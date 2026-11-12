@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=6">
+  <link rel="stylesheet" href="items.css?v=7">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -41,6 +41,20 @@
 
     <p class="legal"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></p>
   </div>
+  <div class="wpop" id="wpop" hidden>
+    <div class="wpop-card" role="dialog" aria-modal="true" aria-labelledby="wpop-name">
+      <div class="wpop-head">
+        <div class="wpop-enc">
+          <button type="button" id="wpop-down" aria-label="인첸트 내리기">−</button>
+          <b id="wpop-enc">0강</b>
+          <button type="button" id="wpop-up" aria-label="인첸트 올리기">+</button>
+        </div>
+        <h3 id="wpop-name">무기</h3>
+        <button type="button" class="wpop-x" id="wpop-x" aria-label="닫기">×</button>
+      </div>
+      <div id="wpop-body"></div>
+    </div>
+  </div>
   <script>
     var current = 'all';
     var input = document.querySelector('.find');
@@ -69,6 +83,111 @@
       });
     });
     input.addEventListener('input', applyList);
+
+    var pop = document.getElementById('wpop');
+    var popEnc = document.getElementById('wpop-enc');
+    var popName = document.getElementById('wpop-name');
+    var popBody = document.getElementById('wpop-body');
+    var popDown = document.getElementById('wpop-down');
+    var popUp = document.getElementById('wpop-up');
+    var weapon = null;
+    var enchant = 0;
+
+    function numOf(text, label) {
+      var total = 0;
+      text.split(', ').forEach(function (part) {
+        var matched = part.match(new RegExp('^' + label + ' ([+-]?\\d+)$'));
+        if (matched) total += Number(matched[1]);
+      });
+      return total;
+    }
+    function canDamage(cat, name) {
+      if (name === '다마스커스 검' || /화살$/.test(name)) return false;
+      return cat !== '둔기' && cat !== '지팡이';
+    }
+    function damageRange(dice, flat, step, tier) {
+      var min = Math.max(0, 1 + flat + step + tier);
+      var max = Math.max(0, dice + flat + step + tier);
+      if (min > max) min = max;
+      return { min: min, max: max, avg: (min + max) / 2 };
+    }
+    function oneDecimal(value) {
+      return (Math.round(value * 10) / 10).toFixed(1);
+    }
+    function openWeapon(row) {
+      var cells = row.children;
+      var cat = row.closest('.scroll').previousElementSibling.dataset.cat;
+      var fx = cells[3].textContent.trim();
+      weapon = {
+        name: row.dataset.name,
+        small: Number(cells[1].textContent),
+        large: Number(cells[2].textContent),
+        fx: fx === '—' ? '' : fx,
+        cat: cat,
+        enchantable: cells[7].textContent.trim() !== '인첸불가',
+        damage: canDamage(cat, row.dataset.name)
+      };
+      enchant = 0;
+      paintWeapon();
+      pop.hidden = false;
+    }
+    function paintWeapon() {
+      var step = weapon.enchantable ? enchant : 0;
+      var tier = !weapon.enchantable ? 0 : enchant >= 11 ? 5 : enchant >= 10 ? 2 : 0;
+      var flat = numOf(weapon.fx, '근거리 대미지') + numOf(weapon.fx, '원거리 대미지');
+      var hit = numOf(weapon.fx, '근거리 명중') + numOf(weapon.fx, '원거리 명중');
+      var added = flat + step;
+      var accuracy = hit + step;
+      var small = damageRange(weapon.small, flat, step, tier);
+      var large = damageRange(weapon.large, flat, step, tier);
+      var options = weapon.fx ? weapon.fx.split(', ') : [];
+      var dmgWord = weapon.cat === '활' ? '원댐' : '근댐';
+      if (weapon.enchantable && enchant >= 10) options.push(dmgWord + '+2(10강)');
+      if (weapon.enchantable && enchant >= 11) options.push(dmgWord + '+3(11강)');
+      var undead = weapon.fx.split(', ').indexOf('언데드추타') >= 0 ? '1~' + (10 + step) : '—';
+      popEnc.textContent = step + '강';
+      popName.textContent = weapon.name;
+      popDown.disabled = !weapon.enchantable || enchant <= 0;
+      popUp.disabled = !weapon.enchantable || enchant >= 11;
+      popBody.innerHTML = [
+        line('작은몹', weapon.small, small),
+        line('큰몹', weapon.large, large),
+        stat('추가 대미지', added),
+        stat('명중', accuracy),
+        stat('언데드추타', undead),
+        stat('손상', weapon.damage ? 'O' : 'X'),
+        stat('옵션', options.length ? options.join(', ') : '—')
+      ].join('') + (weapon.enchantable ? '' : '<p class="wpop-note">인첸트할 수 없는 무기입니다.</p>');
+    }
+    function line(label, dice, range) {
+      return '<p class="wpop-line"><b>' + label + '</b> ' + dice +
+        ' <span>최소' + range.min + '~최대' + range.max + '</span>' +
+        ' <span>평균대미지 ' + oneDecimal(range.avg) + '</span></p>';
+    }
+    function stat(label, value) {
+      return '<p class="wpop-line"><b>' + label + '</b> ' + value + '</p>';
+    }
+    document.querySelectorAll('td.name').forEach(function (cell) {
+      cell.addEventListener('click', function () {
+        openWeapon(cell.parentElement);
+      });
+    });
+    popDown.addEventListener('click', function () {
+      if (enchant > 0) { enchant -= 1; paintWeapon(); }
+    });
+    popUp.addEventListener('click', function () {
+      if (enchant < 11) { enchant += 1; paintWeapon(); }
+    });
+    document.getElementById('wpop-x').addEventListener('click', function () { pop.hidden = true; });
+    pop.addEventListener('click', function (event) {
+      if (event.target === pop) pop.hidden = true;
+    });
+    document.addEventListener('keydown', function (event) {
+      if (pop.hidden) return;
+      if (event.key === 'Escape') pop.hidden = true;
+      if (event.key === 'ArrowLeft' && enchant > 0 && weapon.enchantable) { enchant -= 1; paintWeapon(); }
+      if (event.key === 'ArrowRight' && enchant < 11 && weapon.enchantable) { enchant += 1; paintWeapon(); }
+    });
   </script>
 </body>
 </html>

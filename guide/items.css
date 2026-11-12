@@ -20,6 +20,14 @@ h2 span { margin-left: 8px; color: var(--muted); font-size: 14px; }
 table { min-width: 720px; }
 th:first-child, td:first-child { text-align: left; }
 td.name { text-align: left; }
+.icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  object-fit: contain;
+  vertical-align: middle;
+  image-rendering: pixelated;
+}
 td.fx { white-space: normal; text-align: left; min-width: 180px; max-width: 420px; }
 h2[hidden], .scroll[hidden] { display: none; }
 .legal { margin: 28px 0 0; color: var(--muted); font-size: 13px; font-weight: 800; text-align: center; }

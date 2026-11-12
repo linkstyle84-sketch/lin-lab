@@ -176,6 +176,8 @@
     .member-cta strong { font-size: clamp(13px, 2.2vw, 18px); }
     .member-cta span { font-size: clamp(11px, 1.7vw, 14px); color: #f0d2a8; }
     .member-cta .alarm { font-size: clamp(11px, 1.5vw, 13px); white-space: nowrap; }
+    .banner[hidden],
+    .shortcuts[hidden] { display: none; }
     .banner {
       display: grid;
       place-items: center;
@@ -240,7 +242,7 @@
         <span class="alarm">구독 좋아요 알람설정!</span>
       </a>
     </div>
-    <div class="banner">배너 광고 구함</div>
+    <div class="banner" hidden>배너 광고 구함</div>
     <div class="tools">
       <div class="item-cats">
         <a href="items-weapon.html"><img src="btn-item-weapon.jpg" alt="무기DB"></a>
@@ -248,7 +250,7 @@
         <a href="items-accessory.html"><img src="btn-item-accessory.jpg" alt="장신구DB"></a>
         <a href="items-etc.html"><img src="btn-item-etc.jpg" alt="기타DB"></a>
       </div>
-      <div class="shortcuts">
+      <div class="shortcuts" hidden>
         <a class="yt" href="https://www.youtube.com/user/linkstyle84" target="_blank" rel="noopener"><img src="shortcut-youtube.jpg" alt=""><span>도건유튜브 바로가기</span></a>
         <a class="yt" href="https://open.kakao.com/o/gL2Xyl9h" target="_blank" rel="noopener"><img src="shortcut-kakao.jpg" alt=""><span>도건 린클 연구소 단톡방 바로가기</span></a>
       </div>

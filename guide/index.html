@@ -61,24 +61,15 @@
       gap: 8px;
     }
     .item-cats a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      min-height: 78px;
-      padding: 10px 6px;
+      display: block;
+      padding: 0;
       border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(228, 195, 106, 0.08);
-      color: var(--gold);
+      overflow: hidden;
       text-decoration: none;
-      text-align: center;
       box-shadow: 0 10px 28px rgba(0, 0, 0, .35);
     }
-    .item-cats a:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .item-cats strong { font-size: clamp(15px, 2vw, 20px); font-weight: 900; }
-    .item-cats span { color: var(--muted); font-size: clamp(10px, 1.4vw, 12px); font-weight: 800; line-height: 1.35; }
+    .item-cats img { display: block; width: 100%; height: auto; }
+    .item-cats a:hover { filter: brightness(1.06); transform: translateY(-1px); }
     .speed-banner {
       display: block;
       padding: 0;
@@ -252,10 +243,10 @@
     <div class="banner">배너 광고 구함</div>
     <div class="tools">
       <div class="item-cats">
-        <a href="items-weapon.html"><strong>무기</strong><span>활 · 검 · 창 · 지팡이</span></a>
-        <a href="items-armor.html"><strong>방어구</strong><span>투구 · 갑옷 · 방패</span></a>
-        <a href="items-accessory.html"><strong>장신구</strong><span>반지 · 목걸이 · 벨트</span></a>
-        <a href="items-etc.html"><strong>기타</strong><span>물약 · 주문서 · 마법서</span></a>
+        <a href="items-weapon.html"><img src="btn-item-weapon.jpg" alt="무기DB"></a>
+        <a href="items-armor.html"><img src="btn-item-armor.jpg" alt="방어구DB"></a>
+        <a href="items-accessory.html"><img src="btn-item-accessory.jpg" alt="장신구DB"></a>
+        <a href="items-etc.html"><img src="btn-item-etc.jpg" alt="기타DB"></a>
       </div>
       <div class="shortcuts">
         <a class="yt" href="https://www.youtube.com/user/linkstyle84" target="_blank" rel="noopener"><img src="shortcut-youtube.jpg" alt=""><span>도건유튜브 바로가기</span></a>

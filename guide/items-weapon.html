@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=7">
+  <link rel="stylesheet" href="items.css?v=8">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -49,6 +49,7 @@
           <b id="wpop-enc">0강</b>
           <button type="button" id="wpop-up" aria-label="인첸트 올리기">+</button>
         </div>
+        <img class="wpop-icon" id="wpop-icon" alt="" src="">
         <h3 id="wpop-name">무기</h3>
         <button type="button" class="wpop-x" id="wpop-x" aria-label="닫기">×</button>
       </div>
@@ -87,6 +88,7 @@
     var pop = document.getElementById('wpop');
     var popEnc = document.getElementById('wpop-enc');
     var popName = document.getElementById('wpop-name');
+    var popIcon = document.getElementById('wpop-icon');
     var popBody = document.getElementById('wpop-body');
     var popDown = document.getElementById('wpop-down');
     var popUp = document.getElementById('wpop-up');
@@ -118,8 +120,10 @@
       var cells = row.children;
       var cat = row.closest('.scroll').previousElementSibling.dataset.cat;
       var fx = cells[3].textContent.trim();
+      var icon = row.querySelector('img');
       weapon = {
         name: row.dataset.name,
+        icon: icon ? icon.getAttribute('src') : '',
         small: Number(cells[1].textContent),
         large: Number(cells[2].textContent),
         fx: fx === '—' ? '' : fx,
@@ -146,6 +150,7 @@
       if (weapon.enchantable && enchant >= 11) options.push(dmgWord + '+3(11강)');
       var undead = weapon.fx.split(', ').indexOf('언데드추타') >= 0 ? '1~' + (10 + step) : '—';
       popEnc.textContent = step + '강';
+      popIcon.src = weapon.icon;
       popName.textContent = weapon.name;
       popDown.disabled = !weapon.enchantable || enchant <= 0;
       popUp.disabled = !weapon.enchantable || enchant >= 11;

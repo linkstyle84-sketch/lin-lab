@@ -20,6 +20,17 @@ h2 span { margin-left: 8px; color: var(--muted); font-size: 14px; }
 table { min-width: 720px; }
 th:first-child { text-align: center; }
 td:first-child, td.name { text-align: left; }
+.weapon-db th,
+.weapon-db td,
+.weapon-db th:nth-child(2),
+.weapon-db td:nth-child(2),
+.weapon-db td.fx { text-align: center; }
+.weapon-db td:first-child,
+.weapon-db td.name { text-align: left; }
+.weapon-db th:last-child,
+.weapon-db td:last-child,
+.gear-db th:last-child,
+.gear-db td:last-child { text-align: center; }
 .icon {
   width: 32px;
   height: 32px;

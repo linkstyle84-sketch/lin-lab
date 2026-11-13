@@ -100,7 +100,8 @@
     var weapon = null;
     var enchant = 0;
     var videos = {
-      '뇌신검|발동 : 일렉트릭 쇼크': 'TPE2uwykkFQ'
+      '뇌신검|발동 : 일렉트릭 쇼크': { id: 'TPE2uwykkFQ', start: 0 },
+      '달의 장궁|발동 : 문라이트 이럽션': { id: 'BkTeMm6RrMQ', start: 275 }
     };
 
     function numOf(text, label) {
@@ -141,9 +142,9 @@
       pop.hidden = false;
     }
     function optionHtml(option) {
-      var id = videos[weapon.name + '|' + option];
-      if (!id) return option;
-      return '<button type="button" class="wpop-play" data-video="' + id + '">' + option + '</button>';
+      var video = videos[weapon.name + '|' + option];
+      if (!video) return option;
+      return '<button type="button" class="wpop-play" data-video="' + video.id + '" data-start="' + video.start + '">' + option + '</button>';
     }
     function stopVideo() {
       popVideo.innerHTML = '';
@@ -206,7 +207,7 @@
       if (!play) return;
       if (!popVideo.hidden) { stopVideo(); return; }
       popVideo.innerHTML = '<iframe src="https://www.youtube.com/embed/' + play.dataset.video +
-        '?autoplay=1" title="' + play.textContent + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+        '?autoplay=1&start=' + play.dataset.start + '" title="' + play.textContent + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
       popVideo.hidden = false;
     });
     document.getElementById('wpop-x').addEventListener('click', closePop);

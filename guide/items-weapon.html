@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=8">
+  <link rel="stylesheet" href="items.css?v=9">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -44,14 +44,17 @@
   <div class="wpop" id="wpop" hidden>
     <div class="wpop-card" role="dialog" aria-modal="true" aria-labelledby="wpop-name">
       <div class="wpop-head">
+        <img class="wpop-icon" id="wpop-icon" alt="" src="">
+        <h3 id="wpop-name">무기</h3>
+        <button type="button" class="wpop-x" id="wpop-x" aria-label="닫기">×</button>
+      </div>
+      <div class="wpop-line wpop-enc-row">
+        <b>인첸트</b>
         <div class="wpop-enc">
           <button type="button" id="wpop-down" aria-label="인첸트 내리기">−</button>
           <b id="wpop-enc">0강</b>
           <button type="button" id="wpop-up" aria-label="인첸트 올리기">+</button>
         </div>
-        <img class="wpop-icon" id="wpop-icon" alt="" src="">
-        <h3 id="wpop-name">무기</h3>
-        <button type="button" class="wpop-x" id="wpop-x" aria-label="닫기">×</button>
       </div>
       <div id="wpop-body"></div>
     </div>

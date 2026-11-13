@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=9">
+  <link rel="stylesheet" href="items.css?v=10">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -57,6 +57,7 @@
         </div>
       </div>
       <div id="wpop-body"></div>
+      <div class="wpop-video" id="wpop-video" hidden></div>
     </div>
   </div>
   <script>
@@ -95,8 +96,12 @@
     var popBody = document.getElementById('wpop-body');
     var popDown = document.getElementById('wpop-down');
     var popUp = document.getElementById('wpop-up');
+    var popVideo = document.getElementById('wpop-video');
     var weapon = null;
     var enchant = 0;
+    var videos = {
+      '뇌신검|발동 : 일렉트릭 쇼크': 'TPE2uwykkFQ'
+    };
 
     function numOf(text, label) {
       var total = 0;
@@ -131,8 +136,22 @@
         damage: row.dataset.damage === '1'
       };
       enchant = 0;
+      stopVideo();
       paintWeapon();
       pop.hidden = false;
+    }
+    function optionHtml(option) {
+      var id = videos[weapon.name + '|' + option];
+      if (!id) return option;
+      return '<button type="button" class="wpop-play" data-video="' + id + '">' + option + '</button>';
+    }
+    function stopVideo() {
+      popVideo.innerHTML = '';
+      popVideo.hidden = true;
+    }
+    function closePop() {
+      stopVideo();
+      pop.hidden = true;
     }
     function paintWeapon() {
       var step = weapon.enchantable ? enchant : 0;
@@ -160,7 +179,7 @@
         stat('명중', accuracy),
         stat('언데드추타', undead),
         stat('손상 여부', weapon.damage ? '손상 됨' : '손상 안됨'),
-        stat('옵션', options.length ? options.join(', ') : '—')
+        stat('옵션', options.length ? options.map(optionHtml).join(', ') : '—')
       ].join('') + (weapon.enchantable ? '' : '<p class="wpop-note">인첸트할 수 없는 무기입니다.</p>');
     }
     function line(label, dice, range) {
@@ -182,13 +201,21 @@
     popUp.addEventListener('click', function () {
       if (enchant < 11) { enchant += 1; paintWeapon(); }
     });
-    document.getElementById('wpop-x').addEventListener('click', function () { pop.hidden = true; });
+    popBody.addEventListener('click', function (event) {
+      var play = event.target.closest('.wpop-play');
+      if (!play) return;
+      if (!popVideo.hidden) { stopVideo(); return; }
+      popVideo.innerHTML = '<iframe src="https://www.youtube.com/embed/' + play.dataset.video +
+        '?autoplay=1" title="' + play.textContent + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      popVideo.hidden = false;
+    });
+    document.getElementById('wpop-x').addEventListener('click', closePop);
     pop.addEventListener('click', function (event) {
-      if (event.target === pop) pop.hidden = true;
+      if (event.target === pop) closePop();
     });
     document.addEventListener('keydown', function (event) {
       if (pop.hidden) return;
-      if (event.key === 'Escape') pop.hidden = true;
+      if (event.key === 'Escape') closePop();
       if (event.key === 'ArrowLeft' && enchant > 0 && weapon.enchantable) { enchant -= 1; paintWeapon(); }
       if (event.key === 'ArrowRight' && enchant < 11 && weapon.enchantable) { enchant += 1; paintWeapon(); }
     });

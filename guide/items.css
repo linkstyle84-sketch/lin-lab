@@ -86,9 +86,9 @@ tr.hidden { display: none; }
 td.cls { text-align: center; }
 .cls-grid {
   display: inline-grid;
-  grid-template-columns: repeat(2, 20px);
+  grid-template-columns: repeat(4, 20px);
   grid-auto-rows: 20px;
-  gap: 1px 3px;
+  gap: 3px;
   vertical-align: middle;
 }
 .cls-grid img,

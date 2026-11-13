@@ -145,8 +145,8 @@
       var large = damageRange(weapon.large, flat, step, tier);
       var options = weapon.fx ? weapon.fx.split(', ').filter(function (part) { return part !== '손상 안됨'; }) : [];
       var dmgWord = weapon.cat === '활' ? '원댐' : '근댐';
-      if (weapon.enchantable && enchant >= 10) options.push(dmgWord + '+2(10강)');
-      if (weapon.enchantable && enchant >= 11) options.push(dmgWord + '+3(11강)');
+      if (weapon.enchantable && enchant === 10) options.push(dmgWord + '+2(10강)');
+      if (weapon.enchantable && enchant >= 11) options.push(dmgWord + '+5(11강)');
       var undead = weapon.fx.split(', ').indexOf('언데드추타') >= 0 ? '1~' + (10 + step) : '—';
       popEnc.textContent = step + '강';
       popIcon.src = weapon.icon;

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=13">
+  <link rel="stylesheet" href="items.css?v=14">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -87,6 +87,39 @@
       });
     });
     input.addEventListener('input', applyList);
+
+    var sortCol = 0;
+    var sortDir = 1;
+    function sortTables() {
+      document.querySelectorAll('.scroll tbody').forEach(function (body) {
+        var rows = Array.prototype.slice.call(body.rows);
+        rows.sort(function (a, b) {
+          var byName = a.dataset.name.localeCompare(b.dataset.name, 'ko');
+          if (sortCol === 0) return byName * sortDir;
+          var diff = Number(a.cells[sortCol].textContent) - Number(b.cells[sortCol].textContent);
+          return diff ? diff * sortDir : byName;
+        });
+        rows.forEach(function (row) { body.appendChild(row); });
+      });
+      document.querySelectorAll('thead th.sort').forEach(function (th) {
+        th.dataset.dir = th.cellIndex === sortCol ? (sortDir > 0 ? 'up' : 'down') : '';
+      });
+    }
+    document.querySelectorAll('thead th').forEach(function (th) {
+      if (th.cellIndex > 2) return;
+      th.classList.add('sort');
+      th.tabIndex = 0;
+      function pick() {
+        if (sortCol === th.cellIndex) sortDir = -sortDir;
+        else { sortCol = th.cellIndex; sortDir = sortCol === 0 ? 1 : -1; }
+        sortTables();
+      }
+      th.addEventListener('click', pick);
+      th.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(); }
+      });
+    });
+    sortTables();
 
     var pop = document.getElementById('wpop');
     var popEnc = document.getElementById('wpop-enc');

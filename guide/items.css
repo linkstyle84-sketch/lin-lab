@@ -85,6 +85,10 @@ h2[hidden], .scroll[hidden] { display: none; }
 tr.hidden { display: none; }
 th.cls,
 td.cls { text-align: center; }
+th.sort { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sort:hover { color: var(--ink); }
+th.sort[data-dir="up"]::after { content: " ▲"; font-size: 0.75em; }
+th.sort[data-dir="down"]::after { content: " ▼"; font-size: 0.75em; }
 .cls-grid {
   display: inline-flex;
   gap: 3px;

@@ -189,7 +189,7 @@
         ' <span>평균대미지 ' + oneDecimal(range.avg) + '</span></p>';
     }
     function stat(label, value) {
-      return '<p class="wpop-line"><b>' + label + '</b> ' + value + '</p>';
+      return '<p class="wpop-line"><b>' + label + '</b> <span>' + value + '</span></p>';
     }
     document.querySelectorAll('td.name').forEach(function (cell) {
       cell.addEventListener('click', function () {
@@ -202,13 +202,33 @@
     popUp.addEventListener('click', function () {
       if (enchant < 11) { enchant += 1; paintWeapon(); }
     });
+    function playVideo(play) {
+      popVideo.innerHTML = '<iframe src="https://www.youtube.com/embed/' + play.dataset.video +
+        '?autoplay=1&start=' + play.dataset.start + '" title="' + play.textContent + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      popVideo.hidden = false;
+    }
     popBody.addEventListener('click', function (event) {
       var play = event.target.closest('.wpop-play');
       if (!play) return;
       if (!popVideo.hidden) { stopVideo(); return; }
-      popVideo.innerHTML = '<iframe src="https://www.youtube.com/embed/' + play.dataset.video +
-        '?autoplay=1&start=' + play.dataset.start + '" title="' + play.textContent + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-      popVideo.hidden = false;
+      playVideo(play);
+    });
+    Object.keys(videos).forEach(function (key) {
+      var name = key.split('|')[0];
+      var option = key.split('|')[1];
+      var row = document.querySelector('tr[data-name="' + name + '"]');
+      if (!row) return;
+      var cell = row.querySelector('td.fx');
+      cell.innerHTML = cell.textContent.split(', ').map(function (part) {
+        if (part !== option) return part;
+        return '<button type="button" class="wpop-play" data-video="' + videos[key].id + '" data-start="' + videos[key].start + '">' + part + '</button>';
+      }).join(', ');
+      cell.addEventListener('click', function (event) {
+        var play = event.target.closest('.wpop-play');
+        if (!play) return;
+        openWeapon(row);
+        playVideo(play);
+      });
     });
     document.getElementById('wpop-x').addEventListener('click', closePop);
     pop.addEventListener('click', function (event) {

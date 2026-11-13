@@ -31,7 +31,7 @@
         <label><input type="checkbox" value="hit">명중</label>
         <label><input type="checkbox" value="undead">언데드추타</label>
         <label><input type="checkbox" value="nodamage">손상방지</label>
-        <label><input type="checkbox" value="regen">회복</label>
+        <label><input type="checkbox" value="regen">MP회복</label>
         <label><input type="checkbox" value="sp">SP</label>
         <label><input type="checkbox" value="proc">발동</label>
       </div>
@@ -91,32 +91,55 @@
         hit: plus(parts, ['근거리 명중', '원거리 명중']),
         undead: parts.indexOf('언데드추타') >= 0,
         nodamage: row.dataset.damage === '0',
-        regen: parts.some(function (part) { return part.indexOf('회복') >= 0; }),
+        regen: parts.some(function (part) { return part.indexOf('MP회복') === 0; }),
         sp: plus(parts, ['SP']),
         proc: parts.some(function (part) { return part.indexOf('발동 :') === 0; })
       };
     }
     var rowTags = new Map();
-    document.querySelectorAll('.scroll tbody tr').forEach(function (row) {
-      rowTags.set(row, tagsOf(row));
+    var rowHome = new Map();
+    var allRows = [];
+    var sections = Array.prototype.map.call(document.querySelectorAll('h2[data-cat]'), function (head) {
+      var box = head.nextElementSibling;
+      Array.prototype.forEach.call(box.querySelector('tbody').rows, function (row) {
+        row.dataset.cat = head.dataset.cat;
+        rowTags.set(row, tagsOf(row));
+        rowHome.set(row, box.querySelector('tbody'));
+        allRows.push(row);
+      });
+      return { head: head, box: box };
     });
+    var allBox = document.createElement('div');
+    allBox.className = 'scroll';
+    allBox.innerHTML = '<table>' + sections[0].box.querySelector('thead').outerHTML + '<tbody></tbody></table>';
+    sections[0].head.before(allBox);
+    var allBody = allBox.querySelector('tbody');
+    function placeRows() {
+      allRows.forEach(function (row) {
+        (current === 'all' ? allBody : rowHome.get(row)).appendChild(row);
+      });
+      sortTables();
+    }
     function applyList() {
       var q = input.value.trim();
       var need = Array.prototype.filter.call(checks, function (box) { return box.checked; })
         .map(function (box) { return box.value; });
-      document.querySelectorAll('.scroll').forEach(function (box) {
-        var cat = box.previousElementSibling.dataset.cat;
-        var shown = 0;
-        box.querySelectorAll('tbody tr').forEach(function (row) {
-          var tags = rowTags.get(row);
-          var hide = (q && row.dataset.name.indexOf(q) < 0) ||
-            need.some(function (key) { return !tags[key]; });
-          row.classList.toggle('hidden', hide);
-          if (!hide) shown += 1;
-        });
-        var hideBox = (current !== 'all' && cat !== current) || shown === 0;
-        box.hidden = hideBox;
-        box.previousElementSibling.hidden = hideBox;
+      var shown = new Map();
+      allRows.forEach(function (row) {
+        var tags = rowTags.get(row);
+        var hide = (q && row.dataset.name.indexOf(q) < 0) ||
+          need.some(function (key) { return !tags[key]; });
+        row.classList.toggle('hidden', hide);
+        if (!hide) shown.set(row.dataset.cat, (shown.get(row.dataset.cat) || 0) + 1);
+      });
+      var total = 0;
+      shown.forEach(function (count) { total += count; });
+      allBox.hidden = current !== 'all' || total === 0;
+      sections.forEach(function (section) {
+        var cat = section.head.dataset.cat;
+        var hide = cat !== current || !shown.get(cat);
+        section.box.hidden = hide;
+        section.head.hidden = hide;
       });
     }
     document.querySelectorAll('.cats button').forEach(function (button) {
@@ -125,6 +148,7 @@
         document.querySelectorAll('.cats button').forEach(function (other) {
           other.classList.toggle('on', other === button);
         });
+        placeRows();
         applyList();
       });
     });
@@ -162,7 +186,8 @@
         if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); pick(); }
       });
     });
-    sortTables();
+    placeRows();
+    applyList();
 
     var pop = document.getElementById('wpop');
     var popEnc = document.getElementById('wpop-enc');
@@ -199,7 +224,7 @@
     }
     function openWeapon(row) {
       var cells = row.children;
-      var cat = row.closest('.scroll').previousElementSibling.dataset.cat;
+      var cat = row.dataset.cat;
       var fx = cells[3].textContent.trim();
       var icon = row.querySelector('img');
       weapon = {

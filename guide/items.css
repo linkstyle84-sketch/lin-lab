@@ -181,6 +181,8 @@ th.sort[data-dir="down"]::after { content: " ▼"; font-size: 0.75em; }
 }
 .wpop-line b { color: var(--gold); font-weight: 900; }
 .wpop-enc-row { align-items: center; margin-bottom: 10px; }
+.wpop-cls-row { align-items: center; }
+.wpop-cls-row .cls-grid img { width: 24px; height: 24px; }
 .wpop-play {
   padding: 0;
   border: 0;

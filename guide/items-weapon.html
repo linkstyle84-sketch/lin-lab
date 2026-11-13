@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=14">
+  <link rel="stylesheet" href="items.css?v=15">
 </head>
 <body class="weapon-db">
   <div class="wrap">
@@ -46,6 +46,10 @@
         <img class="wpop-icon" id="wpop-icon" alt="" src="">
         <h3 id="wpop-name">무기</h3>
         <button type="button" class="wpop-x" id="wpop-x" aria-label="닫기">×</button>
+      </div>
+      <div class="wpop-line wpop-cls-row">
+        <b>착용 클래스</b>
+        <span id="wpop-cls"></span>
       </div>
       <div class="wpop-line wpop-enc-row">
         <b>인첸트</b>
@@ -129,6 +133,7 @@
     var popDown = document.getElementById('wpop-down');
     var popUp = document.getElementById('wpop-up');
     var popVideo = document.getElementById('wpop-video');
+    var popCls = document.getElementById('wpop-cls');
     var weapon = null;
     var enchant = 0;
     var videos = {
@@ -168,6 +173,7 @@
         enchantable: cells[7].textContent.trim() !== '인첸불가',
         damage: row.dataset.damage === '1'
       };
+      popCls.innerHTML = cells[6].innerHTML;
       enchant = 0;
       stopVideo();
       paintWeapon();

@@ -136,8 +136,8 @@ th.sort[data-dir="down"]::after { content: " ▼"; font-size: 0.75em; }
   vertical-align: middle;
 }
 .cls-grid img { display: block; width: 20px; height: 20px; }
-.weapon-db td.name { cursor: pointer; }
-.weapon-db td.name:hover { color: var(--gold); }
+.weapon-db td.name, .armor-db td.name { cursor: pointer; }
+.weapon-db td.name:hover, .armor-db td.name:hover { color: var(--gold); }
 .wpop[hidden] { display: none; }
 .wpop {
   position: fixed;

@@ -1,5 +1,14 @@
 .skill-icos { display: inline-flex; gap: 4px; margin-right: 8px; vertical-align: middle; }
 .skill-ico { width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--line); }
+.set-fx { color: #8fd18f; white-space: nowrap; }
+.set-box { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #120e0b; }
+.set-title { margin: 0 0 8px; color: #8fd18f; font-weight: 900; }
+.set-items { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.set-item { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.set-item img { width: 24px; height: 24px; }
+.set-item:hover, .set-item.on { border-color: var(--gold); color: var(--gold); }
+.set-bonus { margin: 0; font-weight: 800; }
+.set-bonus b { margin-right: 6px; color: var(--gold); }
 .db-top { margin: 0 0 18px; }
 .home-btn {
   display: inline-flex;

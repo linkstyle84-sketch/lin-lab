@@ -309,3 +309,6 @@ a.drop-chip { text-decoration: none; }
 .src-npc { margin: 6px 0 0; font-size: 13px; font-weight: 800; line-height: 1.6; }
 .pop-db td.name { cursor: pointer; }
 .pop-db td.name:hover { color: var(--gold); }
+.stack-pop { background: rgba(0, 0, 0, 0.28); }
+.stack-pop .wpop-card { max-height: calc(100vh - 80px); border-color: rgba(228, 195, 106, 0.55); box-shadow: -8px -8px 24px rgba(0, 0, 0, 0.55), 0 24px 60px rgba(0, 0, 0, 0.7); animation: stack-in 0.16s ease-out; }
+@keyframes stack-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }

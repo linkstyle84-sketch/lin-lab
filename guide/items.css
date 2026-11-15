@@ -38,6 +38,13 @@
 .seg button.on { background: rgba(228, 195, 106, 0.22); color: var(--gold); }
 .pick { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #140f0c; color: var(--ink); font: inherit; font-weight: 800; }
 .pick[hidden] { display: none; }
+.pick-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.pick-row[hidden] { display: none; }
+.pick-row button { padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; background: #140f0c; color: var(--muted); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.pick-row button:hover { color: var(--ink); }
+.pick-row button.on { border-color: var(--gold); background: rgba(228, 195, 106, 0.22); color: var(--gold); }
+.pick-row.sub { padding-left: 10px; border-left: 2px solid rgba(228, 195, 106, 0.45); }
+.pick-row.sub button { padding: 4px 10px; font-size: 12px; }
 .count { margin: 6px 0 8px; color: var(--muted); font-size: 13px; font-weight: 800; }
 .mon-db tbody tr, .craft-db tbody tr { cursor: pointer; }
 .mon-db tbody tr:hover td.name, .craft-db tbody tr:hover td.name { color: var(--gold); }

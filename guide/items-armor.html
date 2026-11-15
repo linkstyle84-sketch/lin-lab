@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=28">
+  <link rel="stylesheet" href="items.css?v=29">
 </head>
 <body class="gear-db armor-db">
   <div class="wrap">
@@ -134,9 +134,23 @@
     allBox.innerHTML = '<table>' + sections[0].box.querySelector('thead').outerHTML + '<tbody></tbody></table>';
     sections[0].head.before(allBox);
     var allBody = allBox.querySelector('tbody');
+    function setKey(row) {
+      var set = Number(row.dataset.set);
+      var items = typeof SETS !== 'undefined' && SETS[set] ? SETS[set].items : [];
+      return set * 100 + Math.max(0, items.indexOf(row.dataset.name));
+    }
     function placeRows() {
-      allRows.forEach(function (row) {
+      var bySet = Array.prototype.some.call(checks, function (box) { return box.checked && (box.value === 'set' || box.value === 'poly'); });
+      var list = bySet ? allRows.slice().sort(function (a, b) {
+        var ka = a.dataset.set ? setKey(a) : 1e9;
+        var kb = b.dataset.set ? setKey(b) : 1e9;
+        return ka - kb;
+      }) : allRows;
+      var last = null;
+      list.forEach(function (row) {
         (current === 'all' ? allBody : rowHome.get(row)).appendChild(row);
+        row.classList.toggle('set-first', bySet && !!row.dataset.set && row.dataset.set !== last);
+        if (row.dataset.set) last = row.dataset.set;
       });
     }
     function applyList() {
@@ -171,7 +185,7 @@
       });
     });
     input.addEventListener('input', applyList);
-    checks.forEach(function (box) { box.addEventListener('change', applyList); });
+    checks.forEach(function (box) { box.addEventListener('change', function () { placeRows(); applyList(); }); });
     placeRows();
     applyList();
 

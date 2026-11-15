@@ -1,3 +1,5 @@
+.skill-icos { display: inline-flex; gap: 4px; margin-right: 8px; vertical-align: middle; }
+.skill-ico { width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--line); }
 .db-top { margin: 0 0 18px; }
 .home-btn {
   display: inline-flex;

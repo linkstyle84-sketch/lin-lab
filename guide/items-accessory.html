@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=27">
+  <link rel="stylesheet" href="items.css?v=28">
 </head>
 <body class="gear-db pop-db">
   <div class="wrap">
@@ -48,18 +48,43 @@
   <script>
     var input = document.querySelector('.find');
     var current = 'all';
+    var rowHome = new Map();
+    var allRows = [];
+    var sections = Array.prototype.map.call(document.querySelectorAll('h2[data-cat]'), function (head) {
+      var box = head.nextElementSibling;
+      Array.prototype.forEach.call(box.querySelector('tbody').rows, function (row) {
+        row.dataset.cat = head.dataset.cat;
+        rowHome.set(row, box.querySelector('tbody'));
+        allRows.push(row);
+      });
+      return { head: head, box: box };
+    });
+    var allBox = document.createElement('div');
+    allBox.className = 'scroll';
+    allBox.innerHTML = '<table>' + sections[0].box.querySelector('thead').outerHTML + '<tbody></tbody></table>';
+    sections[0].head.before(allBox);
+    var allBody = allBox.querySelector('tbody');
+    function placeRows() {
+      allRows.forEach(function (row) {
+        (current === 'all' ? allBody : rowHome.get(row)).appendChild(row);
+      });
+    }
     function applyList() {
       var q = input.value.trim();
-      document.querySelectorAll('.scroll').forEach(function (box) {
-        var shown = 0;
-        box.querySelectorAll('tbody tr').forEach(function (row) {
-          var hide = q && row.dataset.name.indexOf(q) < 0;
-          row.classList.toggle('hidden', hide);
-          if (!hide) shown += 1;
-        });
-        var off = shown === 0 || (current !== 'all' && box.previousElementSibling.dataset.cat !== current);
-        box.hidden = off;
-        box.previousElementSibling.hidden = off;
+      var shown = new Map();
+      allRows.forEach(function (row) {
+        var hide = q && row.dataset.name.indexOf(q) < 0;
+        row.classList.toggle('hidden', !!hide);
+        if (!hide) shown.set(row.dataset.cat, (shown.get(row.dataset.cat) || 0) + 1);
+      });
+      var total = 0;
+      shown.forEach(function (count) { total += count; });
+      allBox.hidden = current !== 'all' || total === 0;
+      sections.forEach(function (section) {
+        var cat = section.head.dataset.cat;
+        var hide = cat !== current || !shown.get(cat);
+        section.box.hidden = hide;
+        section.head.hidden = hide;
       });
     }
     document.querySelectorAll('.cats button').forEach(function (button) {
@@ -68,10 +93,13 @@
         document.querySelectorAll('.cats button').forEach(function (other) {
           other.classList.toggle('on', other === button);
         });
+        placeRows();
         applyList();
       });
     });
     input.addEventListener('input', applyList);
+    placeRows();
+    applyList();
   </script>
   <script id="gpop-js">
     (function () {
@@ -86,7 +114,7 @@
         var head = table.closest('.scroll').previousElementSibling;
         document.getElementById('gpop-icon').src = img ? img.getAttribute('src') : '';
         document.getElementById('gpop-name').textContent = row.dataset.name;
-        document.getElementById('gpop-sub').textContent = head && head.dataset.cat ? head.dataset.cat : '';
+        document.getElementById('gpop-sub').textContent = row.dataset.cat || (head && head.dataset.cat) || '';
         var h = '';
         for (var i = 1; i < cells.length; i++) {
           var label = ths[i].textContent.trim();

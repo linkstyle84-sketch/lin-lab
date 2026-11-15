@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=27">
+  <link rel="stylesheet" href="items.css?v=28">
 </head>
 <body class="gear-db armor-db">
   <div class="wrap">
@@ -117,22 +117,47 @@
       return tags;
     }
     var rowTags = new Map();
-    document.querySelectorAll('.scroll tbody tr').forEach(function (row) { rowTags.set(row, tagsOf(row)); });
+    var rowHome = new Map();
+    var allRows = [];
+    var sections = Array.prototype.map.call(document.querySelectorAll('h2[data-cat]'), function (head) {
+      var box = head.nextElementSibling;
+      Array.prototype.forEach.call(box.querySelector('tbody').rows, function (row) {
+        row.dataset.cat = head.dataset.cat;
+        rowTags.set(row, tagsOf(row));
+        rowHome.set(row, box.querySelector('tbody'));
+        allRows.push(row);
+      });
+      return { head: head, box: box };
+    });
+    var allBox = document.createElement('div');
+    allBox.className = 'scroll';
+    allBox.innerHTML = '<table>' + sections[0].box.querySelector('thead').outerHTML + '<tbody></tbody></table>';
+    sections[0].head.before(allBox);
+    var allBody = allBox.querySelector('tbody');
+    function placeRows() {
+      allRows.forEach(function (row) {
+        (current === 'all' ? allBody : rowHome.get(row)).appendChild(row);
+      });
+    }
     function applyList() {
       var q = input.value.trim();
       var need = Array.prototype.filter.call(checks, function (box) { return box.checked; })
         .map(function (box) { return box.value; });
-      document.querySelectorAll('.scroll').forEach(function (box) {
-        var shown = 0;
-        box.querySelectorAll('tbody tr').forEach(function (row) {
-          var tags = rowTags.get(row);
-          var hide = (q && row.dataset.name.indexOf(q) < 0) || need.some(function (key) { return !tags[key]; });
-          row.classList.toggle('hidden', hide);
-          if (!hide) shown += 1;
-        });
-        var off = shown === 0 || (current !== 'all' && box.previousElementSibling.dataset.cat !== current);
-        box.hidden = off;
-        box.previousElementSibling.hidden = off;
+      var shown = new Map();
+      allRows.forEach(function (row) {
+        var tags = rowTags.get(row);
+        var hide = (q && row.dataset.name.indexOf(q) < 0) || need.some(function (key) { return !tags[key]; });
+        row.classList.toggle('hidden', !!hide);
+        if (!hide) shown.set(row.dataset.cat, (shown.get(row.dataset.cat) || 0) + 1);
+      });
+      var total = 0;
+      shown.forEach(function (count) { total += count; });
+      allBox.hidden = current !== 'all' || total === 0;
+      sections.forEach(function (section) {
+        var cat = section.head.dataset.cat;
+        var hide = cat !== current || !shown.get(cat);
+        section.box.hidden = hide;
+        section.head.hidden = hide;
       });
     }
     document.querySelectorAll('.cats button').forEach(function (button) {
@@ -141,11 +166,14 @@
         document.querySelectorAll('.cats button').forEach(function (other) {
           other.classList.toggle('on', other === button);
         });
+        placeRows();
         applyList();
       });
     });
     input.addEventListener('input', applyList);
     checks.forEach(function (box) { box.addEventListener('change', applyList); });
+    placeRows();
+    applyList();
 
     var SETS = [{"items":["난쟁이족 철 투구","난쟁이족 망토","난쟁이족 둥근 방패"],"bonus":[{"n":3,"opts":["AC -1","최대 HP +5"],"poly":""}]},{"items":["오크족 투구","오크족 고리 갑옷","오크족 망토","우럭하이 방패"],"bonus":[{"n":4,"opts":["AC -3"],"poly":""}]},{"items":["가죽모자","가죽샌달","가죽방패","가죽조끼"],"bonus":[{"n":4,"opts":["AC -3"],"poly":""}]},{"items":["징박은 가죽모자","징박은 가죽샌달","징박은 가죽방패","징박은 가죽조끼"],"bonus":[{"n":4,"opts":["AC -3"],"poly":""}]},{"items":["해골투구","골각방패","뼈갑옷"],"bonus":[{"n":3,"opts":["AC -2","최대 HP +10"],"poly":""}]},{"items":["강철 장갑","강철 면갑","강철 방패","강철 부츠","강철 판금 갑옷"],"bonus":[{"n":5,"opts":["AC -3"],"poly":""}]},{"items":["마법사 모자","마법사 옷"],"bonus":[{"n":2,"opts":["MP회복 +1","최대 MP +50"],"poly":""}]},{"items":["데스나이트의 장갑","데스나이트의 갑옷","데스나이트의 부츠","데스나이트의 투구"],"bonus":[{"n":4,"opts":["AC -4"],"poly":"데스나이트"}]},{"items":["푸른 해적 가죽갑옷","푸른 해적 두건","푸른 해적 장갑","푸른 해적 부츠"],"bonus":[{"n":4,"opts":["INT +1","AC -1","최대 HP +10"],"poly":""}]},{"items":["반왕의 갑옷","반왕의 부츠","반왕의 건틀릿","반왕의 투구"],"bonus":[{"n":4,"opts":["HP회복 +7","AC -3"],"poly":"켄 라우헬"}]},{"items":["케레니스의 부츠","케레니스의 서클릿","케레니스의 장갑","케레니스의 로브"],"bonus":[{"n":4,"opts":["MP회복 +12","AC -2","최대 MP +100"],"poly":"케레니스"}]},{"items":["커츠의 장갑","커츠의 갑옷","커츠의 부츠","커츠의 투구"],"bonus":[{"n":4,"opts":["AC -4"],"poly":"커츠"}]},{"items":["짙푸른 해적 두건","짙푸른 해적 장갑","짙푸른 해적 부츠","짙푸른 해적 가죽갑옷"],"bonus":[{"n":4,"opts":["AC -7"],"poly":""}]}];
     var pop = document.getElementById('wpop');

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=27">
+  <link rel="stylesheet" href="items.css?v=28">
 </head>
 <body class="pop-db">
   <div class="wrap">
@@ -88,7 +88,7 @@
         var head = table.closest('.scroll').previousElementSibling;
         document.getElementById('gpop-icon').src = img ? img.getAttribute('src') : '';
         document.getElementById('gpop-name').textContent = row.dataset.name;
-        document.getElementById('gpop-sub').textContent = head && head.dataset.cat ? head.dataset.cat : '';
+        document.getElementById('gpop-sub').textContent = row.dataset.cat || (head && head.dataset.cat) || '';
         var h = '';
         for (var i = 1; i < cells.length; i++) {
           var label = ths[i].textContent.trim();

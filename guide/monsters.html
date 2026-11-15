@@ -189,6 +189,11 @@
       pop.querySelector('.wpop-card').scrollTop = 0;
     }
     render();
+    var mon0 = new URLSearchParams(location.search).get('mon');
+    if (mon0) {
+      var mk = MON.findIndex(function (m) { return m.n === mon0; });
+      if (mk >= 0) { input.value = mon0; render(); openMon(mk); }
+    }
   </script>
 </body>
 </html>

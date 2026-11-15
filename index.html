@@ -747,7 +747,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
       <h1>리니지 클래식 DPS 측정기</h1>
       <div class="credit-row">
         <p>제작: <a class="channel" href="https://www.youtube.com/user/linkstyle84" target="_blank" rel="noopener">도건유튜브</a></p>
-        <p class="updated">업데이트 일시: 2026년 11월 15일 21:25 (버전: 3.43v)</p>
+        <p class="updated">업데이트 일시: 2026년 11월 15일 21:26 (버전: 3.44v)</p>
       </div>
       <p class="site-legal"><a href="guide/privacy.html">개인정보처리방침</a> · <a href="guide/terms.html">이용약관</a></p>
     </div>
@@ -1730,7 +1730,12 @@ function weaponFactLine(result) {
     ? '전체'
     : opt.classes.join(', ');
   const p = result.parts;
-  return `무기대미지 ${fmtNum(p.weaponDice)}/${fmtNum(p.weaponDiceLarge)} · 재질 ${mat} · 착용 ${classes}`;
+  const bits = [`무기대미지 ${fmtNum(p.weaponDice)}/${fmtNum(p.weaponDiceLarge)}`];
+  if (p.flat) bits.push(`추타 ${p.flat > 0 ? '+' : ''}${fmtNum(p.flat)}`);
+  if (p.weaponAcc) bits.push(`명중 ${p.weaponAcc > 0 ? '+' : ''}${fmtNum(p.weaponAcc)}`);
+  if (p.undeadMax > 0) bits.push(`언데드추타 1~${fmtNum(p.undeadMax)}`);
+  bits.push(`재질 ${mat}`, `착용 ${classes}`);
+  return bits.join(' · ');
 }
 
 function detailView() {

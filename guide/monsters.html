@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=22">
+  <link rel="stylesheet" href="items.css?v=25">
 </head>
 <body class="gear-db mon-db">
   <div class="wrap">
@@ -174,7 +174,8 @@
       document.getElementById('wpop-icon').outerHTML = ico(m, 64, 'mon-ico mon-ico-lg" id="wpop-icon');
       document.getElementById('wpop-name').textContent = m.n;
       document.getElementById('wpop-sub').textContent = '레벨 ' + m.l;
-      var html = '<div class="wpop-line"><b>크기</b><span>' + (m.b ? '큰 몬스터' : '작은 몬스터') + '</span></div>' +
+      var html = (backHref && k == backMon ? '<a class="back-link" href="' + esc(backHref) + '">‹ ' + esc(backName) + '(으)로 돌아가기</a>' : '') +
+        '<div class="wpop-line"><b>크기</b><span>' + (m.b ? '큰 몬스터' : '작은 몬스터') + '</span></div>' +
         '<div class="wpop-line"><b>속성</b><span>' + (m.u ? '언데드' : '—') + '</span></div>' +
         '<div class="wpop-line"><b>출현 지역</b><span class="pop-list">' + (m.r.length ? m.r.map(esc).join('<br>') : '—') + '</span></div>' +
         '<h4 class="pop-h">드롭 아이템</h4>';
@@ -189,10 +190,15 @@
       pop.querySelector('.wpop-card').scrollTop = 0;
     }
     render();
-    var mon0 = new URLSearchParams(location.search).get('mon');
+    var params = new URLSearchParams(location.search);
+    var mon0 = params.get('mon');
+    var FROM = { armor: 'items-armor.html' };
+    var backName = params.get('item');
+    var backHref = FROM[params.get('from')] && backName ? FROM[params.get('from')] + '?item=' + encodeURIComponent(backName) : '';
+    var backMon = -1;
     if (mon0) {
       var mk = MON.findIndex(function (m) { return m.n === mon0; });
-      if (mk >= 0) { input.value = mon0; render(); openMon(mk); }
+      if (mk >= 0) { backMon = mk; input.value = mon0; render(); openMon(mk); }
     }
   </script>
 </body>

@@ -301,6 +301,8 @@ th.sort[data-dir="down"]::after { content: " ▼"; font-size: 0.75em; }
 .wpop-video iframe { display: block; width: 100%; height: 100%; border: 0; }
 .wpop-note { margin: 8px 0 0; color: var(--muted); font-size: 13px; font-weight: 800; }
 a.drop-chip { text-decoration: none; }
+.back-link { display: inline-flex; align-items: center; margin: 0 0 10px; padding: 5px 12px; border: 1px solid var(--gold); border-radius: 8px; background: #120e0b; color: var(--gold); font-size: 13px; font-weight: 900; text-decoration: none; }
+.back-link:hover { background: var(--gold); color: #120e0b; }
 .src-craft { margin: 8px 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(18, 14, 11, 0.6); }
 .src-craft-h { margin: 0 0 6px; font-weight: 800; }
 .src-craft-h > b, .src-npc > b { margin-right: 6px; color: var(--gold); }

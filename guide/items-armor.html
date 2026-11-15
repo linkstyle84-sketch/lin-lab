@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=24">
+  <link rel="stylesheet" href="items.css?v=25">
 </head>
 <body class="gear-db armor-db">
   <div class="wrap">
@@ -153,7 +153,7 @@
     function srcHtml(name) { // @src-fn
       var s = SRC[name] || {}; // @src-fn
       var h = '<h4 class="pop-h">획득처</h4>'; // @src-fn
-      if (s.m) h += '<div class="wpop-line"><b>몬스터 드롭</b><span class="chips">' + s.m.map(function (k) { var m = SRCMON[k]; return '<a class="chip drop-chip" href="monsters.html?mon=' + encodeURIComponent(m[0]) + '">' + srcMonIco(m, 24) + srcEsc(m[0]) + ' <span class="more">Lv.' + m[1] + '</span></a>'; }).join('') + '</span></div>'; // @src-fn
+      if (s.m) h += '<div class="wpop-line"><b>몬스터 드롭</b><span class="chips">' + s.m.map(function (k) { var m = SRCMON[k]; return '<a class="chip drop-chip" href="monsters.html?mon=' + encodeURIComponent(m[0]) + '&from=armor&item=' + encodeURIComponent(name) + '">' + srcMonIco(m, 24) + srcEsc(m[0]) + ' <span class="more">Lv.' + m[1] + '</span></a>'; }).join('') + '</span></div>'; // @src-fn
       if (s.c) h += s.c.map(function (c) { // @src-fn
         return '<div class="src-craft"><p class="src-craft-h"><b>제작</b>' + (c.o[0] ? '+' + c.o[0] + ' ' : '') + srcEsc(name) + (c.o[1] > 1 ? ' ×' + c.o[1] : '') + ' <span class="more">성공 ' + c.o[2] + '%' + (c.f ? ' · 요정 전용' : '') + '</span></p>' + // @src-fn
           '<ul class="mat-list">' + c.m.map(function (x) { return '<li><img src="item-icons/' + x[1] + '" alt="" loading="lazy">' + (x[3] ? '+' + x[3] + ' ' : '') + srcEsc(x[0]) + (x[4] ? ' <span class="more">(축복/저주 무관)</span>' : '') + '<b>×' + x[2].toLocaleString('ko-KR') + '</b></li>'; }).join('') + '</ul>' + // @src-fn
@@ -265,6 +265,9 @@
       if (event.key === 'ArrowLeft' && enchant > 0) { enchant -= 1; paintArmor(); }
       if (event.key === 'ArrowRight' && enchant < armor.max) { enchant += 1; paintArmor(); }
     });
+    var item0 = new URLSearchParams(location.search).get('item');
+    var row0 = item0 && Array.prototype.find.call(document.querySelectorAll('tr[data-name]'), function (row) { return row.dataset.name === item0; });
+    if (row0) openArmor(row0);
   </script>
 </body>
 </html>

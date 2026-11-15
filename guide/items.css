@@ -30,6 +30,42 @@
 .db-nav a:hover { opacity: 1; filter: brightness(1.06); }
 .db-nav a.on { border-color: var(--gold); opacity: 1; }
 .db-nav img { display: block; width: 100%; height: auto; }
+.db-nav.db3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.seg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 6px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { padding: 8px 16px; border: 0; border-right: 1px solid var(--line); background: #140f0c; color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: rgba(228, 195, 106, 0.22); color: var(--gold); }
+.pick { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #140f0c; color: var(--ink); font: inherit; font-weight: 800; }
+.pick[hidden] { display: none; }
+.count { margin: 6px 0 8px; color: var(--muted); font-size: 13px; font-weight: 800; }
+.mon-db tbody tr, .craft-db tbody tr { cursor: pointer; }
+.mon-db tbody tr:hover td.name, .craft-db tbody tr:hover td.name { color: var(--gold); }
+.mon-db th, .mon-db td, .craft-db th, .craft-db td { text-align: center; }
+.mon-db td.name, .craft-db td.name { text-align: left; white-space: nowrap; }
+.mon-ico { display: inline-block; flex: none; margin-right: 8px; border-radius: 6px; background-color: #120e0b; background-repeat: no-repeat; vertical-align: middle; image-rendering: pixelated; }
+.mon-ico-lg { margin-right: 0; border: 1px solid var(--line); }
+.more { color: var(--muted); font-size: 0.88em; }
+.undead { color: #c9a0ff; }
+td.drops { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; color: var(--muted); }
+td.npc { white-space: nowrap; }
+td.mats { text-align: right; white-space: nowrap; }
+.mat { position: relative; display: inline-block; width: 40px; height: 40px; margin-left: 4px; border: 1px solid var(--line); border-radius: 6px; background: #120e0b; vertical-align: middle; }
+.mat img { width: 32px; height: 32px; margin: 3px; image-rendering: pixelated; }
+.mat b { position: absolute; right: 2px; bottom: 0; font-size: 11px; line-height: 1.2; color: #fffdf6; text-shadow: 0 0 2px #000, 0 0 2px #000; }
+.mat .enc { position: absolute; left: 2px; top: 0; font-size: 10px; font-style: normal; font-weight: 900; color: #8ec5ff; text-shadow: 0 0 2px #000; }
+.wpop-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; font-weight: 800; }
+.wpop-card { max-height: calc(100vh - 36px); overflow-y: auto; }
+.pop-h { margin: 14px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--gold); font-size: 15px; font-weight: 900; }
+.pop-list { line-height: 1.6; }
+.wpop-line > b { min-width: 72px; }
+.chips { display: flex; flex: 1; flex-wrap: wrap; gap: 4px; }
+.chip { padding: 2px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+.mat-list, .npc-list { margin: 0; padding: 0; list-style: none; }
+.mat-list li, .npc-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-weight: 800; }
+.mat-list img { width: 32px; height: 32px; image-rendering: pixelated; }
+.mat-list li > b { margin-left: auto; color: var(--gold); }
+.npc-list li b { min-width: 64px; color: var(--ink); }
 h2 {
   margin: 28px 0 10px;
   font-size: 20px;

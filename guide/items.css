@@ -61,6 +61,14 @@ td.mats { text-align: right; white-space: nowrap; }
 .wpop-line > b { min-width: 72px; }
 .chips { display: flex; flex: 1; flex-wrap: wrap; gap: 4px; }
 .chip { padding: 2px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+.ipop { z-index: 41; }
+.drop-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 3px; background: #120e0b; color: var(--ink); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.drop-chip img { width: 26px; height: 26px; object-fit: contain; image-rendering: pixelated; }
+.drop-chip .mon-ico { margin-right: 2px; }
+.drop-chip:hover { border-color: var(--gold); color: var(--gold); }
+.item-desc { margin: 8px 0; color: var(--muted); font-size: 13px; font-weight: 800; white-space: pre-line; }
+.craft-link { color: #8ec5ff; font-weight: 900; text-decoration: none; }
+.craft-link:hover { text-decoration: underline; }
 .mat-list, .npc-list { margin: 0; padding: 0; list-style: none; }
 .mat-list li, .npc-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-weight: 800; }
 .mat-list img { width: 32px; height: 32px; image-rendering: pixelated; }

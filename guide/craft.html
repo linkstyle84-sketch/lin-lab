@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=21">
+  <link rel="stylesheet" href="items.css?v=22">
 </head>
 <body class="gear-db craft-db">
   <div class="wrap">
@@ -50,7 +50,11 @@
     function closePop() { pop.hidden = true; }
     document.getElementById('wpop-x').addEventListener('click', closePop);
     pop.addEventListener('click', function (e) { if (e.target === pop) closePop(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closePop(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      var ip = document.getElementById('ipop');
+      if (ip && !ip.hidden) ip.hidden = true; else closePop();
+    });
     function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     var rows = document.getElementById('rows');
     var input = document.querySelector('.find');
@@ -92,6 +96,8 @@
     input.addEventListener('input', render);
     elf.addEventListener('change', render);
     sub.addEventListener('change', render);
+    var q0 = new URLSearchParams(location.search).get('q');
+    if (q0) input.value = q0;
     rows.addEventListener('click', function (e) {
       var tr = e.target.closest('tr[data-k]');
       if (!tr) return;

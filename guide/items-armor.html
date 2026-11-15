@@ -99,7 +99,6 @@
         icon: icon ? icon.getAttribute('src') : '',
         ac: Number(row.dataset.ac),
         max: Number(row.dataset.max),
-        damage: row.dataset.damage === '1',
         fx: fx === '—' || !fx ? '' : fx,
         material: cells[3].textContent,
         weight: cells[4].textContent,
@@ -125,7 +124,6 @@
         stat('재질', armor.material),
         stat('무게', armor.weight),
         stat('안전 인첸트', armor.safe),
-        stat('손상 여부', armor.damage ? '손상 됨' : '손상 안됨'),
         stat('옵션', armor.fx || '—')
       ].join('') + setHtml(armor.set) + (armor.max ? '' : '<p class="wpop-note">인첸트할 수 없는 방어구입니다.</p>');
     }

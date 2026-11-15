@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="speed.css">
-  <link rel="stylesheet" href="items.css?v=25">
+  <link rel="stylesheet" href="items.css?v=26">
 </head>
 <body class="gear-db mon-db">
   <div class="wrap">
@@ -192,7 +192,7 @@
     render();
     var params = new URLSearchParams(location.search);
     var mon0 = params.get('mon');
-    var FROM = { armor: 'items-armor.html' };
+    var FROM = { weapon: 'items-weapon.html', armor: 'items-armor.html', accessory: 'items-accessory.html', etc: 'items-etc.html' };
     var backName = params.get('item');
     var backHref = FROM[params.get('from')] && backName ? FROM[params.get('from')] + '?item=' + encodeURIComponent(backName) : '';
     var backMon = -1;

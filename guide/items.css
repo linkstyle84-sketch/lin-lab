@@ -307,3 +307,5 @@ a.drop-chip { text-decoration: none; }
 .src-craft-h { margin: 0 0 6px; font-weight: 800; }
 .src-craft-h > b, .src-npc > b { margin-right: 6px; color: var(--gold); }
 .src-npc { margin: 6px 0 0; font-size: 13px; font-weight: 800; line-height: 1.6; }
+.pop-db td.name { cursor: pointer; }
+.pop-db td.name:hover { color: var(--gold); }

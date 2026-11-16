@@ -320,3 +320,11 @@ a.drop-chip { text-decoration: none; }
 .stack-pop .wpop-card { max-height: calc(100vh - 80px); border-color: rgba(228, 195, 106, 0.55); box-shadow: -8px -8px 24px rgba(0, 0, 0, 0.55), 0 24px 60px rgba(0, 0, 0, 0.7); animation: stack-in 0.16s ease-out; }
 @keyframes stack-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
 tr.set-first td { border-top: 2px solid rgba(228, 195, 106, 0.5); }
+.seg-label { min-width: 34px; color: var(--muted); font-size: 13px; font-weight: 900; }
+.sp-cls { display: inline-flex; gap: 8px; white-space: nowrap; vertical-align: middle; }
+.sp-cls > span { display: inline-flex; align-items: center; gap: 2px; color: var(--muted); font-size: 12px; font-weight: 800; }
+.sp-cls img { display: block; width: 20px; height: 20px; }
+.wpop .sp-cls img { width: 24px; height: 24px; }
+.sp-cost { white-space: nowrap; }
+.sp-cat { display: inline-flex; align-items: center; gap: 1px; margin-left: 4px; font-size: 12px; vertical-align: middle; }
+.sp-cat img { width: 22px; height: 22px; image-rendering: pixelated; }

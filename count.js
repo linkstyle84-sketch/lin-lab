@@ -1,7 +1,8 @@
 (function () {
   var NS = 'linkstyle84-lin-dps';
   function live() {
-    return location.hostname === 'linkstyle84-sketch.github.io';
+    var host = location.hostname;
+    return host === 'linkstyle84-sketch.github.io' || host === 'dggamelab.com' || host === 'www.dggamelab.com';
   }
   function url(kind, key) {
     return 'https://abacus.jasoncameron.dev/' + kind + '/' + NS + '/' + key;

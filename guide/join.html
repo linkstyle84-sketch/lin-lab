@@ -223,8 +223,14 @@
       });
     }
 
-    tabLogin.addEventListener('click', function () { show('login'); });
-    tabJoin.addEventListener('click', function () { show('join'); });
+    tabLogin.addEventListener('click', function () {
+      if (location.hash !== '#login') location.hash = 'login';
+      else show('login');
+    });
+    tabJoin.addEventListener('click', function () {
+      if (location.hash !== '#join') location.hash = 'join';
+      else show('join');
+    });
     var joinBlock = document.getElementById('join-block');
     function syncJoinBlock() {
       joinBlock.hidden = agreed();

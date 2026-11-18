@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>회원 관리 · 도건유튜브</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0c0a08; --ink:#f6edd6; --muted:#cbb994; --gold:#e4c36a; --line:rgba(228,195,106,.28); }
+    * { box-sizing: border-box; }
+    html, body { margin:0; min-height:100%; background:radial-gradient(900px 380px at 50% -60px,#3a2410 0%,transparent 62%),var(--bg); color:var(--ink); font-family:"Noto Sans KR",sans-serif; }
+    .wrap { width:min(880px,calc(100% - 28px)); margin:0 auto; padding:36px 0 64px; }
+    a { color:var(--gold); font-weight:800; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    h1 { margin:0 0 8px; font-size:28px; font-weight:900; letter-spacing:-.03em; }
+    p { color:var(--muted); font-size:15px; font-weight:700; line-height:1.7; }
+    .status { color:var(--gold); font-weight:800; }
+    .scroll { overflow-x:auto; margin-top:12px; border:1px solid var(--line); border-radius:16px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; font-weight:700; }
+    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap; }
+    th { color:var(--gold); }
+    button { border:0; background:none; color:var(--gold); font:inherit; font-weight:800; cursor:pointer; }
+    #google { min-height:44px; margin:12px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p><a href="join.html">회원가입</a> · <a href="./">처음으로</a></p>
+    <h1>회원 관리</h1>
+    <p>대표 이인한 님의 구글 계정(linkstyle84@gmail.com)만 명단을 볼 수 있습니다. 그 계정에는 구글 2단계 인증을 켜 두세요. IP만으로 이 페이지를 잠그지는 않습니다.</p>
+    <div id="google"></div>
+    <p class="status" id="status" role="status"></p>
+    <div class="scroll" id="list" hidden></div>
+  </div>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="member-config.js"></script>
+  <script src="member.js"></script>
+  <script>
+    var status = document.getElementById('status');
+    var list = document.getElementById('list');
+    var token = '';
+
+    function say(text) { status.textContent = text || ''; }
+
+    function draw(members) {
+      list.hidden = false;
+      list.textContent = '';
+      var table = document.createElement('table');
+      var head = document.createElement('tr');
+      ['이메일', '이름', '14세 확인', '가입', '최근 접속', ''].forEach(function (label) {
+        var th = document.createElement('th');
+        th.textContent = label;
+        head.appendChild(th);
+      });
+      table.appendChild(head);
+      if (!members.length) {
+        var empty = document.createElement('tr');
+        var cell = document.createElement('td');
+        cell.colSpan = 6;
+        cell.textContent = '가입한 회원이 없습니다.';
+        empty.appendChild(cell);
+        table.appendChild(empty);
+      }
+      members.forEach(function (member) {
+        var row = document.createElement('tr');
+        [member.email, member.name || '', member.age14 || '', member.joined_at || '', member.last_seen || ''].forEach(function (value) {
+          var td = document.createElement('td');
+          td.textContent = value;
+          row.appendChild(td);
+        });
+        var action = document.createElement('td');
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = '삭제';
+        button.addEventListener('click', function () {
+          if (!window.confirm(member.email + ' 회원을 삭제할까요?')) return;
+          button.disabled = true;
+          DgMember.call({ action: 'remove', idToken: token, sub: member.sub }).then(function () {
+            load();
+          }).catch(function (err) {
+            button.disabled = false;
+            say(err.message);
+          });
+        });
+        action.appendChild(button);
+        row.appendChild(action);
+        table.appendChild(row);
+      });
+      list.appendChild(table);
+    }
+
+    function load() {
+      say('명단을 불러오는 중입니다.');
+      DgMember.call({ action: 'list', idToken: token }).then(function (data) {
+        say('회원 ' + (data.members || []).length + '명');
+        draw(data.members || []);
+      }).catch(function (err) {
+        list.hidden = true;
+        say(err.message);
+      });
+    }
+
+    if (!DgMember.connected()) {
+      say('회원 저장 서버를 연결하면 이 화면이 열립니다.');
+    } else {
+      var wait = setInterval(function () {
+        if (!window.google || !google.accounts) return;
+        clearInterval(wait);
+        DgMember.renderGoogle(document.getElementById('google'), function (idToken) {
+          token = idToken;
+          load();
+        });
+      }, 200);
+    }
+  </script>
+</body>
+</html>

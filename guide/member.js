@@ -85,7 +85,7 @@
       size: 'large',
       text: (options && options.text) || 'signin_with',
       shape: 'rectangular',
-      width: 320,
+      width: (options && options.width) || 320,
       locale: 'ko'
     });
   }

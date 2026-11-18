@@ -31,13 +31,14 @@
     .back a:hover, .foot a:hover { text-decoration: underline; }
     .account {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
       min-height: 640px;
       border: 1px solid var(--line);
       border-radius: 22px;
       overflow: hidden;
       background: #140f0c;
     }
+    .intro, .panel { min-width: 0; }
     .intro {
       padding: 42px 36px;
       background:
@@ -82,15 +83,19 @@
     .checks input { margin-top: 3px; }
     .checks a { color: var(--gold); }
     .need { color: #f0b4a0; font-weight: 900; }
-    .google { min-height: 44px; }
+    .google { position: relative; width: 100%; max-width: 100%; min-height: 44px; }
+    .google > div, .google [role="button"] { max-width: 100% !important; width: 100% !important; }
+    .block { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
     .hint { margin: 12px 0 0; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.55; }
+    .hint, .lead, .consent, .intro p, .checks label { overflow-wrap: anywhere; }
     .status { min-height: 1.5em; margin: 12px 0 0; color: var(--gold); font-size: 14px; font-weight: 800; line-height: 1.5; }
     .leave { margin-top: 8px; border: 0; padding: 0; background: none; color: var(--gold); font: inherit; font-weight: 800; cursor: pointer; }
     .foot { margin: 18px 0 0; text-align: center; color: var(--muted); font-size: 13px; font-weight: 800; }
     .view[hidden] { display: none; }
     @media (max-width: 800px) {
-      .account { grid-template-columns: 1fr; }
-      .intro { border-right: 0; border-bottom: 1px solid var(--line); }
+      .account { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+      .intro { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 18px; }
+      .panel { padding: 22px 16px 16px; }
       .intro h1 { font-size: 28px; }
     }
   </style>
@@ -129,10 +134,10 @@
             <label><input id="ok-privacy" type="checkbox"> <span><a href="privacy.html">개인정보 수집·이용 및 처리방침</a>에 동의합니다. <b class="need">(필수)</b></span></label>
             <label><input id="ok-age" type="checkbox"> <span>만 14세 이상입니다. <b class="need">(필수)</b></span></label>
           </div>
-          <div id="google-join" class="google" hidden></div>
+          <div id="google-join" class="google"><div id="join-block" class="block"></div></div>
           <p class="hint">계속하면 Google 인증 화면으로 이동합니다. 이 사이트에는 Google 비밀번호가 전달되지 않습니다.</p>
         </div>
-        <p class="status" id="status" role="status"></p>
+        <p class="status" id="status" role="status">회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.</p>
         <button id="leave" class="leave" type="button" hidden>탈퇴</button>
       </section>
     </div>
@@ -169,14 +174,23 @@
       tabJoin.className = login ? '' : 'on';
       viewLogin.hidden = !login;
       viewJoin.hidden = login;
-      say('');
+      if (!login) paint(joinSlot, 'signup_with', joinFlag);
+      notice();
     }
 
     function paint(slot, text, flag) {
       if (flag.done) return;
       if (!window.google || !google.accounts) return;
       flag.done = true;
-      DgMember.renderGoogle(slot, onCredential, { text: text });
+      var room = Math.max(220, window.innerWidth - 80);
+      var width = Math.min(400, slot.clientWidth || room, room);
+      DgMember.renderGoogle(slot, onCredential, { text: text, width: width });
+    }
+
+    function notice() {
+      if (!window.DgMember || !DgMember.connected()) {
+        say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
+      }
     }
 
     function onCredential(idToken) {
@@ -204,11 +218,15 @@
 
     tabLogin.addEventListener('click', function () { show('login'); });
     tabJoin.addEventListener('click', function () { show('join'); });
+    var joinBlock = document.getElementById('join-block');
+    function syncJoinBlock() {
+      joinBlock.hidden = agreed();
+    }
     checks.forEach(function (box) {
-      box.addEventListener('change', function () {
-        joinSlot.hidden = !agreed();
-        if (agreed()) paint(joinSlot, 'signup_with', joinFlag);
-      });
+      box.addEventListener('change', syncJoinBlock);
+    });
+    joinBlock.addEventListener('click', function () {
+      say('필수 동의를 먼저 확인해 주세요.');
     });
     leave.addEventListener('click', function () {
       if (!token) return;
@@ -234,15 +252,14 @@
         return;
       }
       paint(loginSlot, 'signin_with', loginFlag);
-      if (agreed()) {
-        joinSlot.hidden = false;
-        paint(joinSlot, 'signup_with', joinFlag);
-      }
-      if (loginPainted && (!agreed() || joinPainted)) {
+      if (!viewJoin.hidden) paint(joinSlot, 'signup_with', joinFlag);
+      if (loginPainted && (viewJoin.hidden || joinPainted)) {
         clearInterval(wait);
-        if (!DgMember.connected()) say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
+        notice();
       }
     }, 200);
+    notice();
+    if (location.hash === '#join') show('join');
   </script>
 </body>
 </html>

@@ -57,28 +57,35 @@
     });
   }
 
-  function renderGoogle(el, callback) {
+  var googleReady = false;
+  var googleHandler = null;
+
+  function renderGoogle(el, callback, options) {
     var cfg = config();
     if (!window.google || !google.accounts || !google.accounts.id) {
       throw new Error('구글 로그인 버튼을 불러오지 못했습니다.');
     }
-    google.accounts.id.initialize({
-      client_id: cfg.clientId,
-      callback: function (resp) {
-        if (resp && resp.credential) callback(resp.credential);
-      },
-      auto_select: false,
-      cancel_on_tap_outside: true,
-      ux_mode: 'popup',
-      context: 'signup'
-    });
+    googleHandler = callback;
+    if (!googleReady) {
+      google.accounts.id.initialize({
+        client_id: cfg.clientId,
+        callback: function (resp) {
+          if (googleHandler && resp && resp.credential) googleHandler(resp.credential);
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        ux_mode: 'popup',
+        context: 'signin'
+      });
+      googleReady = true;
+    }
     google.accounts.id.renderButton(el, {
       type: 'standard',
       theme: 'outline',
       size: 'large',
-      text: 'signup_with',
+      text: (options && options.text) || 'signin_with',
       shape: 'rectangular',
-      width: 280,
+      width: 320,
       locale: 'ko'
     });
   }

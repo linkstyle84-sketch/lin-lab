@@ -3,106 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>회원가입 · 도건유튜브</title>
+  <title>계정 · 도건유튜브</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0c0a08; --ink:#f6edd6; --muted:#cbb994; --gold:#e4c36a; --line:rgba(228,195,106,.28); }
+    :root {
+      --bg: #0c0a08;
+      --ink: #f6edd6;
+      --muted: #cbb994;
+      --gold: #e4c36a;
+      --line: rgba(228, 195, 106, 0.28);
+    }
     * { box-sizing: border-box; }
-    html, body { margin:0; min-height:100%; background:radial-gradient(900px 380px at 50% -60px,#3a2410 0%,transparent 62%),var(--bg); color:var(--ink); font-family:"Noto Sans KR",sans-serif; }
-    .wrap { width:min(760px,calc(100% - 28px)); margin:0 auto; padding:36px 0 64px; }
-    a { color:var(--gold); font-weight:800; text-decoration:none; }
-    a:hover { text-decoration:underline; }
-    h1 { margin:0 0 8px; font-size:28px; font-weight:900; letter-spacing:-.03em; }
-    p, li { color:var(--muted); font-size:15px; font-weight:700; line-height:1.7; }
-    .card { margin-top:18px; padding:18px; border:1px solid var(--line); border-radius:16px; background:rgba(228,195,106,.06); }
-    label.age { display:flex; gap:10px; align-items:flex-start; color:var(--ink); font-weight:800; }
-    label.age input { margin-top:4px; }
-    #google { min-height:44px; margin-top:16px; }
-    .status { min-height:1.5em; color:var(--gold); font-weight:800; }
-    button { border:2px solid var(--gold); border-radius:14px; padding:10px 14px; background:rgba(228,195,106,.1); color:var(--gold); font:inherit; font-weight:900; cursor:pointer; }
-    .legal { margin-top:28px; text-align:center; font-size:13px; font-weight:800; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(900px 420px at 50% -80px, #3a2410 0%, transparent 62%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans KR", sans-serif;
+    }
+    .wrap { width: min(980px, calc(100% - 28px)); margin: 0 auto; padding: 28px 0 48px; }
+    .back { margin: 0 0 14px; }
+    .back a, .foot a { color: var(--gold); font-weight: 800; text-decoration: none; }
+    .back a:hover, .foot a:hover { text-decoration: underline; }
+    .account {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      min-height: 640px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #140f0c;
+    }
+    .intro {
+      padding: 42px 36px;
+      background:
+        radial-gradient(420px 220px at 20% 0%, rgba(228, 195, 106, 0.16), transparent 70%),
+        linear-gradient(180deg, #2a1c12 0%, #120e0b 100%);
+      border-right: 1px solid var(--line);
+    }
+    .brand { margin: 0 0 28px; color: var(--gold); font-size: 13px; font-weight: 900; letter-spacing: 0.16em; }
+    .intro h1 { margin: 0 0 16px; font-size: 34px; font-weight: 900; letter-spacing: -0.04em; line-height: 1.25; }
+    .intro p { margin: 0 0 22px; color: var(--muted); font-size: 15px; font-weight: 700; line-height: 1.7; }
+    .intro ul { margin: 0; padding: 0; list-style: none; }
+    .intro li { position: relative; margin: 0 0 12px; padding-left: 18px; color: var(--ink); font-size: 14px; font-weight: 800; line-height: 1.55; }
+    .intro li:before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+    .panel { padding: 28px 26px 20px; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 26px; }
+    .tabs button {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 8px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .tabs button.on { border-color: var(--gold); background: rgba(228, 195, 106, 0.16); color: var(--ink); }
+    .panel h2 { margin: 0 0 8px; font-size: 26px; font-weight: 900; letter-spacing: -0.03em; }
+    .lead { margin: 0 0 16px; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.6; }
+    .consent {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(228, 195, 106, 0.06);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.65;
+    }
+    .checks { display: grid; gap: 10px; margin: 0 0 16px; }
+    .checks label { display: flex; gap: 8px; align-items: flex-start; color: var(--ink); font-size: 14px; font-weight: 800; line-height: 1.45; }
+    .checks input { margin-top: 3px; }
+    .checks a { color: var(--gold); }
+    .need { color: #f0b4a0; font-weight: 900; }
+    .google { min-height: 44px; }
+    .hint { margin: 12px 0 0; color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.55; }
+    .status { min-height: 1.5em; margin: 12px 0 0; color: var(--gold); font-size: 14px; font-weight: 800; line-height: 1.5; }
+    .leave { margin-top: 8px; border: 0; padding: 0; background: none; color: var(--gold); font: inherit; font-weight: 800; cursor: pointer; }
+    .foot { margin: 18px 0 0; text-align: center; color: var(--muted); font-size: 13px; font-weight: 800; }
+    .view[hidden] { display: none; }
+    @media (max-width: 800px) {
+      .account { grid-template-columns: 1fr; }
+      .intro { border-right: 0; border-bottom: 1px solid var(--line); }
+      .intro h1 { font-size: 28px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <p><a href="./">처음으로</a></p>
-    <h1>회원가입</h1>
-    <p>구글 계정으로 가입합니다. 비밀번호는 받지 않습니다. 구글 계정만으로는 나이를 알 수 없어, 만 14세 이상인지를 따로 확인합니다.</p>
-    <p>저장하는 항목은 구글 이메일, 구글 식별값, 구글이 보내는 표시 이름, 가입 시각, 만 14세 이상 확인입니다. 전화번호, 주소, 주민등록번호는 받지 않습니다.</p>
-    <div class="card">
-      <label class="age"><input id="age" type="checkbox"> 만 14세 이상입니다.</label>
-      <div id="google" hidden></div>
-      <p class="status" id="status" role="status"></p>
-      <p id="who" hidden></p>
-      <button id="leave" type="button" hidden>탈퇴</button>
+    <p class="back"><a href="./">처음으로</a></p>
+    <div class="account">
+      <section class="intro">
+        <p class="brand">DOGEON LAB</p>
+        <h1>Google 계정으로 이용</h1>
+        <p>비밀번호는 이 사이트에 저장하지 않습니다. 구글이 확인한 이메일과 계정 식별값으로 회원을 구분합니다.</p>
+        <ul>
+          <li>프로필 사진은 받지 않습니다.</li>
+          <li>전화번호, 주소, 주민등록번호는 받지 않습니다.</li>
+          <li>회원 명단은 관리자만 봅니다.</li>
+        </ul>
+      </section>
+      <section class="panel">
+        <div class="tabs">
+          <button type="button" id="tab-login" class="on">로그인</button>
+          <button type="button" id="tab-join">회원가입</button>
+        </div>
+        <div id="view-login" class="view">
+          <h2>다시 오신 것을 환영합니다.</h2>
+          <p class="lead">가입할 때 사용한 Google 계정으로 계속해 주세요.</p>
+          <div id="google-login" class="google"></div>
+          <p class="hint">계속하면 Google 인증 화면으로 이동합니다. 이 사이트에는 Google 비밀번호가 전달되지 않습니다.</p>
+        </div>
+        <div id="view-join" class="view" hidden>
+          <h2>새 계정을 만듭니다.</h2>
+          <p class="lead">동의를 완료한 뒤 Google 계정을 선택하면 바로 가입됩니다.</p>
+          <div class="consent">필수 수집: Google 이메일, 계정 식별값. 구글이 표시 이름을 보내면 함께 저장합니다. 목적: 회원 식별과 로그인. 보유: 탈퇴할 때까지. 동의를 거부하면 가입할 수 없습니다.</div>
+          <div class="checks">
+            <label><input id="ok-terms" type="checkbox"> <span><a href="terms.html">이용약관</a>에 동의합니다. <b class="need">(필수)</b></span></label>
+            <label><input id="ok-privacy" type="checkbox"> <span><a href="privacy.html">개인정보 수집·이용 및 처리방침</a>에 동의합니다. <b class="need">(필수)</b></span></label>
+            <label><input id="ok-age" type="checkbox"> <span>만 14세 이상입니다. <b class="need">(필수)</b></span></label>
+          </div>
+          <div id="google-join" class="google" hidden></div>
+          <p class="hint">계속하면 Google 인증 화면으로 이동합니다. 이 사이트에는 Google 비밀번호가 전달되지 않습니다.</p>
+        </div>
+        <p class="status" id="status" role="status"></p>
+        <button id="leave" class="leave" type="button" hidden>탈퇴</button>
+      </section>
     </div>
-    <p class="legal"><a href="admin.html">관리자</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></p>
+    <p class="foot"><a href="./">홈</a> · <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="admin.html">관리자</a></p>
   </div>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script>
-    var age = document.getElementById('age');
-    var slot = document.getElementById('google');
+    var tabLogin = document.getElementById('tab-login');
+    var tabJoin = document.getElementById('tab-join');
+    var viewLogin = document.getElementById('view-login');
+    var viewJoin = document.getElementById('view-join');
     var status = document.getElementById('status');
-    var who = document.getElementById('who');
     var leave = document.getElementById('leave');
+    var checks = ['ok-terms', 'ok-privacy', 'ok-age'].map(function (id) { return document.getElementById(id); });
+    var joinSlot = document.getElementById('google-join');
+    var loginSlot = document.getElementById('google-login');
+    var mode = 'login';
     var token = '';
-    var painted = false;
+    var joinPainted = false;
+    var loginPainted = false;
 
     function say(text) { status.textContent = text || ''; }
 
-    function showMember(member) {
-      who.hidden = false;
-      who.textContent = member.email + (member.name ? ' · ' + member.name : '') + ' 으로 가입되어 있습니다.';
-      leave.hidden = false;
+    function agreed() {
+      return checks.every(function (box) { return box.checked; });
     }
 
-    age.addEventListener('change', function () {
-      if (!DgMember.connected()) {
-        say('회원 저장 서버를 연결하면 구글 버튼이 열립니다.');
-        return;
-      }
-      if (!age.checked) {
-        slot.hidden = true;
-        return;
-      }
-      slot.hidden = false;
-      if (painted) return;
-      painted = true;
-      var wait = setInterval(function () {
-        if (!window.google || !google.accounts) return;
-        clearInterval(wait);
-        try {
-          DgMember.renderGoogle(slot, function (idToken) {
-            if (!age.checked) {
-              say('만 14세 이상 확인을 먼저 해 주세요.');
-              return;
-            }
-            token = idToken;
-            say('가입 내용을 저장하는 중입니다.');
-            DgMember.call({ action: 'join', idToken: idToken, age14: true }).then(function (data) {
-              say('가입되었습니다.');
-              showMember(data.member || {});
-            }).catch(function (err) {
-              say(err.message);
-            });
-          });
-        } catch (err) {
-          say(err.message);
-        }
-      }, 200);
-    });
+    function show(next) {
+      mode = next;
+      var login = next === 'login';
+      tabLogin.className = login ? 'on' : '';
+      tabJoin.className = login ? '' : 'on';
+      viewLogin.hidden = !login;
+      viewJoin.hidden = login;
+      say('');
+    }
 
+    function paint(slot, text, flag) {
+      if (flag.done) return;
+      if (!window.google || !google.accounts) return;
+      flag.done = true;
+      DgMember.renderGoogle(slot, onCredential, { text: text });
+    }
+
+    function onCredential(idToken) {
+      if (mode === 'join' && !agreed()) {
+        say('필수 동의를 먼저 확인해 주세요.');
+        return;
+      }
+      if (!DgMember.connected()) {
+        say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
+        return;
+      }
+      token = idToken;
+      say(mode === 'join' ? '가입 내용을 저장하는 중입니다.' : '로그인 확인 중입니다.');
+      var payload = mode === 'join'
+        ? { action: 'join', idToken: idToken, age14: true }
+        : { action: 'login', idToken: idToken };
+      DgMember.call(payload).then(function (data) {
+        var member = data.member || {};
+        say((mode === 'join' ? '가입되었습니다. ' : '로그인되었습니다. ') + (member.email || ''));
+        leave.hidden = false;
+      }).catch(function (err) {
+        say(err.message);
+      });
+    }
+
+    tabLogin.addEventListener('click', function () { show('login'); });
+    tabJoin.addEventListener('click', function () { show('join'); });
+    checks.forEach(function (box) {
+      box.addEventListener('change', function () {
+        joinSlot.hidden = !agreed();
+        if (agreed()) paint(joinSlot, 'signup_with', joinFlag);
+      });
+    });
     leave.addEventListener('click', function () {
       if (!token) return;
       leave.disabled = true;
       say('탈퇴 처리 중입니다.');
       DgMember.call({ action: 'leave', idToken: token }).then(function () {
         token = '';
-        who.hidden = true;
         leave.hidden = true;
         say('탈퇴했습니다. 저장된 회원 정보를 지웠습니다.');
       }).catch(function (err) {
@@ -111,7 +224,25 @@
       });
     });
 
-    if (!DgMember.connected()) say('회원 저장 서버를 연결하면 구글 버튼이 열립니다.');
+    var loginFlag = { get done() { return loginPainted; }, set done(v) { loginPainted = v; } };
+    var joinFlag = { get done() { return joinPainted; }, set done(v) { joinPainted = v; } };
+    var wait = setInterval(function () {
+      if (!window.google || !google.accounts || !window.DgMember) return;
+      if (!(window.MEMBER_CONFIG && MEMBER_CONFIG.clientId)) {
+        clearInterval(wait);
+        say('구글 로그인 설정이 없습니다.');
+        return;
+      }
+      paint(loginSlot, 'signin_with', loginFlag);
+      if (agreed()) {
+        joinSlot.hidden = false;
+        paint(joinSlot, 'signup_with', joinFlag);
+      }
+      if (loginPainted && (!agreed() || joinPainted)) {
+        clearInterval(wait);
+        if (!DgMember.connected()) say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
+      }
+    }, 200);
   </script>
 </body>
 </html>

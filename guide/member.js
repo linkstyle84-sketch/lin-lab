@@ -81,9 +81,112 @@
     return true;
   }
 
+  function mapClsForDps(cls) {
+    if (cls === '기사' || cls === '군주') return '기사';
+    return '요정';
+  }
+
+  function defaultSheet() {
+    return {
+      name: '',
+      cls: '요정',
+      level: 1,
+      exp: 0,
+      hp: 14,
+      hpMax: 14,
+      mp: 2,
+      mpMax: 2,
+      ac: 10,
+      weight: 4,
+      food: 100,
+      str: 13,
+      dex: 10,
+      con: 10,
+      int: 10,
+      wis: 11,
+      cha: 13,
+      magicLevel: 0,
+      magicBonus: 0,
+      resistEarth: 0,
+      resistWater: 0,
+      resistFire: 0,
+      resistWind: 0,
+      alignment: '뉴트럴',
+      er: 0,
+      weaponEnchant: 0,
+      gear: {
+        helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
+        ring1: '', gloves: '', belt: '', shield: '', weapon: '',
+        ring2: '', doll: '', boots: ''
+      }
+    };
+  }
+
+  function dpsFromSheet(sheet, base) {
+    var s = sheet || defaultSheet();
+    var out = characterSnapshot(base || readDpsLocal() || {}) || {
+      arrow: 'mithril',
+      elfRanged: null,
+      elfStatMode: 'dex',
+      extraDmg: 0,
+      extraDr: 0,
+      buffs: {},
+      buffsElf: null,
+      buffsKnight: null,
+      buffsElfMelee: null,
+      rows: [],
+      rowsElf: null,
+      rowsKnight: null,
+      selectedElf: null,
+      selectedKnight: null,
+      seq: 1,
+      sortKey: null,
+      sortDir: null,
+      selectedId: null,
+      materials: {}
+    };
+    var cls = mapClsForDps(s.cls);
+    var weaponName = (s.gear && s.gear.weapon) || '';
+    var enchant = Number(s.weaponEnchant) || 0;
+    out.sheet = s;
+    out.cls = cls;
+    out.level = Number(s.level) || 1;
+    out.ac = Number(s.ac);
+    if (!Number.isFinite(out.ac)) out.ac = 10;
+    out.er = Number(s.er) || 0;
+    out.str = Number(s.str) || 10;
+    out.dex = Number(s.dex) || 10;
+    out.knightStat = out.str;
+    out.stat = cls === '기사' ? out.str : out.dex;
+    out.elfStatMode = 'dex';
+    if (weaponName) {
+      var rows = Array.isArray(out.rows) ? out.rows.slice() : [];
+      var found = rows.find(function (row) { return row && row.name === weaponName; });
+      if (found) {
+        found.enchant = enchant;
+        out.selectedId = found.id;
+      } else {
+        var id = (out.seq || 1) + 1;
+        out.seq = id;
+        rows.unshift({ id: id, name: weaponName, enchant: enchant, transform: '' });
+        out.selectedId = id;
+      }
+      out.rows = rows;
+      if (cls === '기사') {
+        out.rowsKnight = rows;
+        out.selectedKnight = out.selectedId;
+      } else {
+        out.rowsElf = rows;
+        out.selectedElf = out.selectedId;
+      }
+    }
+    return out;
+  }
+
   function characterSnapshot(source) {
     if (!source || typeof source !== 'object') return null;
     return {
+      sheet: source.sheet || null,
       cls: source.cls,
       level: source.level,
       stat: source.stat,
@@ -208,6 +311,9 @@
     clearCharacterCache: clearCharacterCache,
     readDpsLocal: readDpsLocal,
     writeDpsLocal: writeDpsLocal,
-    characterSnapshot: characterSnapshot
+    characterSnapshot: characterSnapshot,
+    defaultSheet: defaultSheet,
+    dpsFromSheet: dpsFromSheet,
+    mapClsForDps: mapClsForDps
   };
 })();

@@ -276,6 +276,7 @@
 <body>
   <div class="wrap">
     <div class="topbar" id="topbar">
+      <a href="character.html">내 캐릭터</a>
       <a href="join.html#login">로그인</a>
       <a href="join.html#join">회원가입</a>
     </div>
@@ -338,6 +339,10 @@
       bar.innerHTML = '';
       var box = document.createElement('span');
       box.className = 'topbar-user';
+      var charLink = document.createElement('a');
+      charLink.href = 'character.html';
+      charLink.textContent = '내 캐릭터';
+      bar.appendChild(charLink);
       box.innerHTML = '<b></b><span class="on"></span><button type="button">로그아웃</button>';
       box.querySelector('b').textContent = label;
       box.querySelector('span').textContent = '로그인 중';

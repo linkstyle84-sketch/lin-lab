@@ -1,5 +1,7 @@
 (function () {
   var SESSION_KEY = 'dg-member-session';
+  var CHARACTER_KEY = 'dg-character';
+  var DPS_KEY = 'lin-dps-html-v2';
 
   function config() {
     return window.MEMBER_CONFIG || {};
@@ -34,6 +36,82 @@
 
   function clearSession() {
     localStorage.removeItem(SESSION_KEY);
+  }
+
+  function getCharacterCache() {
+    try {
+      var raw = localStorage.getItem(CHARACTER_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !data.data) return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setCharacterCache(memberEmail, character, updatedAt) {
+    if (!character || typeof character !== 'object') return;
+    localStorage.setItem(CHARACTER_KEY, JSON.stringify({
+      email: String(memberEmail || '').trim().toLowerCase(),
+      updatedAt: updatedAt || new Date().toISOString(),
+      data: character
+    }));
+  }
+
+  function clearCharacterCache() {
+    localStorage.removeItem(CHARACTER_KEY);
+  }
+
+  function readDpsLocal() {
+    try {
+      var raw = localStorage.getItem(DPS_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.rows)) return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeDpsLocal(character) {
+    if (!character || !Array.isArray(character.rows)) return false;
+    localStorage.setItem(DPS_KEY, JSON.stringify(character));
+    return true;
+  }
+
+  function characterSnapshot(source) {
+    if (!source || typeof source !== 'object') return null;
+    return {
+      cls: source.cls,
+      level: source.level,
+      stat: source.stat,
+      ac: source.ac,
+      er: source.er,
+      arrow: source.arrow,
+      elfRanged: source.elfRanged,
+      elfStatMode: source.elfStatMode,
+      dex: source.dex,
+      str: source.str,
+      knightStat: source.knightStat,
+      extraDmg: source.extraDmg,
+      extraDr: source.extraDr,
+      buffs: source.buffs,
+      buffsElf: source.buffsElf,
+      buffsKnight: source.buffsKnight,
+      buffsElfMelee: source.buffsElfMelee,
+      rows: source.rows,
+      rowsElf: source.rowsElf,
+      rowsKnight: source.rowsKnight,
+      selectedElf: source.selectedElf,
+      selectedKnight: source.selectedKnight,
+      seq: source.seq,
+      sortKey: source.sortKey,
+      sortDir: source.sortDir,
+      selectedId: source.selectedId,
+      materials: source.materials || {}
+    };
   }
 
   function call(payload) {
@@ -124,6 +202,12 @@
     renderGoogle: renderGoogle,
     getSession: getSession,
     setSession: setSession,
-    clearSession: clearSession
+    clearSession: clearSession,
+    getCharacterCache: getCharacterCache,
+    setCharacterCache: setCharacterCache,
+    clearCharacterCache: clearCharacterCache,
+    readDpsLocal: readDpsLocal,
+    writeDpsLocal: writeDpsLocal,
+    characterSnapshot: characterSnapshot
   };
 })();

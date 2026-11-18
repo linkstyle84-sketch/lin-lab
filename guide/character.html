@@ -233,7 +233,7 @@
     .er-box input { width: 64px; }
     .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin: 14px 0 0;
     }
@@ -410,15 +410,12 @@
           </div>
         </div>
       </section>
-      <p class="hint">레벨·스탯은 왼쪽에서 고르고, 무기·방어구·장신구 칸을 누르면 아이템 DB에서 선택할 수 있습니다. 저장하면 계정에 남고, DPS 측정기에는 클래스·레벨·Str/Dex·AC·ER·무기가 자동 반영됩니다.</p>
-      <div id="google" class="google"></div>
+      <p class="hint">레벨·스탯은 왼쪽에서 고르고, 무기·방어구·장신구 칸을 누르면 아이템 DB에서 선택합니다. 저장하면 DPS 측정기를 열 때 자동으로 반영됩니다.</p>
       <div class="actions">
-        <button type="button" id="btn-save">계정에 저장</button>
-        <button type="button" id="btn-pull">계정에서 불러오기</button>
-        <button type="button" id="btn-apply">측정기에 적용</button>
-        <a class="btn" href="/dps/">측정기 열기</a>
-        <button type="button" id="btn-clear" class="danger wide">계정 캐릭터 삭제</button>
+        <button type="button" id="btn-save">내 캐릭터 저장하기</button>
+        <button type="button" id="btn-clear" class="danger">내 캐릭터 삭제하기</button>
       </div>
+      <div id="google" class="google" hidden></div>
       <p class="status" id="status" role="status"></p>
     </div>
     <p class="foot"><a href="./">홈</a> · <a href="join.html#login">로그인</a> · <a href="/dps/">DPS 측정기</a></p>
@@ -476,6 +473,7 @@
     var sheet = null;
     var token = '';
     var painted = false;
+    var pendingCloudSave = false;
     var editKey = '';
     var picked = null;
     var status = document.getElementById('status');
@@ -639,12 +637,6 @@
       picked = null;
     }
 
-    function needToken() {
-      if (token) return true;
-      say('먼저 Google 확인 버튼을 눌러 주세요.');
-      return false;
-    }
-
     function buildPayload() {
       var form = readForm();
       var payload = DgMember.dpsFromSheet(form);
@@ -691,53 +683,87 @@
     });
     modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
 
-    document.getElementById('btn-save').addEventListener('click', function () {
-      if (!needToken()) return;
-      var payload = buildPayload();
-      say('계정에 저장하는 중입니다.');
-      DgMember.call({ action: 'character_save', idToken: token, character: payload }).then(function (data) {
-        var session = DgMember.getSession() || {};
-        var saved = data.character || payload;
-        DgMember.setCharacterCache(session.email, saved, data.updated_at);
-        DgMember.writeDpsLocal(saved);
-        if (saved.sheet) fillForm(saved.sheet);
-        say('계정에 저장했습니다. 측정기에도 반영해 두었습니다.');
-      }).catch(function (err) { say(err.message); });
-    });
-
-    document.getElementById('btn-pull').addEventListener('click', function () {
-      if (!needToken()) return;
-      say('계정에서 불러오는 중입니다.');
-      DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
-        var session = DgMember.getSession() || {};
-        if (!data.character) {
-          say('계정에 저장된 캐릭터가 없습니다.');
-          return;
-        }
-        DgMember.setCharacterCache(session.email, data.character, data.updated_at);
-        DgMember.writeDpsLocal(data.character);
-        fillForm((data.character && data.character.sheet) || DgMember.defaultSheet());
-        say('불러왔습니다.');
-      }).catch(function (err) { say(err.message); });
-    });
-
-    document.getElementById('btn-apply').addEventListener('click', function () {
-      var payload = buildPayload();
+    function saveLocal(payload) {
       var session = DgMember.getSession() || {};
       DgMember.setCharacterCache(session.email, payload);
       DgMember.writeDpsLocal(payload);
-      say('측정기에 적용했습니다. 측정기 페이지를 열어 주세요.');
+    }
+
+    function saveToCloud(payload) {
+      say('내 캐릭터를 저장하는 중입니다.');
+      return DgMember.call({ action: 'character_save', idToken: token, character: payload }).then(function (data) {
+        var saved = data.character || payload;
+        saveLocal(saved);
+        if (saved.sheet) fillForm(saved.sheet);
+        document.getElementById('google').hidden = true;
+        pendingCloudSave = false;
+        say('저장했습니다. DPS 측정기를 열면 자동으로 반영됩니다.');
+      });
+    }
+
+    function ensureGoogle(show) {
+      var box = document.getElementById('google');
+      if (!show) {
+        box.hidden = true;
+        return;
+      }
+      box.hidden = false;
+      if (painted || !window.google || !google.accounts || !(window.MEMBER_CONFIG && MEMBER_CONFIG.clientId)) return;
+      painted = true;
+      DgMember.renderGoogle(box, function (idToken) {
+        token = idToken;
+        if (pendingCloudSave) {
+          saveToCloud(buildPayload()).catch(function (err) { say(err.message); });
+          return;
+        }
+        DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
+          var session = DgMember.getSession() || {};
+          if (data.character) {
+            DgMember.setCharacterCache(session.email, data.character, data.updated_at);
+            DgMember.writeDpsLocal(data.character);
+            fillForm(data.character.sheet || DgMember.defaultSheet());
+            say('계정 캐릭터를 불러왔습니다. DPS 측정기에도 반영됩니다.');
+          } else {
+            say('Google 확인됨. 저장할 수 있습니다.');
+          }
+          box.hidden = true;
+        }).catch(function () {
+          say('Google 확인됨. 저장할 수 있습니다.');
+        });
+      }, { text: 'signin_with', width: 320 });
+    }
+
+    document.getElementById('btn-save').addEventListener('click', function () {
+      var payload = buildPayload();
+      saveLocal(payload);
+      if (!DgMember.connected()) {
+        say('저장했습니다. DPS 측정기를 열면 자동으로 반영됩니다.');
+        return;
+      }
+      if (!token) {
+        pendingCloudSave = true;
+        ensureGoogle(true);
+        say('이 기기 측정기에는 반영됐습니다. 계정에도 남기려면 Google 확인을 눌러 주세요.');
+        return;
+      }
+      saveToCloud(payload).catch(function (err) { say(err.message); });
     });
 
     document.getElementById('btn-clear').addEventListener('click', function () {
-      if (!needToken()) return;
-      if (!window.confirm('계정에 저장된 내 캐릭터를 삭제할까요?')) return;
-      say('삭제하는 중입니다.');
-      DgMember.call({ action: 'character_clear', idToken: token }).then(function () {
+      if (!window.confirm('내 캐릭터를 삭제할까요?')) return;
+      function done() {
         DgMember.clearCharacterCache();
         fillForm(DgMember.defaultSheet());
-        say('계정 캐릭터를 삭제했습니다.');
-      }).catch(function (err) { say(err.message); });
+        say('내 캐릭터를 삭제했습니다.');
+      }
+      if (token && DgMember.connected()) {
+        say('삭제하는 중입니다.');
+        DgMember.call({ action: 'character_clear', idToken: token }).then(done).catch(function (err) {
+          say(err.message);
+        });
+        return;
+      }
+      done();
     });
 
     var wait = setInterval(function () {
@@ -752,24 +778,10 @@
       var cache = DgMember.getCharacterCache();
       if (cache && cache.data && cache.data.sheet && (!cache.email || cache.email === session.email)) {
         fillForm(cache.data.sheet);
+        DgMember.writeDpsLocal(cache.data);
       } else {
         fillForm(DgMember.defaultSheet());
       }
-      var ready = setInterval(function () {
-        if (!window.google || !google.accounts || painted) return;
-        if (!(window.MEMBER_CONFIG && MEMBER_CONFIG.clientId)) {
-          clearInterval(ready);
-          say('구글 로그인 설정이 없습니다.');
-          return;
-        }
-        painted = true;
-        clearInterval(ready);
-        DgMember.renderGoogle(document.getElementById('google'), function (idToken) {
-          token = idToken;
-          say('Google 확인됨. 저장하거나 불러올 수 있습니다.');
-        }, { text: 'signin_with', width: 320 });
-        if (!DgMember.connected()) say('회원 저장 서버를 연결하면 계정 동기화가 됩니다.');
-      }, 200);
     }, 100);
   </script>
 </body>

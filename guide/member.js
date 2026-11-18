@@ -1,4 +1,6 @@
 (function () {
+  var SESSION_KEY = 'dg-member-session';
+
   function config() {
     return window.MEMBER_CONFIG || {};
   }
@@ -6,6 +8,32 @@
   function connected() {
     var cfg = config();
     return !!(cfg.clientId && cfg.scriptUrl);
+  }
+
+  function getSession() {
+    try {
+      var raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || !data.email) return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setSession(member) {
+    var email = String((member && member.email) || '').trim().toLowerCase();
+    if (!email) return;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      email: email,
+      name: String((member && member.name) || '').slice(0, 80),
+      at: Date.now()
+    }));
+  }
+
+  function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
   }
 
   function call(payload) {
@@ -93,6 +121,9 @@
   window.DgMember = {
     connected: connected,
     call: call,
-    renderGoogle: renderGoogle
+    renderGoogle: renderGoogle,
+    getSession: getSession,
+    setSession: setSession,
+    clearSession: clearSession
   };
 })();

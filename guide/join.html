@@ -211,13 +211,9 @@
         : { action: 'login', idToken: idToken };
       DgMember.call(payload).then(function (data) {
         var member = data.member || {};
-        if (mode === 'join') {
-          say('가입되었습니다. 홈으로 이동합니다.');
-          window.setTimeout(function () { location.href = './'; }, 500);
-          return;
-        }
-        say('로그인되었습니다. ' + (member.email || ''));
-        leave.hidden = false;
+        DgMember.setSession(member);
+        say((mode === 'join' ? '가입되었습니다. ' : '로그인되었습니다. ') + '홈으로 이동합니다.');
+        window.setTimeout(function () { location.href = './'; }, 500);
       }).catch(function (err) {
         say(err.message);
       });
@@ -248,6 +244,7 @@
       DgMember.call({ action: 'leave', idToken: token }).then(function () {
         token = '';
         leave.hidden = true;
+        DgMember.clearSession();
         say('탈퇴했습니다. 저장된 회원 정보를 지웠습니다.');
       }).catch(function (err) {
         leave.disabled = false;

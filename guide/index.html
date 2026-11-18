@@ -47,6 +47,31 @@
       text-decoration: none;
     }
     .topbar a:hover { border-color: var(--gold); color: var(--gold); }
+    .topbar-user {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: rgba(228, 195, 106, 0.14);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .topbar-user b { color: var(--gold); font-weight: 900; }
+    .topbar-user button {
+      border: 0;
+      padding: 0;
+      background: none;
+      color: var(--muted);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .topbar-user button:hover { color: var(--gold); text-decoration: underline; }
     .tools { display: grid; gap: 12px; }
     .tool {
       display: block;
@@ -251,7 +276,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="topbar">
+    <div class="topbar" id="topbar">
       <a href="join.html#login">로그인</a>
       <a href="join.html#join">회원가입</a>
     </div>
@@ -303,8 +328,26 @@
   <div class="soon" id="soon" hidden>
     <p class="soon-card" role="dialog" aria-modal="true">업데이트 준비중 입니다.</p>
   </div>
+  <script src="member.js"></script>
   <script src="../count.js?v=3"></script>
   <script>
+    (function () {
+      var bar = document.getElementById('topbar');
+      var session = window.DgMember && DgMember.getSession && DgMember.getSession();
+      if (!bar || !session || !session.email) return;
+      var label = session.name || session.email;
+      bar.innerHTML = '';
+      var box = document.createElement('span');
+      box.className = 'topbar-user';
+      box.innerHTML = '<b></b><span></span><button type="button">로그아웃</button>';
+      box.querySelector('b').textContent = label;
+      box.querySelector('span').textContent = '로그인 중';
+      box.querySelector('button').addEventListener('click', function () {
+        DgMember.clearSession();
+        location.reload();
+      });
+      bar.appendChild(box);
+    })();
     function paintCount(key, n) {
       document.getElementById(key).textContent = n == null ? '-' : String(n);
     }

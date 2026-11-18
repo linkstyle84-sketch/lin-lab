@@ -212,18 +212,8 @@
       DgMember.call(payload).then(function (data) {
         var member = data.member || {};
         DgMember.setSession(member);
-        say((mode === 'join' ? '가입되었습니다. ' : '로그인되었습니다. ') + '캐릭터를 확인하는 중입니다.');
-        return DgMember.call({ action: 'character_load', idToken: idToken }).then(function (charData) {
-          if (charData.character) {
-            DgMember.setCharacterCache(member.email, charData.character, charData.updated_at);
-            DgMember.writeDpsLocal(charData.character);
-          }
-        }).catch(function () {
-          /* 캐릭터 스크립트가 아직 없으면 로그인만 유지 */
-        }).then(function () {
-          say((mode === 'join' ? '가입되었습니다. ' : '로그인되었습니다. ') + '홈으로 이동합니다.');
-          window.setTimeout(function () { location.href = './'; }, 500);
-        });
+        try { sessionStorage.setItem('dg-id-token', idToken); } catch (e) {}
+        location.replace('./');
       }).catch(function (err) {
         say(err.message);
       });

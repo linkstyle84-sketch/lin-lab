@@ -351,6 +351,18 @@
         location.reload();
       });
       bar.appendChild(box);
+      var token = '';
+      try {
+        token = sessionStorage.getItem('dg-id-token') || '';
+        if (token) sessionStorage.removeItem('dg-id-token');
+      } catch (e) {}
+      if (token && DgMember.connected && DgMember.connected()) {
+        DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
+          if (!data.character) return;
+          DgMember.setCharacterCache(session.email, data.character, data.updated_at);
+          DgMember.writeDpsLocal(data.character);
+        }).catch(function () {});
+      }
     })();
     function paintCount(key, n) {
       document.getElementById(key).textContent = n == null ? '-' : String(n);

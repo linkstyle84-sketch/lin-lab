@@ -50,6 +50,8 @@
       font-weight: 800;
     }
     .toolbar input[type="text"] { width: min(220px, 100%); }
+    .name-field { display: grid; gap: 4px; min-width: min(260px, 100%); }
+    .name-field .note { color: var(--muted); font-size: 12px; font-weight: 700; line-height: 1.4; }
     .sheet {
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -322,7 +324,10 @@
             <option value="마법사">마법사</option>
           </select>
         </label>
-        <input id="name" type="text" placeholder="캐릭터 이름" maxlength="24">
+        <label class="name-field">캐릭터 이름
+          <input id="name" type="text" placeholder="캐릭터 이름" maxlength="24" aria-describedby="name-note">
+          <span class="note" id="name-note">인게임 캐릭명과 동일하지 않아도 됩니다.</span>
+        </label>
       </div>
       <section class="sheet" aria-label="캐릭터 정보">
         <div class="sheet-top">

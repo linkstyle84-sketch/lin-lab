@@ -28,8 +28,25 @@
     .wrap {
       width: min(760px, calc(100% - 28px));
       margin: 0 auto;
-      padding: 48px 0 56px;
+      padding: 18px 0 56px;
     }
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .topbar a {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 16px;
+      background: rgba(228, 195, 106, 0.1);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+    .topbar a:hover { border-color: var(--gold); color: var(--gold); }
     .tools { display: grid; gap: 12px; }
     .tool {
       display: block;
@@ -234,6 +251,10 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="topbar">
+      <a href="join.html">로그인</a>
+      <a href="join.html#join">회원가입</a>
+    </div>
     <div class="banner-row">
       <img src="banner.png?v=2" alt="리니지클래식 연구소">
       <a class="member-cta" href="https://www.youtube.com/channel/UCk6f0jViRYWOi5BcHaDLZXQ/join" target="_blank" rel="noopener">
@@ -275,7 +296,7 @@
       <span class="site-note">본 사이트는 '도건유튜브' 와 '리니지 클래식'의 팬 사이트 입니다.<br>
       "게임 개발사 또는 서비스사"와는 전혀 무관합니다.</span>
       <span class="site-note">건의사항 또는 버그 및 오류제보는 <a href="feedback.html">피드백 게시판</a>을 이용해주세요.</span>
-      <span class="site-note"><a href="join.html">회원가입</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></span>
+      <span class="site-note"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></span>
     </p>
     <p class="counts" hidden><span>방문자 수: <b id="guide">…</b></span><span>무기 DPS 측정기 방문자수: <b id="tool">…</b></span></p>
   </div>

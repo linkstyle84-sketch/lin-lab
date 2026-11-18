@@ -146,8 +146,10 @@
       materials: {}
     };
     var cls = mapClsForDps(s.cls);
-    var weaponName = (s.gear && s.gear.weapon) || '';
+    var weaponRaw = s.gear && s.gear.weapon;
+    var weaponName = !weaponRaw ? '' : (typeof weaponRaw === 'string' ? weaponRaw : (weaponRaw.name || weaponRaw.n || ''));
     var enchant = Number(s.weaponEnchant) || 0;
+    if (!enchant && weaponRaw && typeof weaponRaw === 'object') enchant = Number(weaponRaw.enchant) || 0;
     out.sheet = s;
     out.cls = cls;
     out.level = Number(s.level) || 1;

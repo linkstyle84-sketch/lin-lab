@@ -275,7 +275,9 @@
       padding: 20px;
     }
     .modal {
-      width: min(420px, 100%);
+      width: min(480px, 100%);
+      max-height: min(820px, calc(100vh - 40px));
+      overflow: auto;
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 16px;
@@ -293,6 +295,37 @@
       font: inherit;
       font-weight: 800;
     }
+    .pick-list {
+      display: grid;
+      gap: 6px;
+      max-height: 360px;
+      overflow: auto;
+      margin: 0 0 10px;
+      padding: 4px;
+      border: 1px solid rgba(228,195,106,.16);
+      border-radius: 12px;
+      background: #100c09;
+    }
+    .pick-item {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 8px;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+    }
+    .pick-item:hover, .pick-item.on { border-color: var(--gold); background: rgba(228,195,106,.1); }
+    .pick-item img { width: 32px; height: 32px; object-fit: contain; }
+    .pick-item .meta { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .pick-empty { padding: 16px 8px; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center; }
     .modal .row-actions { display: flex; gap: 8px; }
     .modal .row-actions button { flex: 1; }
     [hidden] { display: none !important; }
@@ -377,7 +410,7 @@
           </div>
         </div>
       </section>
-      <p class="hint">장비 칸을 누르면 이름을 넣을 수 있습니다. 저장하면 계정에 남고, DPS 측정기에는 클래스·레벨·Str/Dex·AC·ER·무기가 자동 반영됩니다.</p>
+      <p class="hint">레벨·스탯은 왼쪽에서 고르고, 무기·방어구·장신구 칸을 누르면 아이템 DB에서 선택할 수 있습니다. 저장하면 계정에 남고, DPS 측정기에는 클래스·레벨·Str/Dex·AC·ER·무기가 자동 반영됩니다.</p>
       <div id="google" class="google"></div>
       <div class="actions">
         <button type="button" id="btn-save">계정에 저장</button>
@@ -392,21 +425,38 @@
   </div>
   <div class="modal-bg" id="modal" hidden>
     <div class="modal" role="dialog" aria-modal="true">
-      <h2 id="modal-title">장비</h2>
-      <input id="modal-input" type="text" maxlength="40" placeholder="아이템 이름">
+      <h2 id="modal-title">장비 선택</h2>
+      <input id="modal-search" type="search" placeholder="이름 검색" aria-label="아이템 검색">
+      <div class="pick-list" id="pick-list"></div>
       <label class="hint" id="enchant-wrap" hidden>강화
         <input id="modal-enchant" type="number" min="0" max="15" step="1" value="0">
       </label>
       <div class="row-actions">
         <button type="button" id="modal-clear">비우기</button>
-        <button type="button" id="modal-ok">확인</button>
+        <button type="button" id="modal-ok">선택 확정</button>
       </div>
     </div>
   </div>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
+  <script src="db-stack.js"></script>
   <script>
+    var SLOT_CATS = {
+      helmet: ['투구'],
+      necklace: ['목걸이'],
+      shirt: ['티셔츠'],
+      armor: ['갑옷'],
+      cloak: ['망토'],
+      ring1: ['반지'],
+      ring2: ['반지'],
+      gloves: ['장갑'],
+      belt: ['벨트'],
+      shield: ['방패'],
+      weapon: ['한손검', '양손검', '둔기', '창', '활', '단검', '지팡이'],
+      boots: ['부츠'],
+      doll: []
+    };
     var SLOTS = [
       { key: 'helmet', label: '투구', cls: 's-helm' },
       { key: 'necklace', label: '목걸이', cls: 's-neck' },
@@ -427,15 +477,26 @@
     var token = '';
     var painted = false;
     var editKey = '';
+    var picked = null;
     var status = document.getElementById('status');
     var gearEl = document.getElementById('gear');
     var modal = document.getElementById('modal');
+    var pickList = document.getElementById('pick-list');
 
     function say(text) { status.textContent = text || ''; }
     function num(id) {
       var el = document.getElementById(id);
       if (!el) return 0;
       return Number(el.value);
+    }
+    function gearLabel(value) {
+      if (!value) return '';
+      if (typeof value === 'string') return value;
+      return value.name || value.n || '';
+    }
+    function gearIcon(value) {
+      if (!value || typeof value === 'string') return '';
+      return value.icon || value.i || '';
     }
 
     function fillForm(data) {
@@ -469,32 +530,113 @@
       SLOTS.forEach(function (slot) {
         var btn = document.createElement('button');
         var value = (sheet.gear && sheet.gear[slot.key]) || '';
+        var label = gearLabel(value);
+        var icon = gearIcon(value);
         btn.type = 'button';
-        btn.className = 'slot ' + slot.cls + (value ? '' : ' empty');
+        btn.className = 'slot ' + slot.cls + (label ? '' : ' empty');
         btn.dataset.key = slot.key;
         btn.innerHTML = '<span class="k"></span><span class="v"></span>';
         btn.querySelector('.k').textContent = slot.label;
-        btn.querySelector('.v').textContent = value
-          ? (slot.key === 'weapon' && sheet.weaponEnchant ? value + ' +' + sheet.weaponEnchant : value)
-          : slot.label;
+        if (icon) {
+          var img = document.createElement('img');
+          img.src = 'item-icons/' + icon;
+          img.alt = '';
+          img.width = 28;
+          img.height = 28;
+          img.style.display = 'block';
+          img.style.margin = '0 auto 4px';
+          btn.querySelector('.v').appendChild(img);
+        }
+        btn.querySelector('.v').appendChild(document.createTextNode(
+          label
+            ? (slot.key === 'weapon' && sheet.weaponEnchant ? label + ' +' + sheet.weaponEnchant : label)
+            : slot.label
+        ));
         btn.addEventListener('click', function () { openSlot(slot.key, slot.label); });
         gearEl.appendChild(btn);
       });
     }
 
+    function itemListForSlot(key, query) {
+      var cats = SLOT_CATS[key] || [];
+      var q = String(query || '').trim().toLowerCase();
+      var out = [];
+      var src = window.DBITEMS || {};
+      Object.keys(src).forEach(function (id) {
+        var it = src[id];
+        if (!it || !it.n) return;
+        if (key === 'doll') {
+          if (it.n.indexOf('인형') === -1) return;
+        } else if (cats.length && cats.indexOf(it.c) === -1) return;
+        if (q && it.n.toLowerCase().indexOf(q) === -1) return;
+        out.push({
+          id: id,
+          name: it.n,
+          icon: it.i || '',
+          cat: it.c || '',
+          ac: it.a != null ? Number(it.a) : null,
+          opt: Array.isArray(it.o) ? it.o.join(', ') : ''
+        });
+      });
+      out.sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); });
+      return out.slice(0, 120);
+    }
+
+    function renderPickList() {
+      var q = document.getElementById('modal-search').value;
+      var list = itemListForSlot(editKey, q);
+      pickList.innerHTML = '';
+      if (!list.length) {
+        pickList.innerHTML = '<div class="pick-empty">검색 결과가 없습니다.</div>';
+        return;
+      }
+      list.forEach(function (it) {
+        var btn = document.createElement('button');
+        var selected = picked && String(picked.id) === String(it.id);
+        btn.type = 'button';
+        btn.className = 'pick-item' + (selected ? ' on' : '');
+        btn.innerHTML = (it.icon ? '<img alt="">' : '<span></span>') +
+          '<span><b></b><div class="meta"></div></span><span class="meta"></span>';
+        if (it.icon) btn.querySelector('img').src = 'item-icons/' + it.icon;
+        btn.querySelector('b').textContent = it.name;
+        btn.querySelector('.meta').textContent = it.cat + (it.ac != null ? ' · AC ' + (-it.ac) : '');
+        btn.lastChild.textContent = it.opt || '';
+        btn.addEventListener('click', function () {
+          picked = it;
+          renderPickList();
+        });
+        pickList.appendChild(btn);
+      });
+    }
+
+    function recomputeAc() {
+      var sum = 0;
+      var gear = (sheet && sheet.gear) || {};
+      Object.keys(gear).forEach(function (key) {
+        var g = gear[key];
+        if (g && typeof g === 'object' && g.ac != null) sum += Number(g.ac) || 0;
+      });
+      document.getElementById('ac').value = 10 - sum;
+    }
+
     function openSlot(key, label) {
       editKey = key;
-      document.getElementById('modal-title').textContent = label;
-      document.getElementById('modal-input').value = (sheet.gear && sheet.gear[key]) || '';
+      picked = null;
+      var current = sheet.gear && sheet.gear[key];
+      if (current && typeof current === 'object') picked = current;
+      document.getElementById('modal-title').textContent = label + ' 선택';
+      document.getElementById('modal-search').value = '';
       document.getElementById('enchant-wrap').hidden = key !== 'weapon';
-      document.getElementById('modal-enchant').value = sheet.weaponEnchant || 0;
+      document.getElementById('modal-enchant').value = sheet.weaponEnchant || (picked && picked.enchant) || 0;
       modal.hidden = false;
-      document.getElementById('modal-input').focus();
+      renderPickList();
+      document.getElementById('modal-search').focus();
     }
 
     function closeModal() {
       modal.hidden = true;
       editKey = '';
+      picked = null;
     }
 
     function needToken() {
@@ -518,11 +660,23 @@
       });
     });
 
+    document.getElementById('modal-search').addEventListener('input', renderPickList);
     document.getElementById('modal-ok').addEventListener('click', function () {
       if (!editKey) return;
+      if (!picked || !picked.name) {
+        say('목록에서 아이템을 선택해 주세요.');
+        return;
+      }
       sheet = readForm();
-      sheet.gear[editKey] = document.getElementById('modal-input').value.trim();
+      sheet.gear[editKey] = {
+        id: picked.id,
+        name: picked.name,
+        icon: picked.icon || '',
+        ac: picked.ac,
+        enchant: editKey === 'weapon' ? (Number(document.getElementById('modal-enchant').value) || 0) : 0
+      };
       if (editKey === 'weapon') sheet.weaponEnchant = Number(document.getElementById('modal-enchant').value) || 0;
+      recomputeAc();
       paintGear();
       closeModal();
     });
@@ -531,6 +685,7 @@
       sheet = readForm();
       sheet.gear[editKey] = '';
       if (editKey === 'weapon') sheet.weaponEnchant = 0;
+      recomputeAc();
       paintGear();
       closeModal();
     });

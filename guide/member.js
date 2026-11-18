@@ -35,7 +35,16 @@
   }
 
   function clearSession() {
+    var prev = getSession();
     localStorage.removeItem(SESSION_KEY);
+    try {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+        if (prev && prev.email) {
+          google.accounts.id.revoke(prev.email, function () {});
+        }
+      }
+    } catch (e) {}
   }
 
   function getCharacterCache() {
@@ -286,17 +295,44 @@
         auto_select: false,
         cancel_on_tap_outside: true,
         ux_mode: 'popup',
-        context: 'signin'
+        context: 'signin',
+        use_fedcm_for_prompt: false
       });
       googleReady = true;
     }
-    google.accounts.id.renderButton(el, {
+    try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+
+    var width = (options && options.width) || 320;
+    var textKey = (options && options.text) || 'signin_with';
+    var label = textKey === 'signup_with' ? 'Google 계정으로 가입하기' : 'Google 계정으로 로그인';
+    el.innerHTML = '';
+    el.style.position = 'relative';
+    el.style.width = width + 'px';
+    el.style.maxWidth = '100%';
+    el.style.height = '44px';
+
+    var face = document.createElement('div');
+    face.setAttribute('aria-hidden', 'true');
+    face.style.cssText = [
+      'position:absolute', 'inset:0', 'display:flex', 'align-items:center', 'justify-content:center',
+      'gap:10px', 'border:1px solid #dadce0', 'border-radius:4px', 'background:#fff',
+      'color:#3c4043', 'font:500 14px/1 "Noto Sans KR", Arial, sans-serif',
+      'box-shadow:0 1px 2px rgba(0,0,0,.08)', 'pointer-events:none', 'user-select:none'
+    ].join(';');
+    face.innerHTML = '<span style="width:18px;height:18px;display:inline-block;background:url(https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg) center/contain no-repeat"></span><span></span>';
+    face.lastChild.textContent = label;
+
+    var hit = document.createElement('div');
+    hit.style.cssText = 'position:absolute;inset:0;opacity:0.02;overflow:hidden';
+    el.appendChild(face);
+    el.appendChild(hit);
+    google.accounts.id.renderButton(hit, {
       type: 'standard',
       theme: 'outline',
       size: 'large',
-      text: (options && options.text) || 'signin_with',
+      text: textKey,
       shape: 'rectangular',
-      width: (options && options.width) || 320,
+      width: width,
       locale: 'ko'
     });
   }

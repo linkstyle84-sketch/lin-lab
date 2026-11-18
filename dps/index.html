@@ -2616,7 +2616,9 @@ function accountCharacterReady() {
 }
 
 function tryApplyAccountCharacter() {
-  const data = accountCharacterReady();
+  let data = accountCharacterReady();
+  if (!data) return false;
+  if (data.sheet && DgMember.dpsFromSheet) data = DgMember.dpsFromSheet(data.sheet, data);
   if (!data || !Array.isArray(data.rows)) return false;
   Object.assign(state, data);
   if (!state.materials) state.materials = {};

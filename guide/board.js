@@ -314,10 +314,8 @@
       if (cached) {
         say('');
         openDetail(cached);
-      } else {
-        say('글을 불러오는 중입니다.');
       }
-      DgMember.call({ action: 'board_get', id: id }).then(function (res) {
+      fetchPost(id).then(function (res) {
         say('');
         openDetail(res.post);
       }).catch(function (err) {
@@ -344,27 +342,37 @@
       });
     }
 
+    function fetchList() {
+      if (DgMember.callJsonp) {
+        return DgMember.callJsonp({ action: 'board_list', board: board });
+      }
+      return DgMember.call({ action: 'board_list', board: board });
+    }
+
+    function fetchPost(id) {
+      if (DgMember.callJsonp) {
+        return DgMember.callJsonp({ action: 'board_get', id: id });
+      }
+      return DgMember.call({ action: 'board_get', id: id });
+    }
+
     function loadList(opts) {
       var silent = opts && opts.silent;
       show('list');
       var cached = readListCache();
-      if (cached) {
-        paintPosts(cached);
-        if (!silent) say('');
-      } else if (!silent) {
-        listEl.innerHTML = '<li class="empty">글 목록을 불러오는 중입니다.</li>';
-        countEl.textContent = '…';
-      }
-      DgMember.call({ action: 'board_list', board: board }).then(function (data) {
+      /* 화면은 즉시: 캐시 또는 빈 목록. '불러오는 중'은 쓰지 않음 */
+      paintPosts(cached || []);
+      if (!silent) say('');
+      fetchList().then(function (data) {
         var posts = data.posts || [];
         writeListCache(posts);
         paintPosts(posts);
         say('');
       }).catch(function (err) {
         if (!cached) {
+          paintPosts([]);
           say(err.message);
-          listEl.innerHTML = '<li class="empty">목록을 불러오지 못했습니다.</li>';
-        } else {
+        } else if (!silent) {
           say('최신 목록 갱신에 실패했습니다. 캐시된 글을 보여 줍니다.');
         }
       });

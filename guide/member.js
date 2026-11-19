@@ -313,6 +313,58 @@
     });
   }
 
+  /* 공개 읽기(목록/상세): iframe POST 대신 JSONP GET — 대기 화면 없이 빠르게 */
+  function callJsonp(params) {
+    var cfg = config();
+    if (!connected()) return Promise.reject(new Error('회원 저장 서버가 아직 연결되지 않았습니다.'));
+    return new Promise(function (resolve, reject) {
+      var cbName = 'dgMemberJsonp' + Date.now() + Math.floor(Math.random() * 100000);
+      var script = document.createElement('script');
+      var done = false;
+      function cleanup() {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      var timer = window.setTimeout(function () {
+        cleanup();
+        reject(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
+      }, 20000);
+      window[cbName] = function (data) {
+        cleanup();
+        if (!data || data.ok === false) {
+          reject(new Error((data && data.error) || '처리하지 못했습니다.'));
+          return;
+        }
+        resolve(data);
+      };
+      var q = Object.keys(params || {}).map(function (key) {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key] == null ? '' : params[key]);
+      }).join('&');
+      script.src = cfg.scriptUrl + (cfg.scriptUrl.indexOf('?') >= 0 ? '&' : '?') + q + '&callback=' + encodeURIComponent(cbName);
+      script.async = true;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
+      };
+      (document.head || document.documentElement).appendChild(script);
+    });
+  }
+
+  function prefetchBoardList(board) {
+    return callJsonp({ action: 'board_list', board: board }).then(function (data) {
+      try {
+        localStorage.setItem('dg-board-list:' + board, JSON.stringify({
+          at: Date.now(),
+          posts: data.posts || []
+        }));
+      } catch (e) {}
+      return data;
+    });
+  }
+
   var googleReady = false;
   var googleHandler = null;
 
@@ -376,6 +428,8 @@
   window.DgMember = {
     connected: connected,
     call: call,
+    callJsonp: callJsonp,
+    prefetchBoardList: prefetchBoardList,
     renderGoogle: renderGoogle,
     getSession: getSession,
     setSession: setSession,

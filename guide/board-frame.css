@@ -1,30 +1,41 @@
-/* 시안 C: 양피지 + 쇠못 코너 */
+/* 시안 C: 홈 게시판 버튼용 양피지 + 쇠못 코너 */
 .parchment-frame {
   --pf-ink: #2a2118;
   --pf-muted: #5c4d3a;
-  --pf-line: rgba(74, 58, 40, 0.28);
   --pf-metal: #3a3732;
-  --pf-metal-hi: #7a756c;
   position: relative;
-  padding: 18px 16px 16px;
+  display: block;
+  padding: 12px 10px;
   color: var(--pf-ink);
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
   background:
     radial-gradient(120% 80% at 12% 0%, rgba(255, 248, 230, 0.55), transparent 42%),
     radial-gradient(90% 70% at 100% 100%, rgba(120, 80, 40, 0.12), transparent 45%),
     linear-gradient(165deg, #f3e6c8 0%, #e8d7b0 42%, #dfc89a 100%);
-  border: 9px solid var(--pf-metal);
+  border: 7px solid var(--pf-metal);
   box-shadow:
     inset 0 0 0 2px #5e5951,
-    inset 0 0 0 4px rgba(232, 215, 176, 0.35),
-    inset 0 18px 40px rgba(90, 60, 30, 0.12),
-    0 14px 30px rgba(0, 0, 0, 0.42);
+    inset 0 0 0 3px rgba(232, 215, 176, 0.35),
+    inset 0 12px 28px rgba(90, 60, 30, 0.1),
+    0 10px 22px rgba(0, 0, 0, 0.4);
+}
+
+.parchment-frame:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  color: #1a140e;
 }
 
 .parchment-frame .nail {
   position: absolute;
   z-index: 2;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   background: linear-gradient(145deg, #8a847a 0%, #4a4640 48%, #26231f 100%);
   border: 1px solid #a39d90;
   box-shadow:
@@ -37,136 +48,73 @@
 .parchment-frame .nail::before {
   content: "";
   position: absolute;
-  inset: 4px;
+  inset: 3px;
   background:
-    radial-gradient(circle at 28% 28%, #d2ccc0 0 2.2px, #3a3732 2.6px 3.4px, transparent 3.6px),
-    radial-gradient(circle at 72% 28%, #d2ccc0 0 2.2px, #3a3732 2.6px 3.4px, transparent 3.6px),
-    radial-gradient(circle at 28% 72%, #d2ccc0 0 2.2px, #3a3732 2.6px 3.4px, transparent 3.6px),
-    radial-gradient(circle at 72% 72%, #d2ccc0 0 2.2px, #3a3732 2.6px 3.4px, transparent 3.6px);
+    radial-gradient(circle at 28% 28%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
+    radial-gradient(circle at 72% 28%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
+    radial-gradient(circle at 28% 72%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
+    radial-gradient(circle at 72% 72%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px);
 }
 
-.parchment-frame .nail.tl { top: -8px; left: -8px; }
-.parchment-frame .nail.tr { top: -8px; right: -8px; }
-.parchment-frame .nail.bl { bottom: -8px; left: -8px; }
-.parchment-frame .nail.br { bottom: -8px; right: -8px; }
+.parchment-frame .nail.tl { top: -6px; left: -6px; }
+.parchment-frame .nail.tr { top: -6px; right: -6px; }
+.parchment-frame .nail.bl { bottom: -6px; left: -6px; }
+.parchment-frame .nail.br { bottom: -6px; right: -6px; }
 
-.parchment-frame .pf-title {
-  margin: 0 0 10px;
+.board-rail-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+}
+
+.board-class.parchment-frame {
+  display: grid;
+  gap: 8px;
+  padding: 12px 10px 10px;
+}
+
+.board-class-label {
+  margin: 0;
   color: var(--pf-ink);
-  text-align: center;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-}
-
-.parchment-frame .pf-note {
-  margin: 0 0 14px;
-  color: var(--pf-muted);
   text-align: center;
   font-size: 13px;
-  font-weight: 700;
-  line-height: 1.55;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
-.parchment-frame .count {
-  color: var(--pf-muted);
+.board-class-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
 }
 
-.parchment-frame .btn,
-.parchment-frame button.btn {
-  border-color: #4a4540;
-  background: linear-gradient(180deg, #6a645c, #3d3934);
-  color: #f3e8cc;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-.parchment-frame .btn.danger,
-.parchment-frame button.btn.danger {
-  border-color: #6a3a32;
-  background: linear-gradient(180deg, #8a5348, #5a2f28);
-  color: #ffe6de;
-}
-
-.parchment-frame .status {
-  color: #6b4a1e;
-}
-
-.parchment-frame #post-list {
-  border: 1px solid var(--pf-line);
-  border-radius: 0;
-  background: rgba(255, 248, 230, 0.35);
-}
-
-.parchment-frame #post-list li {
-  border-bottom-color: var(--pf-line);
-}
-
-.parchment-frame #post-list .empty {
-  color: var(--pf-muted);
-}
-
-.parchment-frame #post-list .row {
-  color: var(--pf-ink);
-}
-
-.parchment-frame #post-list .row:hover {
-  background: rgba(90, 60, 30, 0.08);
-}
-
-.parchment-frame #post-list .m {
-  color: var(--pf-muted);
-}
-
-.parchment-frame .field label {
-  color: #5a4020;
-}
-
-.parchment-frame .field input,
-.parchment-frame .field textarea {
-  border-color: rgba(74, 58, 40, 0.35);
-  background: rgba(255, 250, 238, 0.85);
-  color: var(--pf-ink);
-}
-
-.parchment-frame .hint {
-  color: var(--pf-muted);
-}
-
-.parchment-frame .hint a,
-.parchment-frame .hint b {
-  color: #5a3a12;
-}
-
-.parchment-frame #detail-title {
-  color: var(--pf-ink);
-}
-
-.parchment-frame #detail-meta,
-.parchment-frame .legal {
-  color: var(--pf-muted);
-}
-
-.parchment-frame #detail-body {
-  color: var(--pf-ink);
-}
-
-.parchment-frame #detail-images img,
-.parchment-frame #image-list figure {
-  border-color: rgba(74, 58, 40, 0.35);
-  background: #efe2c4;
-}
-
-.parchment-frame .yt-embed {
-  border-color: rgba(74, 58, 40, 0.4);
-}
-
-.parchment-frame .class-grid a {
-  border: 1px solid rgba(74, 58, 40, 0.35);
+.board-class-grid a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 0;
+  padding: 8px 4px;
+  border: 1px solid rgba(74, 58, 40, 0.28);
   background: rgba(255, 248, 230, 0.45);
   color: var(--pf-ink);
-  box-shadow: none;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
 }
 
-.parchment-frame .class-grid a:hover {
-  background: rgba(90, 60, 30, 0.1);
+.board-class-grid a:hover {
+  background: rgba(90, 60, 30, 0.12);
+  filter: brightness(1.03);
+}
+
+.board-class-grid img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }

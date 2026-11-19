@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="board-frame.css">
   <style>
     :root {
       --bg: #0c0a08;
@@ -38,65 +39,9 @@
     }
     .board-rail {
       display: grid;
-      gap: 8px;
+      gap: 10px;
       position: sticky;
       top: 14px;
-    }
-    .board-rail > a,
-    .board-class a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 54px;
-      padding: 12px 10px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(58, 36, 16, 0.55), rgba(12, 10, 8, 0.92));
-      color: var(--gold);
-      text-align: center;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 900;
-      line-height: 1.35;
-      letter-spacing: -0.02em;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
-    }
-    .board-rail > a:hover,
-    .board-class a:hover {
-      filter: brightness(1.08);
-      transform: translateY(-1px);
-      color: #fff3c8;
-    }
-    .board-class {
-      display: grid;
-      gap: 6px;
-    }
-    .board-class-label {
-      margin: 2px 0 0;
-      color: var(--gold);
-      text-align: center;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      line-height: 1.3;
-    }
-    .board-class-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .board-class a {
-      flex-direction: column;
-      gap: 4px;
-      min-height: 0;
-      padding: 8px 6px;
-      font-size: 12px;
-    }
-    .board-class img {
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-      image-rendering: pixelated;
     }
     .topbar {
       display: flex;
@@ -369,8 +314,18 @@
     <div class="banner" hidden>배너 광고 구함</div>
     <div class="home-grid">
       <nav class="board-rail" aria-label="게시판">
-        <a href="board.html?b=tips">팁 &amp; 노하우<br>게시판</a>
-        <div class="board-class">
+        <a class="parchment-frame board-rail-btn" href="board.html?b=tips">
+          <span class="nail tl" aria-hidden="true"></span>
+          <span class="nail tr" aria-hidden="true"></span>
+          <span class="nail bl" aria-hidden="true"></span>
+          <span class="nail br" aria-hidden="true"></span>
+          팁 &amp; 노하우<br>게시판
+        </a>
+        <div class="parchment-frame board-class">
+          <span class="nail tl" aria-hidden="true"></span>
+          <span class="nail tr" aria-hidden="true"></span>
+          <span class="nail bl" aria-hidden="true"></span>
+          <span class="nail br" aria-hidden="true"></span>
           <p class="board-class-label">클래스 게시판</p>
           <div class="board-class-grid">
             <a href="board.html?b=class-prince"><img src="class-icons/lord.png" alt="">군주</a>
@@ -379,8 +334,20 @@
             <a href="board.html?b=class-mage"><img src="class-icons/mage.png" alt="">마법사</a>
           </div>
         </div>
-        <a href="board.html?b=free">자유<br>게시판</a>
-        <a href="board.html?b=feedback">피드백<br>게시판</a>
+        <a class="parchment-frame board-rail-btn" href="board.html?b=free">
+          <span class="nail tl" aria-hidden="true"></span>
+          <span class="nail tr" aria-hidden="true"></span>
+          <span class="nail bl" aria-hidden="true"></span>
+          <span class="nail br" aria-hidden="true"></span>
+          자유<br>게시판
+        </a>
+        <a class="parchment-frame board-rail-btn" href="board.html?b=feedback">
+          <span class="nail tl" aria-hidden="true"></span>
+          <span class="nail tr" aria-hidden="true"></span>
+          <span class="nail bl" aria-hidden="true"></span>
+          <span class="nail br" aria-hidden="true"></span>
+          피드백<br>게시판
+        </a>
       </nav>
       <div class="tools">
         <div class="item-cats">
@@ -452,22 +419,12 @@
           DgMember.writeDpsLocal(data.character);
         }).catch(function () {});
       }
-      if (DgMember.connected && DgMember.connected()) {
-        document.querySelectorAll('.board-rail a[href*="board.html"]').forEach(function (a) {
-          a.addEventListener('mouseenter', function prefetch() {
-            a.removeEventListener('mouseenter', prefetch);
-            var m = String(a.getAttribute('href') || '').match(/[?&]b=([^&]+)/);
-            if (!m) return;
-            var board = decodeURIComponent(m[1]);
-            DgMember.call({ action: 'board_list', board: board }).then(function (data) {
-              try {
-                localStorage.setItem('dg-board-list:' + board, JSON.stringify({
-                  at: Date.now(),
-                  posts: data.posts || []
-                }));
-              } catch (e) {}
-            }).catch(function () {});
-          });
+      if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
+        var boards = ['tips', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
+        boards.forEach(function (board, i) {
+          window.setTimeout(function () {
+            DgMember.prefetchBoardList(board).catch(function () {});
+          }, 200 + i * 180);
         });
       }
     })();

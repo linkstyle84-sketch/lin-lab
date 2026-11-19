@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>게시판 · 도건 게임 연구소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="member-config.js"></script>
+  <style>
+    :root {
+      --bg: #0c0a08;
+      --ink: #f6edd6;
+      --muted: #cbb994;
+      --gold: #e4c36a;
+      --line: rgba(228, 195, 106, 0.28);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(900px 380px at 50% -60px, #3a2410 0%, transparent 62%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Noto Sans KR", sans-serif;
+    }
+    .wrap {
+      width: min(760px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+    .back { margin: 0 0 16px; }
+    .back a {
+      color: var(--gold);
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .back a:hover { text-decoration: underline; }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+    .note {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 12px;
+    }
+    .count { margin: 0; color: var(--muted); font-size: 14px; font-weight: 800; }
+    .btn, button.btn {
+      display: inline-block;
+      border: 2px solid var(--gold);
+      border-radius: 14px;
+      padding: 10px 14px;
+      background: rgba(228, 195, 106, 0.1);
+      color: var(--gold);
+      font: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn.danger { border-color: #d87a6a; color: #f0b0a4; }
+    button.btn:disabled { opacity: 0.55; cursor: default; }
+    .status {
+      min-height: 1.4em;
+      margin: 0 0 12px;
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    #post-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(228, 195, 106, 0.05);
+    }
+    #post-list li { border-bottom: 1px solid var(--line); }
+    #post-list li:last-child { border-bottom: 0; }
+    #post-list .empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    #post-list .row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 14px 16px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    #post-list .row:hover { background: rgba(228, 195, 106, 0.08); }
+    #post-list .t { font-size: 16px; font-weight: 900; }
+    #post-list .m { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .field { margin: 0 0 14px; }
+    .field label {
+      display: block;
+      margin: 0 0 6px;
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+    }
+    .field textarea { min-height: 220px; resize: vertical; line-height: 1.55; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 18px;
+    }
+    #image-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    #image-list figure {
+      margin: 0;
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111;
+    }
+    #image-list img { display: block; width: 100%; height: 100px; object-fit: cover; }
+    #image-list button {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      border: 0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .hint {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .hint a { color: var(--gold); }
+    .hint b { color: var(--ink); }
+    #detail-title { margin: 0 0 6px; font-size: 24px; font-weight: 900; }
+    #detail-meta { margin: 0 0 16px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    #detail-body {
+      margin: 0 0 16px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+    #detail-images {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+    #detail-images img {
+      display: block;
+      width: 100%;
+      max-height: 480px;
+      object-fit: contain;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #111;
+    }
+    .yt-embed {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      margin: 14px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #000;
+    }
+    .yt-embed iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .legal {
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .legal a { color: inherit; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back"><a href="./">처음으로</a> · <a href="board-class.html" id="class-link" hidden>클래스 게시판</a></p>
+    <h1 id="board-title">게시판</h1>
+    <p class="note" id="board-note"></p>
+    <p class="status" id="board-status" aria-live="polite"></p>
+
+    <section id="view-list">
+      <div class="bar">
+        <p class="count">글 <span id="post-count">0개</span></p>
+        <button type="button" class="btn" id="btn-write">글쓰기</button>
+      </div>
+      <ul id="post-list"></ul>
+    </section>
+
+    <section id="view-compose" hidden>
+      <div class="field">
+        <label for="post-title">제목</label>
+        <input id="post-title" maxlength="80" placeholder="제목을 입력하세요">
+      </div>
+      <div class="field">
+        <label for="post-body">내용</label>
+        <textarea id="post-body" maxlength="8000" placeholder="내용을 입력하세요. 유튜브 링크를 넣으면 본문에 영상이 표시됩니다."></textarea>
+      </div>
+      <div id="image-list"></div>
+      <input id="image-file" type="file" accept="image/*" hidden>
+      <div id="google-box"></div>
+      <div class="actions">
+        <button type="button" class="btn" id="btn-add-image">이미지 추가</button>
+        <button type="button" class="btn" id="btn-publish">게시</button>
+        <button type="button" class="btn" id="btn-update" hidden>수정</button>
+        <button type="button" class="btn danger" id="btn-delete" hidden>삭제</button>
+        <button type="button" class="btn" id="btn-cancel">목록으로</button>
+      </div>
+    </section>
+
+    <section id="view-detail" hidden>
+      <p class="back"><button type="button" class="btn" id="btn-back-list">목록으로</button></p>
+      <h2 id="detail-title"></h2>
+      <p id="detail-meta"></p>
+      <div id="detail-body"></div>
+      <div id="detail-images"></div>
+      <div class="actions" id="detail-actions"></div>
+    </section>
+
+    <p class="legal"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a></p>
+  </div>
+  <script src="member.js"></script>
+  <script src="board.js"></script>
+  <script>
+    (function () {
+      var b = '';
+      try { b = new URLSearchParams(location.search).get('b') || ''; } catch (e) {}
+      if (b.indexOf('class-') === 0) {
+        var link = document.getElementById('class-link');
+        link.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>

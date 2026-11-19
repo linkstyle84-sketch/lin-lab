@@ -444,17 +444,31 @@
         location.reload();
       });
       bar.appendChild(box);
-      var token = '';
-      try {
-        token = sessionStorage.getItem('dg-id-token') || '';
-        if (token) sessionStorage.removeItem('dg-id-token');
-      } catch (e) {}
+      var token = DgMember.getIdToken ? DgMember.getIdToken() : '';
       if (token && DgMember.connected && DgMember.connected()) {
         DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
           if (!data.character) return;
           DgMember.setCharacterCache(session.email, data.character, data.updated_at);
           DgMember.writeDpsLocal(data.character);
         }).catch(function () {});
+      }
+      if (DgMember.connected && DgMember.connected()) {
+        document.querySelectorAll('.board-rail a[href*="board.html"]').forEach(function (a) {
+          a.addEventListener('mouseenter', function prefetch() {
+            a.removeEventListener('mouseenter', prefetch);
+            var m = String(a.getAttribute('href') || '').match(/[?&]b=([^&]+)/);
+            if (!m) return;
+            var board = decodeURIComponent(m[1]);
+            DgMember.call({ action: 'board_list', board: board }).then(function (data) {
+              try {
+                localStorage.setItem('dg-board-list:' + board, JSON.stringify({
+                  at: Date.now(),
+                  posts: data.posts || []
+                }));
+              } catch (e) {}
+            }).catch(function () {});
+          });
+        });
       }
     })();
     function paintCount(key, n) {

@@ -2,6 +2,8 @@
   var SESSION_KEY = 'dg-member-session';
   var CHARACTER_KEY = 'dg-character';
   var DPS_KEY = 'lin-dps-html-v2';
+  var ID_TOKEN_KEY = 'dg-id-token-cache';
+  var ID_TOKEN_TTL_MS = 50 * 60 * 1000;
 
   function config() {
     return window.MEMBER_CONFIG || {};
@@ -34,9 +36,43 @@
     }));
   }
 
+  function setIdToken(idToken) {
+    var token = String(idToken || '');
+    if (!token || token.length < 20) return;
+    try {
+      localStorage.setItem(ID_TOKEN_KEY, JSON.stringify({
+        token: token,
+        at: Date.now()
+      }));
+    } catch (e) {}
+    try { sessionStorage.setItem('dg-id-token', token); } catch (e2) {}
+  }
+
+  function getIdToken() {
+    try {
+      var raw = localStorage.getItem(ID_TOKEN_KEY);
+      if (!raw) return '';
+      var data = JSON.parse(raw);
+      if (!data || !data.token) return '';
+      if (Date.now() - Number(data.at || 0) > ID_TOKEN_TTL_MS) {
+        localStorage.removeItem(ID_TOKEN_KEY);
+        return '';
+      }
+      return String(data.token);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function clearIdToken() {
+    try { localStorage.removeItem(ID_TOKEN_KEY); } catch (e) {}
+    try { sessionStorage.removeItem('dg-id-token'); } catch (e2) {}
+  }
+
   function clearSession() {
     var prev = getSession();
     localStorage.removeItem(SESSION_KEY);
+    clearIdToken();
     try {
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
@@ -344,6 +380,9 @@
     getSession: getSession,
     setSession: setSession,
     clearSession: clearSession,
+    getIdToken: getIdToken,
+    setIdToken: setIdToken,
+    clearIdToken: clearIdToken,
     getCharacterCache: getCharacterCache,
     setCharacterCache: setCharacterCache,
     clearCharacterCache: clearCharacterCache,

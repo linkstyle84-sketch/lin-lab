@@ -712,6 +712,7 @@
       painted = true;
       DgMember.renderGoogle(box, function (idToken) {
         token = idToken;
+        if (DgMember.setIdToken) DgMember.setIdToken(idToken);
         if (pendingCloudSave) {
           saveToCloud(buildPayload()).catch(function (err) { say(err.message); });
           return;

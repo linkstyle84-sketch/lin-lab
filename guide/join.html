@@ -212,7 +212,7 @@
       DgMember.call(payload).then(function (data) {
         var member = data.member || {};
         DgMember.setSession(member);
-        try { sessionStorage.setItem('dg-id-token', idToken); } catch (e) {}
+        DgMember.setIdToken(idToken);
         location.replace('./');
       }).catch(function (err) {
         say(err.message);

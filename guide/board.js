@@ -160,10 +160,12 @@
     noteEl.textContent = meta.note;
     document.title = meta.title + ' · 도건 게임 연구소';
 
-    var token = '';
+    var token = (DgMember.getIdToken && DgMember.getIdToken()) || '';
     var images = [];
     var editingId = '';
     var currentPost = null;
+    var listCacheKey = 'dg-board-list:' + board;
+    var postCacheKey = 'dg-board-post:';
 
     function say(msg) {
       statusEl.textContent = msg || '';
@@ -173,6 +175,40 @@
       listView.hidden = view !== 'list';
       composeView.hidden = view !== 'compose';
       detailView.hidden = view !== 'detail';
+    }
+
+    function readListCache() {
+      try {
+        var raw = localStorage.getItem(listCacheKey);
+        if (!raw) return null;
+        var data = JSON.parse(raw);
+        return data && Array.isArray(data.posts) ? data.posts : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writeListCache(posts) {
+      try {
+        localStorage.setItem(listCacheKey, JSON.stringify({ at: Date.now(), posts: posts || [] }));
+      } catch (e) {}
+    }
+
+    function readPostCache(id) {
+      try {
+        var raw = localStorage.getItem(postCacheKey + id);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writePostCache(post) {
+      if (!post || !post.id) return;
+      try {
+        localStorage.setItem(postCacheKey + post.id, JSON.stringify(post));
+      } catch (e) {}
     }
 
     function paintImages() {
@@ -189,22 +225,34 @@
       });
     }
 
-    function ensureGoogle() {
+    function syncToken(idToken) {
+      token = idToken || '';
+      if (token && DgMember.setIdToken) DgMember.setIdToken(token);
+    }
+
+    function ensureGoogle(force) {
       if (!window.DgMember || !DgMember.connected()) {
         googleBox.innerHTML = '<p class="hint">글쓰기는 회원 로그인이 필요합니다. <a href="join.html#login">로그인</a></p>';
         return;
       }
       var s = session();
       if (!s) {
-        googleBox.innerHTML = '<p class="hint">글을 올리려면 구글 로그인을 한 번 더 확인해 주세요.</p><div id="gis-slot"></div>';
-      } else {
-        googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 게시/수정/삭제 전에 구글 확인이 필요합니다.</p><div id="gis-slot"></div>';
-        googleBox.querySelector('b').textContent = s.name || s.email;
+        googleBox.innerHTML = '<p class="hint">글을 올리려면 <a href="join.html#login">로그인</a>이 필요합니다.</p>';
+        return;
       }
+      token = token || (DgMember.getIdToken && DgMember.getIdToken()) || '';
+      if (token && !force) {
+        googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 로그인된 계정으로 바로 게시할 수 있습니다.</p>';
+        googleBox.querySelector('b').textContent = s.name || s.email;
+        return;
+      }
+      googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 로그인 확인이 만료되어 구글 확인이 한 번 필요합니다.</p><div id="gis-slot"></div>';
+      googleBox.querySelector('b').textContent = s.name || s.email;
       try {
         DgMember.renderGoogle(document.getElementById('gis-slot'), function (idToken) {
-          token = idToken;
-          say('구글 확인됨. 게시·수정·삭제를 눌러 주세요.');
+          syncToken(idToken);
+          ensureGoogle(false);
+          say('로그인 확인됨. 게시·수정·삭제를 눌러 주세요.');
         }, { text: 'signin_with', width: 280 });
       } catch (e) {
         googleBox.innerHTML = '<p class="hint">' + escapeHtml(e.message) + '</p>';
@@ -220,7 +268,7 @@
       btnPublish.hidden = !!editingId;
       btnUpdate.hidden = !editingId;
       btnDelete.hidden = !editingId;
-      ensureGoogle();
+      ensureGoogle(false);
       show('compose');
       say(editingId ? '글을 수정합니다.' : '새 글을 작성합니다.');
       titleInput.focus();
@@ -228,6 +276,7 @@
 
     function openDetail(post) {
       currentPost = post;
+      writePostCache(post);
       detailTitle.textContent = post.title;
       detailMeta.textContent = (post.author_name || '회원') + ' · ' + fmtDate(post.created_at);
       detailBody.innerHTML = renderBody(post.body);
@@ -251,17 +300,8 @@
         del.textContent = '삭제';
         del.addEventListener('click', function () {
           if (!confirm('이 글을 삭제할까요?')) return;
-          ensureGoogle();
-          show('compose');
           editingId = post.id;
-          titleInput.value = post.title;
-          bodyInput.value = post.body;
-          images = (post.images || []).slice();
-          paintImages();
-          btnPublish.hidden = true;
-          btnUpdate.hidden = false;
-          btnDelete.hidden = false;
-          say('삭제하려면 구글 확인 후 삭제를 다시 눌러 주세요.');
+          doDelete();
         });
         detailActions.appendChild(edit);
         detailActions.appendChild(del);
@@ -269,46 +309,102 @@
       show('detail');
     }
 
-    function loadList() {
-      show('list');
-      say('글 목록을 불러오는 중입니다.');
+    function openPost(id) {
+      var cached = readPostCache(id);
+      if (cached) {
+        say('');
+        openDetail(cached);
+      } else {
+        say('글을 불러오는 중입니다.');
+      }
+      DgMember.call({ action: 'board_get', id: id }).then(function (res) {
+        say('');
+        openDetail(res.post);
+      }).catch(function (err) {
+        if (!cached) say(err.message);
+      });
+    }
+
+    function paintPosts(posts) {
+      countEl.textContent = (posts || []).length + '개';
       listEl.innerHTML = '';
+      if (!posts || !posts.length) {
+        listEl.innerHTML = '<li class="empty">아직 글이 없습니다. 첫 글을 남겨 보세요.</li>';
+        return;
+      }
+      posts.forEach(function (p) {
+        var li = document.createElement('li');
+        li.innerHTML = '<button type="button" class="row"><span class="t"></span><span class="m"></span></button>';
+        li.querySelector('.t').textContent = (p.has_image ? '[사진] ' : '') + p.title;
+        li.querySelector('.m').textContent = (p.author_name || '회원') + ' · ' + fmtDate(p.created_at);
+        li.querySelector('button').addEventListener('click', function () {
+          openPost(p.id);
+        });
+        listEl.appendChild(li);
+      });
+    }
+
+    function loadList(opts) {
+      var silent = opts && opts.silent;
+      show('list');
+      var cached = readListCache();
+      if (cached) {
+        paintPosts(cached);
+        if (!silent) say('');
+      } else if (!silent) {
+        listEl.innerHTML = '<li class="empty">글 목록을 불러오는 중입니다.</li>';
+        countEl.textContent = '…';
+      }
       DgMember.call({ action: 'board_list', board: board }).then(function (data) {
         var posts = data.posts || [];
-        countEl.textContent = posts.length + '개';
-        if (!posts.length) {
-          listEl.innerHTML = '<li class="empty">아직 글이 없습니다. 첫 글을 남겨 보세요.</li>';
-          say('');
-          return;
-        }
-        posts.forEach(function (p) {
-          var li = document.createElement('li');
-          li.innerHTML = '<button type="button" class="row"><span class="t"></span><span class="m"></span></button>';
-          li.querySelector('.t').textContent = (p.has_image ? '[사진] ' : '') + p.title;
-          li.querySelector('.m').textContent = (p.author_name || '회원') + ' · ' + fmtDate(p.created_at);
-          li.querySelector('button').addEventListener('click', function () {
-            say('글을 불러오는 중입니다.');
-            DgMember.call({ action: 'board_get', id: p.id }).then(function (res) {
-              say('');
-              openDetail(res.post);
-            }).catch(function (err) { say(err.message); });
-          });
-          listEl.appendChild(li);
-        });
+        writeListCache(posts);
+        paintPosts(posts);
         say('');
       }).catch(function (err) {
-        say(err.message);
-        listEl.innerHTML = '<li class="empty">목록을 불러오지 못했습니다.</li>';
+        if (!cached) {
+          say(err.message);
+          listEl.innerHTML = '<li class="empty">목록을 불러오지 못했습니다.</li>';
+        } else {
+          say('최신 목록 갱신에 실패했습니다. 캐시된 글을 보여 줍니다.');
+        }
       });
     }
 
     function requireToken() {
+      token = token || (DgMember.getIdToken && DgMember.getIdToken()) || '';
       if (!token) {
-        say('먼저 구글 로그인 확인 버튼을 눌러 주세요.');
-        ensureGoogle();
+        say('로그인 확인이 만료되었습니다. 구글 확인을 한 번 해 주세요.');
+        ensureGoogle(true);
         return false;
       }
       return true;
+    }
+
+    function authFailed(err) {
+      var msg = (err && err.message) || '';
+      if (/로그인|구글|토큰|만료|확인하지/.test(msg)) {
+        if (DgMember.clearIdToken) DgMember.clearIdToken();
+        token = '';
+        ensureGoogle(true);
+      }
+      say(msg);
+    }
+
+    function doDelete() {
+      if (!requireToken() || !editingId) return;
+      btnDelete.disabled = true;
+      say('삭제하는 중입니다.');
+      DgMember.call({
+        action: 'board_delete',
+        idToken: token,
+        id: editingId
+      }).then(function () {
+        try { localStorage.removeItem(postCacheKey + editingId); } catch (e) {}
+        editingId = '';
+        loadList();
+      }).catch(authFailed).then(function () {
+        btnDelete.disabled = false;
+      });
     }
 
     btnWrite.addEventListener('click', function () {
@@ -366,12 +462,10 @@
         title: titleInput.value,
         body: bodyInput.value,
         images: images
-      }).then(function () {
-        token = '';
+      }).then(function (res) {
+        if (res.post) writePostCache(res.post);
         loadList();
-      }).catch(function (err) {
-        say(err.message);
-      }).then(function () {
+      }).catch(authFailed).then(function () {
         btnPublish.disabled = false;
       });
     });
@@ -387,38 +481,24 @@
         title: titleInput.value,
         body: bodyInput.value,
         images: images
-      }).then(function () {
-        token = '';
+      }).then(function (res) {
+        if (res.post) writePostCache(res.post);
         loadList();
-      }).catch(function (err) {
-        say(err.message);
-      }).then(function () {
+      }).catch(authFailed).then(function () {
         btnUpdate.disabled = false;
       });
     });
 
     btnDelete.addEventListener('click', function () {
-      if (!requireToken() || !editingId) return;
+      if (!editingId) return;
       if (!confirm('이 글을 삭제할까요?')) return;
-      btnDelete.disabled = true;
-      say('삭제하는 중입니다.');
-      DgMember.call({
-        action: 'board_delete',
-        idToken: token,
-        id: editingId
-      }).then(function () {
-        token = '';
-        loadList();
-      }).catch(function (err) {
-        say(err.message);
-      }).then(function () {
-        btnDelete.disabled = false;
-      });
+      doDelete();
     });
 
     if (!window.DgMember || !DgMember.connected()) {
       say('회원 저장 서버 연결 후 글을 불러올 수 있습니다.');
     }
+    show('list');
     loadList();
   }
 

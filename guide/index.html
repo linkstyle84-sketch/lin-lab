@@ -42,7 +42,8 @@
       position: sticky;
       top: 14px;
     }
-    .board-rail a {
+    .board-rail > a,
+    .board-class a {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -60,10 +61,42 @@
       letter-spacing: -0.02em;
       box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
     }
-    .board-rail a:hover {
+    .board-rail > a:hover,
+    .board-class a:hover {
       filter: brightness(1.08);
       transform: translateY(-1px);
       color: #fff3c8;
+    }
+    .board-class {
+      display: grid;
+      gap: 6px;
+    }
+    .board-class-label {
+      margin: 2px 0 0;
+      color: var(--gold);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+    .board-class-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .board-class a {
+      flex-direction: column;
+      gap: 4px;
+      min-height: 0;
+      padding: 8px 6px;
+      font-size: 12px;
+    }
+    .board-class img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      image-rendering: pixelated;
     }
     .topbar {
       display: flex;
@@ -307,12 +340,14 @@
         position: static;
         grid-template-columns: 1fr 1fr;
       }
+      .board-class { grid-column: 1 / -1; }
     }
     @media (max-width: 640px) {
       .banner-row { grid-template-columns: 1fr; }
       .banner-row img { height: auto; }
       .member-cta { padding: 12px 10px; border-left: 0; border-top: 2px solid #2a160e; }
       .board-rail { grid-template-columns: 1fr 1fr; }
+      .board-class { grid-column: 1 / -1; }
     }
   </style>
 </head>
@@ -335,7 +370,15 @@
     <div class="home-grid">
       <nav class="board-rail" aria-label="게시판">
         <a href="board.html?b=tips">팁 &amp; 노하우<br>게시판</a>
-        <a href="board-class.html">클래스<br>게시판</a>
+        <div class="board-class">
+          <p class="board-class-label">클래스 게시판</p>
+          <div class="board-class-grid">
+            <a href="board.html?b=class-prince"><img src="class-icons/lord.png" alt="">군주</a>
+            <a href="board.html?b=class-knight"><img src="class-icons/knight.png" alt="">기사</a>
+            <a href="board.html?b=class-elf"><img src="class-icons/elf.png" alt="">요정</a>
+            <a href="board.html?b=class-mage"><img src="class-icons/mage.png" alt="">마법사</a>
+          </div>
+        </div>
         <a href="board.html?b=free">자유<br>게시판</a>
         <a href="board.html?b=feedback">피드백<br>게시판</a>
       </nav>

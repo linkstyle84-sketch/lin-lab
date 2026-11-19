@@ -315,7 +315,16 @@
         say('');
         openDetail(cached);
       }
-      fetchPost(id).then(function (res) {
+      fetchPostLocal(id).then(function (res) {
+        if (!res.post) return;
+        if (cached && cached.images && cached.images.length && !(res.post.images && res.post.images.length)) {
+          res.post.images = cached.images;
+        }
+        writePostCache(res.post);
+        say('');
+        openDetail(res.post);
+      }).catch(function () {});
+      fetchPostRemote(id).then(function (res) {
         say('');
         openDetail(res.post);
       }).catch(function (err) {
@@ -342,40 +351,85 @@
       });
     }
 
-    function fetchList() {
+    function fetchListRemote() {
       if (DgMember.callJsonp) {
         return DgMember.callJsonp({ action: 'board_list', board: board });
       }
       return DgMember.call({ action: 'board_list', board: board });
     }
 
-    function fetchPost(id) {
+    /* 인벤처럼 같은 사이트 파일에서 즉시 읽기 (Apps Script 대기 없음) */
+    function fetchListLocal() {
+      return fetch('board-data/' + encodeURIComponent(board) + '.json', { cache: 'no-store' })
+        .then(function (res) {
+          if (!res.ok) throw new Error('local');
+          return res.json();
+        });
+    }
+
+    function fetchPostLocal(id) {
+      return fetch('board-data/posts/' + encodeURIComponent(id) + '.json', { cache: 'no-store' })
+        .then(function (res) {
+          if (!res.ok) throw new Error('local');
+          return res.json();
+        });
+    }
+
+    function fetchPostRemote(id) {
       if (DgMember.callJsonp) {
         return DgMember.callJsonp({ action: 'board_get', id: id });
       }
       return DgMember.call({ action: 'board_get', id: id });
     }
 
+    function applyList(posts) {
+      writeListCache(posts || []);
+      paintPosts(posts || []);
+    }
+
     function loadList(opts) {
       var silent = opts && opts.silent;
       show('list');
       var cached = readListCache();
-      /* 화면은 즉시: 캐시 또는 빈 목록. '불러오는 중'은 쓰지 않음 */
       paintPosts(cached || []);
       if (!silent) say('');
-      fetchList().then(function (data) {
-        var posts = data.posts || [];
-        writeListCache(posts);
-        paintPosts(posts);
+
+      fetchListLocal().then(function (data) {
+        applyList(data.posts || []);
+        say('');
+      }).catch(function () {
+        /* 로컬 스냅샷 없으면 캐시/빈 화면 유지 */
+      });
+
+      /* 백그라운드 동기화(느려도 화면은 이미 떠 있음) */
+      fetchListRemote().then(function (data) {
+        applyList(data.posts || []);
         say('');
       }).catch(function (err) {
-        if (!cached) {
-          paintPosts([]);
-          say(err.message);
-        } else if (!silent) {
-          say('최신 목록 갱신에 실패했습니다. 캐시된 글을 보여 줍니다.');
+        if (!cached && !silent) {
+          /* 로컬도 실패했을 때만 상태 문구 */
         }
       });
+    }
+
+    function summaryFromPost(post) {
+      return {
+        id: post.id,
+        board: post.board || board,
+        title: post.title,
+        author_name: post.author_name,
+        author_email: post.author_email || '',
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        has_image: !!(post.has_image || (post.images && post.images.length))
+      };
+    }
+
+    function prependList(post) {
+      var list = readListCache() || [];
+      var sum = summaryFromPost(post);
+      list = [sum].concat(list.filter(function (p) { return p.id !== sum.id; }));
+      applyList(list);
     }
 
     function requireToken() {
@@ -408,8 +462,12 @@
         id: editingId
       }).then(function () {
         try { localStorage.removeItem(postCacheKey + editingId); } catch (e) {}
+        var list = (readListCache() || []).filter(function (p) { return p.id !== editingId; });
         editingId = '';
-        loadList();
+        applyList(list);
+        show('list');
+        say('');
+        loadList({ silent: true });
       }).catch(authFailed).then(function () {
         btnDelete.disabled = false;
       });
@@ -471,8 +529,13 @@
         body: bodyInput.value,
         images: images
       }).then(function (res) {
-        if (res.post) writePostCache(res.post);
-        loadList();
+        if (res.post) {
+          writePostCache(res.post);
+          prependList(res.post);
+          show('list');
+          say('');
+        }
+        loadList({ silent: true });
       }).catch(authFailed).then(function () {
         btnPublish.disabled = false;
       });
@@ -490,8 +553,13 @@
         body: bodyInput.value,
         images: images
       }).then(function (res) {
-        if (res.post) writePostCache(res.post);
-        loadList();
+        if (res.post) {
+          writePostCache(res.post);
+          prependList(res.post);
+          show('list');
+          say('');
+        }
+        loadList({ silent: true });
       }).catch(authFailed).then(function () {
         btnUpdate.disabled = false;
       });

@@ -103,11 +103,30 @@ h2 span { margin-left: 8px; color: var(--muted); font-size: 14px; }
 .find-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px 16px;
   margin: 0 0 8px;
 }
 .find-row .find { margin: 0; }
+.filter-panels {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  min-width: min(100%, 420px);
+}
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+.filter-label {
+  flex: 0 0 auto;
+  min-width: 3em;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 900;
+}
 .fx-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .fx-checks label {
   display: inline-flex;

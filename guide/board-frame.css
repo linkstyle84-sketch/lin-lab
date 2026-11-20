@@ -1,84 +1,75 @@
-/* 시안 C: 홈 게시판 버튼용 양피지 + 쇠못 코너 */
-.parchment-frame {
+/* 시안 C: 이미지 프레임 1개 안에 게시판 전체 */
+.board-rail {
+  display: block;
+  position: sticky;
+  top: 14px;
+}
+
+.board-panel {
   --pf-ink: #2a2118;
   --pf-muted: #5c4d3a;
-  --pf-metal: #3a3732;
-  position: relative;
-  display: block;
-  padding: 12px 10px;
+  display: grid;
+  gap: 10px;
+  padding: 36px 22px 30px;
   color: var(--pf-ink);
-  text-align: center;
+  background: url("board-ui/frame-c.jpg") center / 100% 100% no-repeat;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+.board-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid rgba(74, 58, 40, 0.28);
+  background: rgba(255, 248, 230, 0.42);
+  color: var(--pf-ink);
   text-decoration: none;
   font-size: 14px;
   font-weight: 900;
-  line-height: 1.35;
+  line-height: 1.3;
   letter-spacing: -0.02em;
-  background:
-    radial-gradient(120% 80% at 12% 0%, rgba(255, 248, 230, 0.55), transparent 42%),
-    radial-gradient(90% 70% at 100% 100%, rgba(120, 80, 40, 0.12), transparent 45%),
-    linear-gradient(165deg, #f3e6c8 0%, #e8d7b0 42%, #dfc89a 100%);
-  border: 7px solid var(--pf-metal);
-  box-shadow:
-    inset 0 0 0 2px #5e5951,
-    inset 0 0 0 3px rgba(232, 215, 176, 0.35),
-    inset 0 12px 28px rgba(90, 60, 30, 0.1),
-    0 10px 22px rgba(0, 0, 0, 0.4);
 }
 
-.parchment-frame:hover {
-  filter: brightness(1.04);
+.board-link:hover {
+  background: rgba(255, 248, 230, 0.72);
   transform: translateY(-1px);
-  color: #1a140e;
 }
 
-.parchment-frame .nail {
-  position: absolute;
-  z-index: 2;
-  width: 18px;
-  height: 18px;
-  background: linear-gradient(145deg, #8a847a 0%, #4a4640 48%, #26231f 100%);
-  border: 1px solid #a39d90;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -2px 0 rgba(0, 0, 0, 0.45),
-    0 2px 4px rgba(0, 0, 0, 0.45);
-  pointer-events: none;
+.board-link span,
+.board-class-label span {
+  display: block;
+  text-align: left;
 }
 
-.parchment-frame .nail::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  background:
-    radial-gradient(circle at 28% 28%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
-    radial-gradient(circle at 72% 28%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
-    radial-gradient(circle at 28% 72%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px),
-    radial-gradient(circle at 72% 72%, #d2ccc0 0 1.6px, #3a3732 2px 2.6px, transparent 2.8px);
+.board-ico {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(42, 33, 24, 0.35);
+  background: #12161e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-.parchment-frame .nail.tl { top: -6px; left: -6px; }
-.parchment-frame .nail.tr { top: -6px; right: -6px; }
-.parchment-frame .nail.bl { bottom: -6px; left: -6px; }
-.parchment-frame .nail.br { bottom: -6px; right: -6px; }
-
-.board-rail-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 54px;
-}
-
-.board-class.parchment-frame {
+.board-class {
   display: grid;
   gap: 8px;
-  padding: 12px 10px 10px;
+  padding: 8px 6px 6px;
+  border: 1px solid rgba(74, 58, 40, 0.28);
+  background: rgba(255, 248, 230, 0.28);
 }
 
 .board-class-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0;
+  padding: 2px 4px;
   color: var(--pf-ink);
-  text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.3;
@@ -98,9 +89,9 @@
   gap: 4px;
   min-height: 0;
   padding: 8px 4px;
-  border: 1px solid rgba(74, 58, 40, 0.28);
-  background: rgba(255, 248, 230, 0.45);
-  color: var(--pf-ink);
+  border: 1px solid rgba(20, 24, 32, 0.55);
+  background: #12161e;
+  color: #f3e8cc;
   text-decoration: none;
   font-size: 12px;
   font-weight: 900;
@@ -108,13 +99,16 @@
 }
 
 .board-class-grid a:hover {
-  background: rgba(90, 60, 30, 0.12);
-  filter: brightness(1.03);
+  background: #1c2430;
+  filter: brightness(1.08);
 }
 
 .board-class-grid img {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   image-rendering: pixelated;
+  background: #0a0d12;
+  border-radius: 4px;
+  padding: 2px;
 }

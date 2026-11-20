@@ -37,12 +37,6 @@
       gap: 14px;
       align-items: start;
     }
-    .board-rail {
-      display: grid;
-      gap: 10px;
-      position: sticky;
-      top: 14px;
-    }
     .topbar {
       display: flex;
       justify-content: flex-end;
@@ -281,18 +275,12 @@
     .counts[hidden] { display: none; }
     @media (max-width: 820px) {
       .home-grid { grid-template-columns: 1fr; }
-      .board-rail {
-        position: static;
-        grid-template-columns: 1fr 1fr;
-      }
-      .board-class { grid-column: 1 / -1; }
+      .board-rail { position: static; }
     }
     @media (max-width: 640px) {
       .banner-row { grid-template-columns: 1fr; }
       .banner-row img { height: auto; }
       .member-cta { padding: 12px 10px; border-left: 0; border-top: 2px solid #2a160e; }
-      .board-rail { grid-template-columns: 1fr 1fr; }
-      .board-class { grid-column: 1 / -1; }
     }
   </style>
 </head>
@@ -314,40 +302,32 @@
     <div class="banner" hidden>배너 광고 구함</div>
     <div class="home-grid">
       <nav class="board-rail" aria-label="게시판">
-        <a class="parchment-frame board-rail-btn" href="board.html?b=tips">
-          <span class="nail tl" aria-hidden="true"></span>
-          <span class="nail tr" aria-hidden="true"></span>
-          <span class="nail bl" aria-hidden="true"></span>
-          <span class="nail br" aria-hidden="true"></span>
-          팁 &amp; 노하우<br>게시판
-        </a>
-        <div class="parchment-frame board-class">
-          <span class="nail tl" aria-hidden="true"></span>
-          <span class="nail tr" aria-hidden="true"></span>
-          <span class="nail bl" aria-hidden="true"></span>
-          <span class="nail br" aria-hidden="true"></span>
-          <p class="board-class-label">클래스 게시판</p>
-          <div class="board-class-grid">
-            <a href="board.html?b=class-prince"><img src="class-icons/lord.png" alt="">군주</a>
-            <a href="board.html?b=class-knight"><img src="class-icons/knight.png" alt="">기사</a>
-            <a href="board.html?b=class-elf"><img src="class-icons/elf.png" alt="">요정</a>
-            <a href="board.html?b=class-mage"><img src="class-icons/mage.png" alt="">마법사</a>
+        <div class="board-panel">
+          <a class="board-link" href="board.html?b=tips">
+            <img class="board-ico" src="board-ui/icon-tips.jpg" alt="">
+            <span>팁 &amp; 노하우<br>게시판</span>
+          </a>
+          <div class="board-class">
+            <p class="board-class-label">
+              <img class="board-ico" src="board-ui/icon-class.jpg" alt="">
+              <span>클래스 게시판</span>
+            </p>
+            <div class="board-class-grid">
+              <a href="board.html?b=class-prince"><img src="class-icons/lord.png" alt="">군주</a>
+              <a href="board.html?b=class-knight"><img src="class-icons/knight.png" alt="">기사</a>
+              <a href="board.html?b=class-elf"><img src="class-icons/elf.png" alt="">요정</a>
+              <a href="board.html?b=class-mage"><img src="class-icons/mage.png" alt="">마법사</a>
+            </div>
           </div>
+          <a class="board-link" href="board.html?b=free">
+            <img class="board-ico" src="board-ui/icon-free.jpg" alt="">
+            <span>자유<br>게시판</span>
+          </a>
+          <a class="board-link" href="board.html?b=feedback">
+            <img class="board-ico" src="board-ui/icon-feedback.jpg" alt="">
+            <span>피드백<br>게시판</span>
+          </a>
         </div>
-        <a class="parchment-frame board-rail-btn" href="board.html?b=free">
-          <span class="nail tl" aria-hidden="true"></span>
-          <span class="nail tr" aria-hidden="true"></span>
-          <span class="nail bl" aria-hidden="true"></span>
-          <span class="nail br" aria-hidden="true"></span>
-          자유<br>게시판
-        </a>
-        <a class="parchment-frame board-rail-btn" href="board.html?b=feedback">
-          <span class="nail tl" aria-hidden="true"></span>
-          <span class="nail tr" aria-hidden="true"></span>
-          <span class="nail bl" aria-hidden="true"></span>
-          <span class="nail br" aria-hidden="true"></span>
-          피드백<br>게시판
-        </a>
       </nav>
       <div class="tools">
         <div class="item-cats">

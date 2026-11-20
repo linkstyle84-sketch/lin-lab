@@ -1,4 +1,4 @@
-/* 시안 C: 이미지 프레임 1개 안에 게시판 전체 */
+/* 시안 C: 9-slice border-image (모서리 고정, 변만 신장) */
 .board-rail {
   display: block;
   position: sticky;
@@ -10,9 +10,14 @@
   --pf-muted: #5c4d3a;
   display: grid;
   gap: 10px;
-  padding: 36px 22px 30px;
+  padding: 8px 10px 10px;
   color: var(--pf-ink);
-  background: url("board-ui/frame-c.jpg") center / 100% 100% no-repeat;
+  background-color: #d6c6a2;
+  border: 42px solid transparent;
+  border-image-source: url("board-ui/frame-c.png");
+  border-image-slice: 90 fill;
+  border-image-width: 42px;
+  border-image-repeat: stretch;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 

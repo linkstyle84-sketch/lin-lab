@@ -8,6 +8,7 @@
 .board-panel {
   --pf-ink: #2a2118;
   --pf-muted: #5c4d3a;
+  --pf-page: #0c0a08;
   display: grid;
   gap: 8px;
   padding: 6px 8px 8px;
@@ -18,7 +19,13 @@
   border-image-slice: 90 fill;
   border-image-width: 24px;
   border-image-repeat: stretch;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  /* 바깥 밝은 잔선을 페이지 배경(#0c0a08)으로 덮음 */
+  outline: 4px solid var(--pf-page);
+  outline-offset: -1px;
+  box-shadow:
+    0 0 0 4px var(--pf-page),
+    0 0 0 8px var(--pf-page),
+    0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .board-link {
@@ -54,11 +61,13 @@
   width: 36px;
   height: 36px;
   flex: 0 0 auto;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
+  /* PNG 투명 + 잔여 흰 픽셀 백업 */
+  mix-blend-mode: multiply;
 }
 
 .board-class {

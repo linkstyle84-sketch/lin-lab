@@ -105,19 +105,20 @@
   justify-content: center;
   gap: 4px;
   min-height: 0;
-  padding: 8px 4px;
-  border: 1px solid rgba(20, 24, 32, 0.55);
-  background: #12161e;
-  color: #f3e8cc;
+  padding: 6px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--pf-ink);
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .board-class-grid a:hover {
-  background: #1c2430;
-  filter: brightness(1.08);
+  background: rgba(255, 248, 230, 0.55);
+  transform: translateY(-1px);
 }
 
 .board-class-grid img {
@@ -125,7 +126,9 @@
   height: 32px;
   object-fit: contain;
   image-rendering: pixelated;
-  background: #0a0d12;
-  border-radius: 4px;
-  padding: 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  mix-blend-mode: multiply;
 }

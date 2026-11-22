@@ -130,5 +130,7 @@
   border: 0;
   border-radius: 0;
   padding: 0;
+  /* 금색 아이콘 → 게시판 잉크색(#2a2118) 톤 + 검정 배경은 양피지에 녹임 */
+  filter: brightness(0) saturate(100%) invert(14%) sepia(35%) saturate(900%) hue-rotate(350deg) brightness(0.95);
   mix-blend-mode: multiply;
 }

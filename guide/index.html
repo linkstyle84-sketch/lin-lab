@@ -78,6 +78,85 @@
       cursor: pointer;
     }
     .topbar-user button:hover { color: var(--gold); text-decoration: underline; }
+    /* 인벤식 좌측 로그인 박스 */
+    .login-box {
+      margin: 0 0 12px;
+      padding: 14px 12px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(20, 16, 12, 0.92);
+      text-align: center;
+    }
+    .login-box .cta {
+      margin: 0 0 10px;
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.45;
+    }
+    .login-box .login-btn {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 10px;
+      background: linear-gradient(#6b3f24, #3d2416);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .login-box .login-btn:hover { filter: brightness(1.08); }
+    .login-box .links {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .login-box .links a { color: var(--muted); text-decoration: none; }
+    .login-box .links a:hover { color: var(--gold); }
+    .login-box .user-name {
+      margin: 0 0 4px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 900;
+    }
+    .login-box .user-name b { color: var(--gold); }
+    .login-box .user-state {
+      margin: 0 0 10px;
+      color: #5dce6e;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .login-box .user-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .login-box .user-actions a,
+    .login-box .user-actions button {
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 6px;
+      background: rgba(228, 195, 106, 0.08);
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .login-box .user-actions a:hover,
+    .login-box .user-actions button:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
     .tools { display: grid; gap: 12px; }
     .tool {
       display: block;
@@ -302,6 +381,13 @@
     <div class="banner" hidden>배너 광고 구함</div>
     <div class="home-grid">
       <nav class="board-rail" aria-label="게시판">
+        <div class="login-box" id="login-box">
+          <p class="cta">로그인하고 게시판을 이용해 보세요!</p>
+          <a class="login-btn" href="join.html#login">로그인</a>
+          <div class="links">
+            <a href="join.html#join">회원가입</a>
+          </div>
+        </div>
         <div class="board-panel">
           <a class="board-link" href="board.html?b=tips">
             <img class="board-ico" src="board-ui/icon-tips.png" alt="">
@@ -373,39 +459,57 @@
   <script>
     (function () {
       var bar = document.getElementById('topbar');
+      var loginBox = document.getElementById('login-box');
       var session = window.DgMember && DgMember.getSession && DgMember.getSession();
-      if (!bar || !session || !session.email) return;
-      var label = session.name || session.email;
-      bar.innerHTML = '';
-      var box = document.createElement('span');
-      box.className = 'topbar-user';
-      var charLink = document.createElement('a');
-      charLink.href = 'character.html';
-      charLink.textContent = '내 캐릭터';
-      bar.appendChild(charLink);
-      box.innerHTML = '<b></b><span class="on"></span><button type="button">로그아웃</button>';
-      box.querySelector('b').textContent = label;
-      box.querySelector('span').textContent = '로그인 중';
-      box.querySelector('button').addEventListener('click', function () {
+
+      function doLogout() {
         DgMember.clearSession();
         location.reload();
-      });
-      bar.appendChild(box);
-      var token = DgMember.getIdToken ? DgMember.getIdToken() : '';
-      if (token && DgMember.connected && DgMember.connected()) {
-        DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
-          if (!data.character) return;
-          DgMember.setCharacterCache(session.email, data.character, data.updated_at);
-          DgMember.writeDpsLocal(data.character);
-        }).catch(function () {});
       }
-      if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
-        var boards = ['tips', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
-        boards.forEach(function (board, i) {
-          window.setTimeout(function () {
-            DgMember.prefetchBoardList(board).catch(function () {});
-          }, 200 + i * 180);
-        });
+
+      if (session && session.email) {
+        var label = session.name || session.email;
+        if (bar) {
+          bar.innerHTML = '';
+          var charLink = document.createElement('a');
+          charLink.href = 'character.html';
+          charLink.textContent = '내 캐릭터';
+          bar.appendChild(charLink);
+          var box = document.createElement('span');
+          box.className = 'topbar-user';
+          box.innerHTML = '<b></b><span class="on"></span><button type="button">로그아웃</button>';
+          box.querySelector('b').textContent = label;
+          box.querySelector('span').textContent = '로그인 중';
+          box.querySelector('button').addEventListener('click', doLogout);
+          bar.appendChild(box);
+        }
+        if (loginBox) {
+          loginBox.innerHTML =
+            '<p class="user-name"><b></b> 님</p>' +
+            '<p class="user-state">로그인 중</p>' +
+            '<div class="user-actions">' +
+            '<a href="character.html">내 캐릭터</a>' +
+            '<button type="button" id="login-box-logout">로그아웃</button>' +
+            '</div>';
+          loginBox.querySelector('.user-name b').textContent = label;
+          loginBox.querySelector('#login-box-logout').addEventListener('click', doLogout);
+        }
+        var token = DgMember.getIdToken ? DgMember.getIdToken() : '';
+        if (token && DgMember.connected && DgMember.connected()) {
+          DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
+            if (!data.character) return;
+            DgMember.setCharacterCache(session.email, data.character, data.updated_at);
+            DgMember.writeDpsLocal(data.character);
+          }).catch(function () {});
+        }
+        if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
+          var boards = ['tips', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
+          boards.forEach(function (board, i) {
+            window.setTimeout(function () {
+              DgMember.prefetchBoardList(board).catch(function () {});
+            }, 200 + i * 180);
+          });
+        }
       }
     })();
     function paintCount(key, n) {

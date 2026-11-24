@@ -120,10 +120,14 @@
           <button type="button" id="tab-join">회원가입</button>
         </div>
         <div id="view-login" class="view">
-          <h2>다시 오신 것을 환영합니다.</h2>
-          <p class="lead">가입할 때 사용한 Google 계정으로 계속해 주세요.</p>
+          <h2>로그인</h2>
+          <p class="lead">가입할 때 사용한 Google 계정으로 로그인합니다.</p>
           <div id="google-login" class="google"></div>
-          <p class="hint">계속하면 Google 인증 화면으로 이동합니다. 이 사이트에는 Google 비밀번호가 전달되지 않습니다.</p>
+          <div class="checks" style="margin-top:14px">
+            <label><input id="keep-login" type="checkbox" checked> <span>로그인 상태 유지</span></label>
+          </div>
+          <p class="hint">로그인 상태 유지를 끄면 브라우저를 닫을 때 로그아웃됩니다. Google 비밀번호는 이 사이트에 저장되지 않습니다.</p>
+          <p class="hint">계정이 없으면 위쪽 <b>회원가입</b> 탭을 이용해 주세요.</p>
         </div>
         <div id="view-join" class="view" hidden>
           <h2>새 계정을 만듭니다.</h2>
@@ -205,6 +209,8 @@
         return;
       }
       token = idToken;
+      var keepBox = document.getElementById('keep-login');
+      if (DgMember.setKeepLogin) DgMember.setKeepLogin(!keepBox || keepBox.checked);
       say(mode === 'join' ? '가입 내용을 저장하는 중입니다.' : '로그인 확인 중입니다.');
       var payload = mode === 'join'
         ? { action: 'join', idToken: idToken, age14: true }
@@ -271,6 +277,13 @@
     }, 200);
     function applyHash() {
       show(location.hash === '#join' ? 'join' : 'login');
+    }
+    var keepLogin = document.getElementById('keep-login');
+    if (keepLogin && DgMember.getKeepLogin) {
+      keepLogin.checked = DgMember.getKeepLogin();
+      keepLogin.addEventListener('change', function () {
+        DgMember.setKeepLogin(keepLogin.checked);
+      });
     }
     notice();
     applyHash();

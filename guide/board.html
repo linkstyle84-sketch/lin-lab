@@ -28,10 +28,30 @@
       font-family: "Noto Sans KR", sans-serif;
     }
     .wrap {
-      width: min(760px, calc(100% - 28px));
+      width: min(900px, calc(100% - 28px));
       margin: 0 auto;
       padding: 28px 0 64px;
     }
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .topbar a, .topbar button {
+      border: 0;
+      padding: 6px 4px;
+      background: none;
+      color: var(--muted);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .topbar a:hover, .topbar button:hover { color: var(--gold); }
+    .topbar .on { color: #5dce6e; }
+    .topbar b { color: var(--gold); }
     .back { margin: 0 0 16px; }
     .back a {
       color: var(--gold);
@@ -82,40 +102,83 @@
       font-size: 14px;
       font-weight: 800;
     }
-    #post-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
+    .board-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 10px;
+      padding: 12px 14px;
       border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-      background: rgba(228, 195, 106, 0.05);
+      border-radius: 12px;
+      background: rgba(228, 195, 106, 0.08);
     }
-    #post-list li { border-bottom: 1px solid var(--line); }
-    #post-list li:last-child { border-bottom: 0; }
-    #post-list .empty {
-      padding: 28px 16px;
+    .board-head h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .post-table-wrap {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: auto;
+      background: rgba(228, 195, 106, 0.04);
+    }
+    .post-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+    }
+    .post-table th,
+    .post-table td {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .post-table th {
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--muted);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .post-table td.num { width: 56px; color: var(--muted); }
+    .post-table td.title { text-align: left; font-weight: 900; }
+    .post-table td.author { width: 110px; color: var(--muted); }
+    .post-table td.date { width: 118px; color: var(--muted); white-space: nowrap; }
+    .post-table td.views { width: 64px; color: var(--muted); }
+    .post-table tbody tr { cursor: pointer; }
+    .post-table tbody tr:hover { background: rgba(228, 195, 106, 0.08); }
+    .post-table .empty td {
+      padding: 36px 16px;
       text-align: center;
       color: var(--muted);
       font-weight: 800;
+      cursor: default;
     }
-    #post-list .row {
-      width: 100%;
+    .post-table .pic {
+      display: inline-block;
+      margin-right: 4px;
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .compose-head {
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(228, 195, 106, 0.08);
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .compose-tools {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-      padding: 14px 16px;
-      border: 0;
-      background: transparent;
-      color: inherit;
-      font: inherit;
-      text-align: left;
-      cursor: pointer;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
     }
-    #post-list .row:hover { background: rgba(228, 195, 106, 0.08); }
-    #post-list .t { font-size: 16px; font-weight: 900; }
-    #post-list .m { color: var(--muted); font-size: 13px; font-weight: 700; }
     .field { margin: 0 0 14px; }
     .field label {
       display: block;
@@ -229,23 +292,48 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="topbar" id="topbar">
+      <a href="join.html#login">로그인</a>
+      <a href="join.html#join">회원가입</a>
+    </div>
     <p class="back"><a href="./">처음으로</a> · <a href="board-class.html" id="class-link" hidden>클래스 게시판</a></p>
-    <h1 id="board-title">게시판</h1>
-    <p class="note" id="board-note"></p>
     <p class="status" id="board-status" aria-live="polite"></p>
 
     <section id="view-list">
+      <div class="board-head">
+        <h1 id="board-title">게시판</h1>
+        <button type="button" class="btn" id="btn-write">글쓰기</button>
+      </div>
+      <p class="note" id="board-note"></p>
       <div class="bar">
-          <p class="count">글 <span id="post-count">0개</span></p>
-          <button type="button" class="btn" id="btn-write">글쓰기</button>
-        </div>
-        <ul id="post-list"><li class="empty">아직 글이 없습니다. 첫 글을 남겨 보세요.</li></ul>
+        <p class="count">전체 <span id="post-count">0</span>개</p>
+      </div>
+      <div class="post-table-wrap">
+        <table class="post-table" id="post-table">
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>제목</th>
+              <th>글쓴이</th>
+              <th>등록일</th>
+              <th>조회</th>
+            </tr>
+          </thead>
+          <tbody id="post-list">
+            <tr class="empty"><td colspan="5">아직 글이 없습니다. 첫 글을 남겨 보세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <section id="view-compose" hidden>
+      <div class="compose-head" id="compose-head">글쓰기</div>
       <div class="field">
         <label for="post-title">제목</label>
         <input id="post-title" maxlength="80" placeholder="제목을 입력하세요">
+      </div>
+      <div class="compose-tools">
+        <button type="button" class="btn" id="btn-add-image">이미지 첨부</button>
       </div>
       <div class="field">
         <label for="post-body">내용</label>
@@ -255,17 +343,18 @@
       <input id="image-file" type="file" accept="image/*" hidden>
       <div id="google-box"></div>
       <div class="actions">
-        <button type="button" class="btn" id="btn-add-image">이미지 추가</button>
-        <button type="button" class="btn" id="btn-publish">게시</button>
-        <button type="button" class="btn" id="btn-update" hidden>수정</button>
+        <button type="button" class="btn" id="btn-publish">등록</button>
+        <button type="button" class="btn" id="btn-update" hidden>수정 완료</button>
         <button type="button" class="btn danger" id="btn-delete" hidden>삭제</button>
-        <button type="button" class="btn" id="btn-cancel">목록으로</button>
+        <button type="button" class="btn" id="btn-cancel">목록</button>
       </div>
     </section>
 
     <section id="view-detail" hidden>
-      <p class="back"><button type="button" class="btn" id="btn-back-list">목록으로</button></p>
-      <h2 id="detail-title"></h2>
+      <div class="board-head">
+        <h1 id="detail-title"></h1>
+        <button type="button" class="btn" id="btn-back-list">목록</button>
+      </div>
       <p id="detail-meta"></p>
       <div id="detail-body"></div>
       <div id="detail-images"></div>
@@ -284,6 +373,26 @@
         var link = document.getElementById('class-link');
         link.hidden = false;
       }
+      var bar = document.getElementById('topbar');
+      var session = window.DgMember && DgMember.getSession && DgMember.getSession();
+      if (!bar || !session || !session.email) return;
+      bar.innerHTML = '';
+      var name = document.createElement('span');
+      name.innerHTML = '<b></b> <span class="on">로그인 중</span>';
+      name.querySelector('b').textContent = session.name || session.email;
+      var charLink = document.createElement('a');
+      charLink.href = 'character.html';
+      charLink.textContent = '내 캐릭터';
+      var out = document.createElement('button');
+      out.type = 'button';
+      out.textContent = '로그아웃';
+      out.addEventListener('click', function () {
+        DgMember.clearSession();
+        location.reload();
+      });
+      bar.appendChild(name);
+      bar.appendChild(charLink);
+      bar.appendChild(out);
     })();
   </script>
 </body>

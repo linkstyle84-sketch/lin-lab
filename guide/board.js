@@ -68,6 +68,35 @@
     return y + '-' + mo + '-' + da + ' ' + h + ':' + mi;
   }
 
+  function fmtDateShort(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+    var now = new Date();
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
+    var da = String(d.getDate()).padStart(2, '0');
+    if (d.getFullYear() === now.getFullYear()) return mo + '-' + da;
+    return String(d.getFullYear()).slice(2) + '-' + mo + '-' + da;
+  }
+
+  function viewKey(id) {
+    return 'dg-board-views:' + id;
+  }
+
+  function getViews(id) {
+    try {
+      return Math.max(0, parseInt(localStorage.getItem(viewKey(id)) || '0', 10) || 0);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function bumpViews(id) {
+    var n = getViews(id) + 1;
+    try { localStorage.setItem(viewKey(id), String(n)); } catch (e) {}
+    return n;
+  }
+
   function session() {
     return window.DgMember && DgMember.getSession ? DgMember.getSession() : null;
   }
@@ -144,6 +173,7 @@
     var bodyInput = document.getElementById('post-body');
     var imageList = document.getElementById('image-list');
     var fileInput = document.getElementById('image-file');
+    var composeHead = document.getElementById('compose-head');
     var btnWrite = document.getElementById('btn-write');
     var btnAddImage = document.getElementById('btn-add-image');
     var btnPublish = document.getElementById('btn-publish');
@@ -268,6 +298,7 @@
       btnPublish.hidden = !!editingId;
       btnUpdate.hidden = !editingId;
       btnDelete.hidden = !editingId;
+      if (composeHead) composeHead.textContent = editingId ? '글 수정' : '글쓰기';
       ensureGoogle(false);
       show('compose');
       say(editingId ? '글을 수정합니다.' : '새 글을 작성합니다.');
@@ -277,8 +308,11 @@
     function openDetail(post) {
       currentPost = post;
       writePostCache(post);
+      var views = bumpViews(post.id);
       detailTitle.textContent = post.title;
-      detailMeta.textContent = (post.author_name || '회원') + ' · ' + fmtDate(post.created_at);
+      detailMeta.textContent = '글쓴이 ' + (post.author_name || '회원')
+        + ' · 등록일 ' + fmtDate(post.created_at)
+        + ' · 조회 ' + views;
       detailBody.innerHTML = renderBody(post.body);
       detailImages.innerHTML = '';
       (post.images || []).forEach(function (src) {
@@ -333,21 +367,30 @@
     }
 
     function paintPosts(posts) {
-      countEl.textContent = (posts || []).length + '개';
+      var rows = posts || [];
+      countEl.textContent = String(rows.length);
       listEl.innerHTML = '';
-      if (!posts || !posts.length) {
-        listEl.innerHTML = '<li class="empty">아직 글이 없습니다. 첫 글을 남겨 보세요.</li>';
+      if (!rows.length) {
+        listEl.innerHTML = '<tr class="empty"><td colspan="5">아직 글이 없습니다. 첫 글을 남겨 보세요.</td></tr>';
         return;
       }
-      posts.forEach(function (p) {
-        var li = document.createElement('li');
-        li.innerHTML = '<button type="button" class="row"><span class="t"></span><span class="m"></span></button>';
-        li.querySelector('.t').textContent = (p.has_image ? '[사진] ' : '') + p.title;
-        li.querySelector('.m').textContent = (p.author_name || '회원') + ' · ' + fmtDate(p.created_at);
-        li.querySelector('button').addEventListener('click', function () {
+      rows.forEach(function (p, i) {
+        var tr = document.createElement('tr');
+        var num = rows.length - i;
+        var title = (p.has_image ? '<span class="pic">[사진]</span>' : '') + escapeHtml(p.title || '');
+        tr.innerHTML =
+          '<td class="num">' + num + '</td>' +
+          '<td class="title">' + title + '</td>' +
+          '<td class="author"></td>' +
+          '<td class="date"></td>' +
+          '<td class="views"></td>';
+        tr.querySelector('.author').textContent = p.author_name || '회원';
+        tr.querySelector('.date').textContent = fmtDateShort(p.created_at);
+        tr.querySelector('.views').textContent = String(getViews(p.id));
+        tr.addEventListener('click', function () {
           openPost(p.id);
         });
-        listEl.appendChild(li);
+        listEl.appendChild(tr);
       });
     }
 

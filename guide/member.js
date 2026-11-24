@@ -3,6 +3,7 @@
   var CHARACTER_KEY = 'dg-character';
   var DPS_KEY = 'lin-dps-html-v2';
   var ID_TOKEN_KEY = 'dg-id-token-cache';
+  var KEEP_LOGIN_KEY = 'dg-keep-login';
   var ID_TOKEN_TTL_MS = 50 * 60 * 1000;
 
   function config() {
@@ -14,64 +15,108 @@
     return !!(cfg.clientId && cfg.scriptUrl);
   }
 
-  function getSession() {
+  /* 인벤의 「로그인 상태 유지」: 켜면 localStorage, 끄면 sessionStorage(탭 닫으면 로그아웃) */
+  function getKeepLogin() {
     try {
-      var raw = localStorage.getItem(SESSION_KEY);
+      var v = localStorage.getItem(KEEP_LOGIN_KEY);
+      if (v === null || v === undefined || v === '') return true;
+      return v !== '0';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setKeepLogin(on) {
+    try {
+      localStorage.setItem(KEEP_LOGIN_KEY, on ? '1' : '0');
+    } catch (e) {}
+  }
+
+  function authStore() {
+    return getKeepLogin() ? localStorage : sessionStorage;
+  }
+
+  function readJsonStore(store, key) {
+    try {
+      var raw = store.getItem(key);
       if (!raw) return null;
-      var data = JSON.parse(raw);
-      if (!data || !data.email) return null;
-      return data;
+      return JSON.parse(raw);
     } catch (e) {
       return null;
     }
   }
 
+  function getSession() {
+    var data = readJsonStore(authStore(), SESSION_KEY);
+    if ((!data || !data.email) && authStore() !== localStorage) {
+      data = readJsonStore(localStorage, SESSION_KEY);
+    }
+    if ((!data || !data.email) && authStore() !== sessionStorage) {
+      data = readJsonStore(sessionStorage, SESSION_KEY);
+    }
+    if (!data || !data.email) return null;
+    return data;
+  }
+
   function setSession(member) {
     var email = String((member && member.email) || '').trim().toLowerCase();
     if (!email) return;
-    localStorage.setItem(SESSION_KEY, JSON.stringify({
+    var payload = JSON.stringify({
       email: email,
       name: String((member && member.name) || '').slice(0, 80),
       at: Date.now()
-    }));
+    });
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e2) {}
+    try { authStore().setItem(SESSION_KEY, payload); } catch (e3) {}
   }
 
   function setIdToken(idToken) {
     var token = String(idToken || '');
     if (!token || token.length < 20) return;
-    try {
-      localStorage.setItem(ID_TOKEN_KEY, JSON.stringify({
-        token: token,
-        at: Date.now()
-      }));
-    } catch (e) {}
-    try { sessionStorage.setItem('dg-id-token', token); } catch (e2) {}
+    var payload = JSON.stringify({ token: token, at: Date.now() });
+    try { localStorage.removeItem(ID_TOKEN_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(ID_TOKEN_KEY); } catch (e2) {}
+    try { sessionStorage.removeItem('dg-id-token'); } catch (e3) {}
+    try { authStore().setItem(ID_TOKEN_KEY, payload); } catch (e4) {}
+    try { sessionStorage.setItem('dg-id-token', token); } catch (e5) {}
   }
 
   function getIdToken() {
-    try {
-      var raw = localStorage.getItem(ID_TOKEN_KEY);
-      if (!raw) return '';
-      var data = JSON.parse(raw);
-      if (!data || !data.token) return '';
-      if (Date.now() - Number(data.at || 0) > ID_TOKEN_TTL_MS) {
-        localStorage.removeItem(ID_TOKEN_KEY);
+    function fromStore(store) {
+      try {
+        var raw = store.getItem(ID_TOKEN_KEY);
+        if (!raw) return '';
+        var data = JSON.parse(raw);
+        if (!data || !data.token) return '';
+        if (Date.now() - Number(data.at || 0) > ID_TOKEN_TTL_MS) {
+          store.removeItem(ID_TOKEN_KEY);
+          return '';
+        }
+        return String(data.token);
+      } catch (e) {
         return '';
       }
-      return String(data.token);
-    } catch (e) {
-      return '';
     }
+    var token = fromStore(authStore());
+    if (!token) token = fromStore(localStorage);
+    if (!token) token = fromStore(sessionStorage);
+    if (!token) {
+      try { token = sessionStorage.getItem('dg-id-token') || ''; } catch (e) { token = ''; }
+    }
+    return token;
   }
 
   function clearIdToken() {
     try { localStorage.removeItem(ID_TOKEN_KEY); } catch (e) {}
-    try { sessionStorage.removeItem('dg-id-token'); } catch (e2) {}
+    try { sessionStorage.removeItem(ID_TOKEN_KEY); } catch (e2) {}
+    try { sessionStorage.removeItem('dg-id-token'); } catch (e3) {}
   }
 
   function clearSession() {
     var prev = getSession();
-    localStorage.removeItem(SESSION_KEY);
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e2) {}
     clearIdToken();
     try {
       if (window.google && google.accounts && google.accounts.id) {
@@ -80,7 +125,7 @@
           google.accounts.id.revoke(prev.email, function () {});
         }
       }
-    } catch (e) {}
+    } catch (e3) {}
   }
 
   function getCharacterCache() {
@@ -434,6 +479,8 @@
     getSession: getSession,
     setSession: setSession,
     clearSession: clearSession,
+    getKeepLogin: getKeepLogin,
+    setKeepLogin: setKeepLogin,
     getIdToken: getIdToken,
     setIdToken: setIdToken,
     clearIdToken: clearIdToken,

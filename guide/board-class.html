@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>클래스 게시판 · 도건 게임 연구소</title>
+  <link rel="stylesheet" href="topnav.css?v=1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
@@ -90,7 +91,15 @@
 </head>
 <body>
   <div class="wrap">
-    <p class="back"><a href="./">처음으로</a></p>
+        <nav class="site-topnav" aria-label="바로가기">
+      <a href="./">홈</a><span class="sep">·</span>
+      <a href="items-weapon.html">아이템DB</a><span class="sep">·</span>
+      <a href="monsters.html">몬스터DB</a><span class="sep">·</span>
+      <a href="craft.html">제작DB</a><span class="sep">·</span>
+      <a href="spells.html">마법DB</a><span class="sep">·</span>
+      <a href="dolls.html">마법인형</a><span class="sep">·</span>
+      <a href="/dps/">무기DPS측정기</a>
+    </nav>
     <h1>클래스 게시판</h1>
     <p class="note">클래스를 선택하면 해당 게시판으로 이동합니다. 글쓰기 구조는 다른 게시판과 동일합니다.</p>
     <div class="grid">

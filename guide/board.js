@@ -535,6 +535,28 @@
       loadList();
     });
 
+    function addImageFile(file) {
+      if (!file) return Promise.resolve(false);
+      if (!/^image\//.test(file.type || '')) {
+        say('이미지 파일만 올릴 수 있습니다.');
+        return Promise.resolve(false);
+      }
+      if (images.length >= 3) {
+        say('이미지는 최대 3장까지입니다.');
+        return Promise.resolve(false);
+      }
+      say('이미지를 준비하는 중입니다.');
+      return compressImage(file).then(function (dataUrl) {
+        images.push(dataUrl);
+        paintImages();
+        say('이미지를 추가했습니다. (Ctrl+V로도 붙여넣을 수 있습니다)');
+        return true;
+      }).catch(function (err) {
+        say(err.message);
+        return false;
+      });
+    }
+
     btnAddImage.addEventListener('click', function () {
       if (images.length >= 3) {
         say('이미지는 최대 3장까지입니다.');
@@ -546,20 +568,32 @@
     fileInput.addEventListener('change', function () {
       var file = fileInput.files && fileInput.files[0];
       fileInput.value = '';
-      if (!file) return;
-      if (!/^image\//.test(file.type)) {
-        say('이미지 파일만 올릴 수 있습니다.');
-        return;
-      }
-      say('이미지를 준비하는 중입니다.');
-      compressImage(file).then(function (dataUrl) {
-        images.push(dataUrl);
-        paintImages();
-        say('이미지를 추가했습니다.');
-      }).catch(function (err) {
-        say(err.message);
-      });
+      addImageFile(file);
     });
+
+    /* 글쓰기 화면에서 클립보드 이미지 Ctrl+V / 우클릭 붙여넣기 */
+    function onComposePaste(e) {
+      if (composeView.hidden) return;
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items || !items.length) return;
+      var files = [];
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (item.kind === 'file' && /^image\//.test(item.type || '')) {
+          var f = item.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (!files.length) return;
+      e.preventDefault();
+      var chain = Promise.resolve();
+      files.forEach(function (file) {
+        chain = chain.then(function () { return addImageFile(file); });
+      });
+    }
+    composeView.addEventListener('paste', onComposePaste);
+    titleInput.addEventListener('paste', onComposePaste);
+    bodyInput.addEventListener('paste', onComposePaste);
 
     btnPublish.addEventListener('click', function () {
       if (!requireToken()) return;

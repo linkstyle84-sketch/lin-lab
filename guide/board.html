@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="topnav.css?v=1">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="member-config.js"></script>
   <style>
@@ -296,7 +297,17 @@
       <a href="join.html#login">로그인</a>
       <a href="join.html#join">회원가입</a>
     </div>
-    <p class="back"><a href="./">처음으로</a> · <a href="board-class.html" id="class-link" hidden>클래스 게시판</a></p>
+    <nav class="site-topnav" aria-label="바로가기">
+      <a href="./">홈</a><span class="sep">·</span>
+      <a href="items-weapon.html">아이템DB</a><span class="sep">·</span>
+      <a href="monsters.html">몬스터DB</a><span class="sep">·</span>
+      <a href="craft.html">제작DB</a><span class="sep">·</span>
+      <a href="spells.html">마법DB</a><span class="sep">·</span>
+      <a href="dolls.html">마법인형</a><span class="sep">·</span>
+      <a href="/dps/">무기DPS측정기</a>
+      <span class="sep" id="class-sep" hidden>·</span>
+      <a href="board-class.html" id="class-link" hidden>클래스 게시판</a>
+    </nav>
     <p class="status" id="board-status" aria-live="polite"></p>
 
     <section id="view-list">

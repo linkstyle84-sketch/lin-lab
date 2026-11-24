@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="topnav.css?v=1">
   <style>
     :root {
       --bg: #0c0a08;
@@ -30,9 +31,8 @@
       font-family: "Noto Sans KR", sans-serif;
     }
     .wrap { width: min(980px, calc(100% - 20px)); margin: 0 auto; padding: 20px 0 48px; }
-    .back { margin: 0 0 12px; }
-    .back a, .foot a { color: var(--gold); font-weight: 800; text-decoration: none; }
-    .back a:hover, .foot a:hover { text-decoration: underline; }
+    .foot a { color: var(--gold); font-weight: 800; text-decoration: none; }
+    .foot a:hover { text-decoration: underline; }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -342,7 +342,15 @@
 </head>
 <body>
   <div class="wrap">
-    <p class="back"><a href="./">처음으로</a></p>
+    <nav class="site-topnav" aria-label="바로가기">
+      <a href="./">홈</a><span class="sep">·</span>
+      <a href="items-weapon.html">아이템DB</a><span class="sep">·</span>
+      <a href="monsters.html">몬스터DB</a><span class="sep">·</span>
+      <a href="craft.html">제작DB</a><span class="sep">·</span>
+      <a href="spells.html">마법DB</a><span class="sep">·</span>
+      <a href="dolls.html">마법인형</a><span class="sep">·</span>
+      <a href="/dps/">무기DPS측정기</a>
+    </nav>
     <div id="need-login" class="gate" hidden>
       <p class="hint" style="margin:0 0 12px">내 캐릭터를 만들려면 먼저 로그인해 주세요.</p>
       <div class="actions"><a class="btn wide" href="join.html#login">로그인하러 가기</a></div>

@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="topnav.css?v=1">
   <style>
     :root {
       --bg: #0c0a08;
@@ -213,7 +214,15 @@
 </head>
 <body>
   <div class="wrap">
-    <p class="back"><a href="./">처음으로</a></p>
+    <nav class="site-topnav" aria-label="바로가기">
+      <a href="./">홈</a><span class="sep">·</span>
+      <a href="items-weapon.html">아이템DB</a><span class="sep">·</span>
+      <a href="monsters.html">몬스터DB</a><span class="sep">·</span>
+      <a href="craft.html">제작DB</a><span class="sep">·</span>
+      <a href="spells.html">마법DB</a><span class="sep">·</span>
+      <a href="dolls.html">마법인형</a><span class="sep">·</span>
+      <a href="/dps/">무기DPS측정기</a>
+    </nav>
     <h1>마법인형 합성 미리해보기</h1>
     <p class="note">사용방법: 아르카 주머니를 클릭하여 인형을 획득하고 합성을 시도해주세요.</p>
     <div class="lab" id="lab">

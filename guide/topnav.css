@@ -1,0 +1,23 @@
+/* 공통 상단 글자 네비 */
+.site-topnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 14px;
+}
+.site-topnav a {
+  color: #e4c36a;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.site-topnav a:hover {
+  text-decoration: underline;
+}
+.site-topnav .sep {
+  color: rgba(203, 185, 148, 0.45);
+  font-weight: 700;
+  user-select: none;
+}

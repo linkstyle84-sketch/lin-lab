@@ -2,6 +2,7 @@
   var ADMIN_EMAIL = 'linkstyle84@gmail.com';
   var BOARDS = {
     tips: { title: '팁 & 노하우 게시판', note: '사냥·제작·운영 팁을 공유하는 게시판입니다.' },
+    lab: { title: '도건 연구일지', note: '도건의 실험·연구 기록과 연구일지를 올리는 게시판입니다.' },
     free: { title: '자유게시판', note: '자유롭게 이야기하는 게시판입니다.' },
     feedback: { title: '피드백 게시판', note: '건의·버그·오류 제보를 올리는 게시판입니다.' },
     'class-prince': { title: '군주 게시판', note: '군주 클래스 이야기와 팁을 올리는 게시판입니다.' },

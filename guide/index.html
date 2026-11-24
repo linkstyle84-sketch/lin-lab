@@ -405,6 +405,10 @@
             <img class="board-ico" src="board-ui/icon-free.png" alt="">
             <span>자유게시판</span>
           </a>
+          <a class="board-link" href="board.html?b=ask">
+            <img class="board-ico" src="board-ui/icon-ask.png" alt="">
+            <span>도건형 질문있어요!</span>
+          </a>
           <a class="board-link" href="board.html?b=lab">
             <img class="board-ico" src="board-ui/icon-lab.png" alt="">
             <span>도건 연구일지</span>
@@ -511,7 +515,7 @@
           }).catch(function () {});
         }
         if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
-          var boards = ['tips', 'lab', 'experiment', 'lab-video', 'lin-video', 'free', 'feedback'];
+          var boards = ['tips', 'lab', 'experiment', 'lab-video', 'lin-video', 'free', 'ask', 'feedback'];
           boards.forEach(function (board, i) {
             window.setTimeout(function () {
               DgMember.prefetchBoardList(board).catch(function () {});

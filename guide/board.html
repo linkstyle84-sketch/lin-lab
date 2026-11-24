@@ -305,8 +305,6 @@
       <a href="spells.html">마법DB</a><span class="sep">·</span>
       <a href="dolls.html">마법인형</a><span class="sep">·</span>
       <a href="/dps/">무기DPS측정기</a>
-      <span class="sep" id="class-sep" hidden>·</span>
-      <a href="board-class.html" id="class-link" hidden>클래스 게시판</a>
     </nav>
     <p class="status" id="board-status" aria-live="polite"></p>
 
@@ -379,12 +377,6 @@
   <script src="board.js"></script>
   <script>
     (function () {
-      var b = '';
-      try { b = new URLSearchParams(location.search).get('b') || ''; } catch (e) {}
-      if (b.indexOf('class-') === 0) {
-        var link = document.getElementById('class-link');
-        link.hidden = false;
-      }
       var bar = document.getElementById('topbar');
       var session = window.DgMember && DgMember.getSession && DgMember.getSession();
       if (!bar || !session || !session.email) return;

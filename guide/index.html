@@ -401,18 +401,10 @@
             <img class="board-ico" src="board-ui/icon-tips.png" alt="">
             <span>리니지 실험요청</span>
           </a>
-          <div class="board-class">
-            <p class="board-class-label">
-              <img class="board-ico" src="board-ui/icon-class.png" alt="">
-              <span>클래스 게시판</span>
-            </p>
-            <div class="board-class-grid">
-              <a href="board.html?b=class-prince"><img src="class-icons/lord.png" alt="">군주</a>
-              <a href="board.html?b=class-knight"><img src="class-icons/knight.png" alt="">기사</a>
-              <a href="board.html?b=class-elf"><img src="class-icons/elf.png" alt="">요정</a>
-              <a href="board.html?b=class-mage"><img src="class-icons/mage.png" alt="">마법사</a>
-            </div>
-          </div>
+          <a class="board-link" href="board.html?b=lab-video">
+            <img class="board-ico" src="board-ui/icon-tips.png" alt="">
+            <span>도건 실험영상</span>
+          </a>
           <a class="board-link" href="board.html?b=free">
             <img class="board-ico" src="board-ui/icon-free.png" alt="">
             <span>자유 게시판</span>
@@ -511,7 +503,7 @@
           }).catch(function () {});
         }
         if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
-          var boards = ['tips', 'lab', 'experiment', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
+          var boards = ['tips', 'lab', 'experiment', 'lab-video', 'free', 'feedback'];
           boards.forEach(function (board, i) {
             window.setTimeout(function () {
               DgMember.prefetchBoardList(board).catch(function () {});

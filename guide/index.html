@@ -405,6 +405,10 @@
             <img class="board-ico" src="board-ui/icon-tips.png" alt="">
             <span>도건 실험영상</span>
           </a>
+          <a class="board-link" href="board.html?b=lin-video">
+            <img class="board-ico" src="board-ui/icon-tips.png" alt="">
+            <span>린저씨 실험영상</span>
+          </a>
           <a class="board-link" href="board.html?b=free">
             <img class="board-ico" src="board-ui/icon-free.png" alt="">
             <span>자유 게시판</span>
@@ -503,7 +507,7 @@
           }).catch(function () {});
         }
         if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
-          var boards = ['tips', 'lab', 'experiment', 'lab-video', 'free', 'feedback'];
+          var boards = ['tips', 'lab', 'experiment', 'lab-video', 'lin-video', 'free', 'feedback'];
           boards.forEach(function (board, i) {
             window.setTimeout(function () {
               DgMember.prefetchBoardList(board).catch(function () {});

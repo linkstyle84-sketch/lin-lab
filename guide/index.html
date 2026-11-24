@@ -81,10 +81,14 @@
     /* 인벤식 좌측 로그인 박스 */
     .login-box {
       margin: 0 0 12px;
-      padding: 14px 12px 12px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: rgba(20, 16, 12, 0.92);
+      padding: 16px 14px 14px;
+      border: 22px solid transparent;
+      border-radius: 0;
+      background-color: #1a1410;
+      border-image-source: url("board-ui/frame-e.png");
+      border-image-slice: 68 fill;
+      border-image-width: 22px;
+      border-image-repeat: stretch;
       text-align: center;
     }
     .login-box .cta {
@@ -141,10 +145,10 @@
     .login-box .user-actions a,
     .login-box .user-actions button {
       display: block;
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      border: 0;
+      border-radius: 6px;
       padding: 8px 6px;
-      background: rgba(228, 195, 106, 0.08);
+      background: rgba(228, 195, 106, 0.1);
       color: var(--ink);
       font: inherit;
       font-size: 12px;
@@ -154,8 +158,8 @@
     }
     .login-box .user-actions a:hover,
     .login-box .user-actions button:hover {
-      border-color: var(--gold);
       color: var(--gold);
+      background: rgba(228, 195, 106, 0.18);
     }
     .tools { display: grid; gap: 12px; }
     .tool {

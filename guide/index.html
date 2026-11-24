@@ -397,6 +397,10 @@
             <img class="board-ico" src="board-ui/icon-tips.png" alt="">
             <span>도건 연구일지</span>
           </a>
+          <a class="board-link" href="board.html?b=experiment">
+            <img class="board-ico" src="board-ui/icon-tips.png" alt="">
+            <span>리니지 실험요청</span>
+          </a>
           <div class="board-class">
             <p class="board-class-label">
               <img class="board-ico" src="board-ui/icon-class.png" alt="">
@@ -507,7 +511,7 @@
           }).catch(function () {});
         }
         if (DgMember.connected && DgMember.connected() && DgMember.prefetchBoardList) {
-          var boards = ['tips', 'lab', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
+          var boards = ['tips', 'lab', 'experiment', 'free', 'feedback', 'class-prince', 'class-knight', 'class-elf', 'class-mage'];
           boards.forEach(function (board, i) {
             window.setTimeout(function () {
               DgMember.prefetchBoardList(board).catch(function () {});

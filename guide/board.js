@@ -110,6 +110,14 @@
     return false;
   }
 
+  function isCommentOwner(comment) {
+    var s = session();
+    if (!s || !comment) return false;
+    if (s.email && s.email.toLowerCase() === ADMIN_EMAIL) return true;
+    if (comment.author_email && s.email && comment.author_email.toLowerCase() === s.email.toLowerCase()) return true;
+    return false;
+  }
+
   function readFileAsDataUrl(file) {
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
@@ -186,6 +194,13 @@
     var detailBody = document.getElementById('detail-body');
     var detailImages = document.getElementById('detail-images');
     var detailActions = document.getElementById('detail-actions');
+    var commentListEl = document.getElementById('comment-list');
+    var commentEmptyEl = document.getElementById('comment-empty');
+    var commentCountEl = document.querySelector('#comments-box .c-count');
+    var commentBodyInput = document.getElementById('comment-body');
+    var commentHintEl = document.getElementById('comment-hint');
+    var btnComment = document.getElementById('btn-comment');
+    var commentsCache = {};
 
     titleEl.textContent = meta.title;
     noteEl.textContent = meta.note;
@@ -306,6 +321,126 @@
       titleInput.focus();
     }
 
+    function syncCommentHint() {
+      var s = session();
+      if (!s) {
+        commentHintEl.innerHTML = '댓글을 쓰려면 <a href="join.html#login">로그인</a>이 필요합니다.';
+        commentBodyInput.disabled = true;
+        btnComment.disabled = true;
+        return;
+      }
+      commentBodyInput.disabled = false;
+      btnComment.disabled = false;
+      commentHintEl.textContent = (s.name || s.email) + ' 님으로 댓글이 등록됩니다.';
+    }
+
+    function paintComments(list) {
+      var rows = list || [];
+      if (commentCountEl) commentCountEl.textContent = rows.length + '개';
+      commentListEl.innerHTML = '';
+      if (!rows.length) {
+        commentEmptyEl.hidden = false;
+        return;
+      }
+      commentEmptyEl.hidden = true;
+      rows.forEach(function (c) {
+        var item = document.createElement('article');
+        item.className = 'comment-item';
+        item.innerHTML =
+          '<div class="c-meta"><b></b><span></span></div>' +
+          '<p class="c-body"></p>';
+        item.querySelector('b').textContent = c.author_name || '회원';
+        item.querySelector('.c-meta span').textContent = fmtDate(c.created_at);
+        item.querySelector('.c-body').textContent = c.body || '';
+        if (isCommentOwner(c)) {
+          var del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'c-del';
+          del.textContent = '삭제';
+          del.addEventListener('click', function () {
+            if (!confirm('이 댓글을 삭제할까요?')) return;
+            doCommentDelete(c.id);
+          });
+          item.querySelector('.c-meta').appendChild(del);
+        }
+        commentListEl.appendChild(item);
+      });
+    }
+
+    function fetchComments(postId) {
+      if (DgMember.callJsonp) {
+        return DgMember.callJsonp({ action: 'comment_list', post_id: postId });
+      }
+      return DgMember.call({ action: 'comment_list', post_id: postId });
+    }
+
+    function loadComments(postId, opts) {
+      var silent = opts && opts.silent;
+      if (!postId) return;
+      if (commentsCache[postId]) paintComments(commentsCache[postId]);
+      else if (!silent) paintComments([]);
+      fetchComments(postId).then(function (data) {
+        var list = data.comments || [];
+        commentsCache[postId] = list;
+        if (currentPost && currentPost.id === postId) paintComments(list);
+      }).catch(function (err) {
+        if (!silent && currentPost && currentPost.id === postId) {
+          say(err.message || '댓글을 불러오지 못했습니다.');
+        }
+      });
+    }
+
+    function doCommentCreate() {
+      if (!currentPost || !currentPost.id) return;
+      if (!session()) {
+        location.href = 'join.html#login';
+        return;
+      }
+      if (!requireToken()) return;
+      var body = String(commentBodyInput.value || '').trim();
+      if (!body) {
+        say('댓글 내용을 입력해 주세요.');
+        commentBodyInput.focus();
+        return;
+      }
+      btnComment.disabled = true;
+      say('댓글을 등록하는 중입니다.');
+      DgMember.call({
+        action: 'comment_create',
+        idToken: token,
+        post_id: currentPost.id,
+        body: body
+      }).then(function (res) {
+        commentBodyInput.value = '';
+        var list = (commentsCache[currentPost.id] || []).slice();
+        if (res.comment) list.push(res.comment);
+        commentsCache[currentPost.id] = list;
+        paintComments(list);
+        say('');
+      }).catch(authFailed).then(function () {
+        btnComment.disabled = false;
+        syncCommentHint();
+      });
+    }
+
+    function doCommentDelete(commentId) {
+      if (!currentPost || !currentPost.id || !commentId) return;
+      if (!requireToken()) return;
+      say('댓글을 삭제하는 중입니다.');
+      DgMember.call({
+        action: 'comment_delete',
+        idToken: token,
+        id: commentId
+      }).then(function () {
+        var list = (commentsCache[currentPost.id] || []).filter(function (c) {
+          return c.id !== commentId;
+        });
+        commentsCache[currentPost.id] = list;
+        paintComments(list);
+        say('');
+      }).catch(authFailed);
+    }
+
     function openDetail(post) {
       currentPost = post;
       writePostCache(post);
@@ -341,6 +476,8 @@
         detailActions.appendChild(edit);
         detailActions.appendChild(del);
       }
+      syncCommentHint();
+      loadComments(post.id);
       show('detail');
     }
 
@@ -647,6 +784,14 @@
       if (!editingId) return;
       if (!confirm('이 글을 삭제할까요?')) return;
       doDelete();
+    });
+
+    btnComment.addEventListener('click', doCommentCreate);
+    commentBodyInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        doCommentCreate();
+      }
     });
 
     if (!window.DgMember || !DgMember.connected()) {

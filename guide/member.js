@@ -154,7 +154,7 @@
   function defaultSheet() {
     return {
       name: '', cls: '요정', level: 1, exp: 0, hp: 14, hpMax: 14, mp: 2, mpMax: 2,
-      ac: 10, weight: 4, food: 100, str: 13, dex: 10, con: 10, int: 10, wis: 11, cha: 13,
+      ac: 10, weight: 4, food: 7, str: 11, dex: 12, con: 12, int: 12, wis: 12, cha: 9,
       magicLevel: 0, magicBonus: 0, resistEarth: 0, resistWater: 0, resistFire: 0, resistWind: 0,
       alignment: '뉴트럴', er: 0, weaponEnchant: 0,
       gear: {

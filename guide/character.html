@@ -475,7 +475,7 @@
             <div class="row"><span class="label">Armor Class</span><span class="value"><input id="ac" type="number"></span></div>
             <div class="divider"></div>
             <div class="row"><span class="label">Weight</span><span class="value"><input id="weight" type="number"> %</span></div>
-            <div class="row"><span class="label">Food</span><span class="value"><input id="food" type="number"> %</span></div>
+            <div class="row"><span class="label">분배스탯</span><span class="value"><input id="food" type="number" min="0" step="1" aria-label="분배스탯"></span></div>
             <div class="divider"></div>
             <div class="row" data-stat="str"><span class="label">Str</span><span class="value"><input id="str" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
             <div class="row" data-stat="dex"><span class="label">Dex</span><span class="value"><input id="dex" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
@@ -605,18 +605,38 @@
     }
 
     var selectedCls = '요정';
+    /* 캐릭터 생성 화면 기준: 좌 Str/Dex/Con, 우 Wis/Cha/Int, 중앙 Remaining Points=분배스탯 */
+    var CLASS_BASE = {
+      '군주': { str: 13, dex: 10, con: 10, wis: 11, cha: 13, int: 10, food: 8 },
+      '기사': { str: 16, dex: 12, con: 14, wis: 9, cha: 12, int: 8, food: 4 },
+      '요정': { str: 11, dex: 12, con: 12, wis: 12, cha: 9, int: 12, food: 7 },
+      '마법사': { str: 8, dex: 7, con: 12, wis: 12, cha: 8, int: 12, food: 16 },
+      '도적': { str: 15, dex: 11, con: 11, wis: 14, cha: 8, int: 9, food: 7 }
+    };
 
-    function setClass(cls) {
+    function setClass(cls, applyStats) {
       selectedCls = cls || '요정';
       document.querySelectorAll('#class-picker .class-btn').forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.dataset.cls === selectedCls ? 'true' : 'false');
       });
+      if (!applyStats) return;
+      var base = CLASS_BASE[selectedCls] || CLASS_BASE['요정'];
+      ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.value = base[id];
+      });
+      if (sheet) {
+        sheet.cls = selectedCls;
+        sheet.str = base.str; sheet.dex = base.dex; sheet.con = base.con;
+        sheet.wis = base.wis; sheet.cha = base.cha; sheet.int = base.int;
+        sheet.food = base.food;
+      }
     }
 
     function fillForm(data) {
       sheet = Object.assign(DgMember.defaultSheet(), data || {});
       sheet.gear = Object.assign(DgMember.defaultSheet().gear, (data && data.gear) || {});
-      setClass(sheet.cls || '요정');
+      setClass(sheet.cls || '요정', false);
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
       FIELDS.forEach(function (id) {
         var el = document.getElementById(id);
@@ -845,7 +865,7 @@
     document.getElementById('class-picker').addEventListener('click', function (e) {
       var btn = e.target.closest('.class-btn');
       if (!btn) return;
-      setClass(btn.dataset.cls);
+      setClass(btn.dataset.cls, true);
     });
 
     document.getElementById('btn-save').addEventListener('click', function () {

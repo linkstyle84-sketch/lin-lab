@@ -692,6 +692,75 @@
     el.appendChild(btn);
   }
 
+  function isDpsHref(href) {
+    if (!href) return false;
+    try {
+      var u = new URL(href, location.href);
+      return /\/dps\/?$/.test(u.pathname);
+    } catch (e) {
+      return href === '/dps/' || href === '/dps';
+    }
+  }
+
+  function ensureLoginPrompt() {
+    var el = document.getElementById('dg-login-need');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'dg-login-need';
+    el.hidden = true;
+    el.setAttribute('style', 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.72);');
+    el.innerHTML =
+      '<div role="dialog" aria-modal="true" style="width:min(420px,100%);padding:26px 22px 22px;border:1px solid rgba(228,195,106,.35);border-radius:14px;background:#16120c;color:#e4c36a;text-align:center;">' +
+      '<h2 style="margin:0 0 10px;font:900 22px/1.25 \'Noto Sans KR\',sans-serif;letter-spacing:-.03em;">회원 전용 기능입니다</h2>' +
+      '<p style="margin:0 0 18px;color:#cbb994;font:700 14px/1.65 \'Noto Sans KR\',sans-serif;">무기 DPS 측정기는 가입 회원만 이용할 수 있습니다.<br>지금 가입하시면 바로 사용할 수 있어요.</p>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">' +
+      '<a href="/guide/join.html#join" style="display:inline-block;border:2px solid #e4c36a;border-radius:12px;padding:10px 16px;background:rgba(228,195,106,.14);color:#e4c36a;font:900 14px/1 \'Noto Sans KR\',sans-serif;text-decoration:none;">회원가입</a>' +
+      '<a href="/guide/join.html#login" style="display:inline-block;border:2px solid #8a7340;border-radius:12px;padding:10px 16px;background:transparent;color:#e8d9a8;font:900 14px/1 \'Noto Sans KR\',sans-serif;text-decoration:none;">로그인</a>' +
+      '<a href="#" data-close="1" style="display:inline-block;border:2px solid #8a7340;border-radius:12px;padding:10px 16px;background:transparent;color:#e8d9a8;font:900 14px/1 \'Noto Sans KR\',sans-serif;text-decoration:none;">닫기</a>' +
+      '</div></div>';
+    el.addEventListener('click', function (e) {
+      if (e.target === el || (e.target && e.target.getAttribute('data-close') === '1')) {
+        e.preventDefault();
+        el.hidden = true;
+        el.style.display = 'none';
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        el.hidden = true;
+        el.style.display = 'none';
+      }
+    });
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function showLoginPrompt() {
+    var el = ensureLoginPrompt();
+    el.hidden = false;
+    el.style.display = 'flex';
+  }
+
+  function installDpsClickGate() {
+    document.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a') : null;
+      if (!a) return;
+      if (!isDpsHref(a.getAttribute('href') || a.href)) return;
+      if (a.id === 'dps-tool-link') return; /* 홈은 전용 팝업 사용 */
+      var s = getSession();
+      if (s && s.email) return;
+      e.preventDefault();
+      e.stopPropagation();
+      showLoginPrompt();
+    }, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installDpsClickGate);
+  } else {
+    installDpsClickGate();
+  }
+
   window.DgMember = {
     connected: connected,
     call: call,

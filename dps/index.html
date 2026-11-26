@@ -863,7 +863,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
       </div>
     </div>
     <div class="top-right">
-      <p class="ver-stamp" title="배포 버전">v3.55 · 2026년 11월 27일 05:55</p>
+      <p class="ver-stamp" title="배포 버전">v3.57 · 2026년 11월 27일 06:05</p>
       <div class="top-actions">
         <button type="button" class="ghost" id="openSetup">처음 설정 하기</button>
         <button type="button" class="ghost" id="openCompare">무기비교</button>
@@ -949,11 +949,11 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
   </div>
   <div class="member-gate" id="memberGate">
     <div class="member-gate-card" role="dialog" aria-modal="true" aria-labelledby="memberGateTitle">
-      <h2 id="memberGateTitle">회원 전용</h2>
-      <p>무기 DPS 측정기는 가입 회원만 사용할 수 있습니다.<br>로그인 후 다시 들어와 주세요.</p>
+      <h2 id="memberGateTitle">회원 전용 기능입니다</h2>
+      <p>무기 DPS 측정기는 가입 회원만 이용할 수 있습니다.<br>지금 가입하시면 바로 사용할 수 있어요.</p>
       <div class="member-gate-actions">
-        <a href="/guide/join.html#login">로그인</a>
-        <a class="secondary" href="/guide/join.html#join">회원가입</a>
+        <a href="/guide/join.html#join">회원가입</a>
+        <a class="secondary" href="/guide/join.html#login">로그인</a>
         <a class="secondary" href="/guide/">홈으로</a>
       </div>
     </div>
@@ -2812,10 +2812,10 @@ function hideMemberGate() {
 }
 
 function boot() {
-  /* 비회원은 DPS 직접 진입 대신 연구소 홈으로. 회원만 측정기 사용 */
+  /* 비회원은 가입 유도 팝업. 회원만 측정기 사용 */
   showMemberGate();
   if (!memberSession()) {
-    location.replace('/guide/');
+    document.fonts.ready.then(() => holdFrame());
     return;
   }
   hideMemberGate();

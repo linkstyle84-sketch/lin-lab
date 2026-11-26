@@ -264,6 +264,45 @@
       line-height: 1.5;
       text-align: center;
     }
+    .soon-card.login-need {
+      width: min(420px, 100%);
+      padding: 26px 22px 22px;
+    }
+    .soon-card.login-need h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+    .soon-card.login-need p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.65;
+    }
+    .soon-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .soon-actions a {
+      display: inline-block;
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 10px 16px;
+      background: rgba(228, 195, 106, 0.14);
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+    .soon-actions a.secondary {
+      border-color: #8a7340;
+      background: transparent;
+      color: #e8d9a8;
+    }
     .yt {
       display: flex;
       align-items: center;
@@ -392,7 +431,7 @@
 <body>
   <div class="wrap">
     <div class="home-top">
-      <p class="site-ver" title="사이트 반영 버전">v3.56 · 2026년 11월 27일 06:00</p>
+      <p class="site-ver" title="사이트 반영 버전">v3.57 · 2026년 11월 27일 06:05</p>
       <div class="topbar" id="topbar">
         <a href="character.html">내 캐릭터</a>
         <a href="join.html#login">로그인</a>
@@ -463,7 +502,7 @@
           <a class="yt" href="https://www.youtube.com/user/linkstyle84" target="_blank" rel="noopener"><img src="shortcut-youtube.jpg" alt=""><span>도건유튜브 바로가기</span></a>
           <a class="yt" href="https://open.kakao.com/o/gL2Xyl9h" target="_blank" rel="noopener"><img src="shortcut-kakao.jpg" alt=""><span>도건 린클 연구소 단톡방 바로가기</span></a>
         </div>
-        <a class="tool" href="/dps/"><img src="dps-tool.jpg" alt="리니지 클래식 무기 DPS 측정기"></a>
+        <a class="tool" id="dps-tool-link" href="/dps/"><img src="dps-tool.jpg" alt="리니지 클래식 무기 DPS 측정기"></a>
         <div class="speed-banners">
           <a class="speed-banner" href="speed-knight.html"><img src="btn-knight.jpg" alt="기사/군주 공격속도"></a>
           <a class="speed-banner" href="speed-elf.html"><img src="btn-elf.jpg" alt="요정 공격속도"></a>
@@ -490,6 +529,17 @@
   </div>
   <div class="soon" id="soon" hidden>
     <p class="soon-card" role="dialog" aria-modal="true">업데이트 준비중 입니다.</p>
+  </div>
+  <div class="soon" id="dps-login-need" hidden>
+    <div class="soon-card login-need" role="dialog" aria-modal="true" aria-labelledby="dpsLoginNeedTitle">
+      <h2 id="dpsLoginNeedTitle">회원 전용 기능입니다</h2>
+      <p>무기 DPS 측정기는 가입 회원만 이용할 수 있습니다.<br>지금 가입하시면 바로 사용할 수 있어요.</p>
+      <div class="soon-actions">
+        <a href="join.html#join">회원가입</a>
+        <a class="secondary" href="join.html#login">로그인</a>
+        <a class="secondary" href="#" id="dps-login-need-close">닫기</a>
+      </div>
+    </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="member-config.js"></script>
@@ -563,12 +613,34 @@
       });
     });
     var soon = document.getElementById('soon');
+    var dpsNeed = document.getElementById('dps-login-need');
+    function closeOverlays() {
+      soon.hidden = true;
+      dpsNeed.hidden = true;
+    }
     soon.addEventListener('click', function (e) {
       if (e.target === soon) soon.hidden = true;
     });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') soon.hidden = true;
+    dpsNeed.addEventListener('click', function (e) {
+      if (e.target === dpsNeed) dpsNeed.hidden = true;
     });
+    document.getElementById('dps-login-need-close').addEventListener('click', function (e) {
+      e.preventDefault();
+      dpsNeed.hidden = true;
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeOverlays();
+    });
+    (function () {
+      var dpsLink = document.getElementById('dps-tool-link');
+      if (!dpsLink) return;
+      dpsLink.addEventListener('click', function (e) {
+        var s = window.DgMember && DgMember.getSession && DgMember.getSession();
+        if (s && s.email) return;
+        e.preventDefault();
+        dpsNeed.hidden = false;
+      });
+    })();
     if (window.LinCount) {
       LinCount.read('tool').then(function (n) { paintCount('tool', n); });
       asPromise(LinCount.hit('guide', false)).then(function (n) {

@@ -37,11 +37,31 @@
       gap: 14px;
       align-items: start;
     }
+    .home-top {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      margin: 0 0 14px;
+    }
+    .site-ver {
+      margin: 0;
+      padding: 5px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(228, 195, 106, 0.1);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
     .topbar {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
-      margin: 0 0 14px;
+      margin: 0;
     }
     .topbar a {
       border: 0;
@@ -369,10 +389,13 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="topbar" id="topbar">
-      <a href="character.html">내 캐릭터</a>
-      <a href="join.html#login">로그인</a>
-      <a href="join.html#join">회원가입</a>
+    <div class="home-top">
+      <p class="site-ver" title="사이트 반영 버전">v3.53 · 2026년 11월 27일 05:15</p>
+      <div class="topbar" id="topbar">
+        <a href="character.html">내 캐릭터</a>
+        <a href="join.html#login">로그인</a>
+        <a href="join.html#join">회원가입</a>
+      </div>
     </div>
     <div class="banner-row">
       <img src="banner.png?v=2" alt="리니지클래식 연구소">

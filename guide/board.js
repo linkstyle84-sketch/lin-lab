@@ -462,7 +462,19 @@
         edit.type = 'button';
         edit.className = 'btn';
         edit.textContent = '수정';
-        edit.addEventListener('click', function () { openCompose(post); });
+        edit.addEventListener('click', function () {
+          var needFull = !!(post.has_image || (post.body == null)) && !(post.images && post.images.length);
+          if (needFull) {
+            say('글 내용을 불러오는 중입니다.');
+            fetchPostRemote(post.id).then(function (res) {
+              openCompose(res.post || post);
+            }).catch(function () {
+              openCompose(post);
+            });
+            return;
+          }
+          openCompose(post);
+        });
         var del = document.createElement('button');
         del.type = 'button';
         del.className = 'btn danger';

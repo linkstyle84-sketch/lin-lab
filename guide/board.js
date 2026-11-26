@@ -708,29 +708,25 @@
       addImageFile(file);
     });
 
-    /* 글쓰기 화면에서 클립보드 이미지 Ctrl+V / 우클릭 붙여넣기 */
+    /* 글쓰기 화면에서 클립보드 이미지 Ctrl+V / 우클릭 붙여넣기 (composeView 한 곳에서만 처리 — 버블링 중복 방지) */
     function onComposePaste(e) {
       if (composeView.hidden) return;
       var items = e.clipboardData && e.clipboardData.items;
       if (!items || !items.length) return;
-      var files = [];
+      var file = null;
       for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (item.kind === 'file' && /^image\//.test(item.type || '')) {
-          var f = item.getAsFile();
-          if (f) files.push(f);
+          file = item.getAsFile();
+          if (file) break;
         }
       }
-      if (!files.length) return;
+      if (!file) return;
       e.preventDefault();
-      var chain = Promise.resolve();
-      files.forEach(function (file) {
-        chain = chain.then(function () { return addImageFile(file); });
-      });
+      e.stopPropagation();
+      addImageFile(file);
     }
     composeView.addEventListener('paste', onComposePaste);
-    titleInput.addEventListener('paste', onComposePaste);
-    bodyInput.addEventListener('paste', onComposePaste);
 
     btnPublish.addEventListener('click', function () {
       if (!requireToken()) return;

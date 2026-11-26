@@ -156,7 +156,7 @@
     </div>
     <p class="foot"><a href="./">홈</a> · <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보처리방침</a> · <a href="admin.html">관리자</a></p>
   </div>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script>
@@ -170,7 +170,6 @@
     var joinSlot = document.getElementById('google-join');
     var loginSlot = document.getElementById('google-login');
     var mode = 'login';
-    var token = '';
     var joinPainted = false;
     var loginPainted = false;
 
@@ -192,46 +191,33 @@
     }
 
     function paint(slot, text, flag) {
-      if (flag.done) return;
-      if (!window.google || !google.accounts) return;
+      if (flag.done || !window.DgMember) return;
       flag.done = true;
       var room = Math.max(220, window.innerWidth - 80);
       var width = Math.min(400, slot.clientWidth || room, room);
-      DgMember.renderGoogle(slot, onCredential, { text: text, width: width });
+      DgMember.renderGoogle(slot, function (_tok, err) {
+        if (err) say(err.message || String(err));
+      }, { text: text, width: width });
+      var btn = slot.querySelector('button');
+      if (!btn) return;
+      btn.addEventListener('click', function (e) {
+        if (text === 'signup_with' && !agreed()) {
+          e.stopImmediatePropagation();
+          say('필수 동의를 먼저 확인해 주세요.');
+          return;
+        }
+        var keepBox = document.getElementById('keep-login');
+        if (DgMember.setKeepLogin) DgMember.setKeepLogin(!keepBox || keepBox.checked);
+        say(text === 'signup_with' ? '구글 가입 화면으로 이동 중…' : '구글 로그인 화면으로 이동 중…');
+      }, true);
     }
 
     function notice() {
       if (!window.DgMember || !DgMember.connected()) {
-        say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
-      } else if (status.textContent.indexOf('회원 저장 서버') === 0) {
+        say('member-config.js에 Supabase anon/publishable 키를 넣으면 가입·로그인이 됩니다.');
+      } else if (/member-config|회원 저장/.test(status.textContent || '')) {
         say('');
       }
-    }
-
-    function onCredential(idToken) {
-      if (mode === 'join' && !agreed()) {
-        say('필수 동의를 먼저 확인해 주세요.');
-        return;
-      }
-      if (!DgMember.connected()) {
-        say('회원 저장 서버를 연결하면 가입과 로그인이 저장됩니다.');
-        return;
-      }
-      token = idToken;
-      var keepBox = document.getElementById('keep-login');
-      if (DgMember.setKeepLogin) DgMember.setKeepLogin(!keepBox || keepBox.checked);
-      say(mode === 'join' ? '가입 내용을 저장하는 중입니다.' : '로그인 확인 중입니다.');
-      var payload = mode === 'join'
-        ? { action: 'join', idToken: idToken, age14: true }
-        : { action: 'login', idToken: idToken };
-      DgMember.call(payload).then(function (data) {
-        var member = data.member || {};
-        DgMember.setSession(member);
-        DgMember.setIdToken(idToken);
-        location.replace('./');
-      }).catch(function (err) {
-        say(err.message);
-      });
     }
 
     tabLogin.addEventListener('click', function () {
@@ -253,14 +239,11 @@
       say('필수 동의를 먼저 확인해 주세요.');
     });
     leave.addEventListener('click', function () {
-      if (!token) return;
+      if (!DgMember.getSession()) return;
       leave.disabled = true;
       say('탈퇴 처리 중입니다.');
-      DgMember.call({ action: 'leave', idToken: token }).then(function () {
-        token = '';
+      DgMember.call({ action: 'leave' }).then(function () {
         leave.hidden = true;
-        DgMember.clearSession();
-        DgMember.clearCharacterCache();
         say('탈퇴했습니다. 저장된 회원 정보를 지웠습니다.');
       }).catch(function (err) {
         leave.disabled = false;
@@ -270,20 +253,14 @@
 
     var loginFlag = { get done() { return loginPainted; }, set done(v) { loginPainted = v; } };
     var joinFlag = { get done() { return joinPainted; }, set done(v) { joinPainted = v; } };
-    var wait = setInterval(function () {
-      if (!window.google || !google.accounts || !window.DgMember) return;
-      if (!(window.MEMBER_CONFIG && MEMBER_CONFIG.clientId)) {
-        clearInterval(wait);
-        say('구글 로그인 설정이 없습니다.');
-        return;
-      }
+
+    function paintButtons() {
+      if (!window.DgMember) return;
       paint(loginSlot, 'signin_with', loginFlag);
       if (!viewJoin.hidden) paint(joinSlot, 'signup_with', joinFlag);
-      if (loginPainted && (viewJoin.hidden || joinPainted)) {
-        clearInterval(wait);
-        notice();
-      }
-    }, 200);
+      notice();
+    }
+
     function applyHash() {
       show(location.hash === '#join' ? 'join' : 'login');
     }
@@ -294,8 +271,23 @@
         DgMember.setKeepLogin(keepLogin.checked);
       });
     }
-    notice();
-    applyHash();
+
+    say('로그인 상태를 확인하는 중…');
+    DgMember.finishAuthFromRedirect().then(function (result) {
+      if (result && result.member && result.intent) {
+        leave.hidden = false;
+        location.replace('./');
+        return;
+      }
+      if ((result && result.member) || DgMember.getSession()) leave.hidden = false;
+      say('');
+      paintButtons();
+      applyHash();
+    }).catch(function (err) {
+      say(err.message);
+      paintButtons();
+      applyHash();
+    });
     window.addEventListener('hashchange', applyHash);
   </script>
 </body>

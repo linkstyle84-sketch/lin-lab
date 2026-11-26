@@ -442,7 +442,7 @@
       </div>
     </div>
   </div>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script src="db-stack.js"></script>
@@ -699,60 +699,24 @@
 
     function saveToCloud(payload) {
       say('내 캐릭터를 저장하는 중입니다.');
-      return DgMember.call({ action: 'character_save', idToken: token, character: payload }).then(function (data) {
+      return DgMember.call({ action: 'character_save', character: payload }).then(function (data) {
         var saved = data.character || payload;
         saveLocal(saved);
         if (saved.sheet) fillForm(saved.sheet);
         document.getElementById('google').hidden = true;
-        pendingCloudSave = false;
         say('저장했습니다. DPS 측정기를 열면 자동으로 반영됩니다.');
       });
-    }
-
-    function ensureGoogle(show) {
-      var box = document.getElementById('google');
-      if (!show) {
-        box.hidden = true;
-        return;
-      }
-      box.hidden = false;
-      if (painted || !window.google || !google.accounts || !(window.MEMBER_CONFIG && MEMBER_CONFIG.clientId)) return;
-      painted = true;
-      DgMember.renderGoogle(box, function (idToken) {
-        token = idToken;
-        if (DgMember.setIdToken) DgMember.setIdToken(idToken);
-        if (pendingCloudSave) {
-          saveToCloud(buildPayload()).catch(function (err) { say(err.message); });
-          return;
-        }
-        DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
-          var session = DgMember.getSession() || {};
-          if (data.character) {
-            DgMember.setCharacterCache(session.email, data.character, data.updated_at);
-            DgMember.writeDpsLocal(data.character);
-            fillForm(data.character.sheet || DgMember.defaultSheet());
-            say('계정 캐릭터를 불러왔습니다. DPS 측정기에도 반영됩니다.');
-          } else {
-            say('Google 확인됨. 저장할 수 있습니다.');
-          }
-          box.hidden = true;
-        }).catch(function () {
-          say('Google 확인됨. 저장할 수 있습니다.');
-        });
-      }, { text: 'signin_with', width: 320 });
     }
 
     document.getElementById('btn-save').addEventListener('click', function () {
       var payload = buildPayload();
       saveLocal(payload);
       if (!DgMember.connected()) {
-        say('저장했습니다. DPS 측정기를 열면 자동으로 반영됩니다.');
+        say('저장했습니다. DPS 측정기에는 반영됩니다. (클라우드 키 미설정)');
         return;
       }
-      if (!token) {
-        pendingCloudSave = true;
-        ensureGoogle(true);
-        say('이 기기 측정기에는 반영됐습니다. 계정에도 남기려면 Google 확인을 눌러 주세요.');
+      if (!DgMember.getSession()) {
+        say('이 기기에는 반영됐습니다. 계정 저장은 로그인 후 가능합니다.');
         return;
       }
       saveToCloud(payload).catch(function (err) { say(err.message); });
@@ -765,9 +729,9 @@
         fillForm(DgMember.defaultSheet());
         say('내 캐릭터를 삭제했습니다.');
       }
-      if (token && DgMember.connected()) {
+      if (DgMember.getSession() && DgMember.connected()) {
         say('삭제하는 중입니다.');
-        DgMember.call({ action: 'character_clear', idToken: token }).then(done).catch(function (err) {
+        DgMember.call({ action: 'character_clear' }).then(done).catch(function (err) {
           say(err.message);
         });
         return;
@@ -790,6 +754,15 @@
         DgMember.writeDpsLocal(cache.data);
       } else {
         fillForm(DgMember.defaultSheet());
+      }
+      if (DgMember.connected()) {
+        DgMember.call({ action: 'character_load' }).then(function (data) {
+          if (!data.character) return;
+          DgMember.setCharacterCache(session.email, data.character, data.updated_at);
+          DgMember.writeDpsLocal(data.character);
+          fillForm(data.character.sheet || DgMember.defaultSheet());
+          say('계정 캐릭터를 불러왔습니다.');
+        }).catch(function () {});
       }
     }, 100);
   </script>

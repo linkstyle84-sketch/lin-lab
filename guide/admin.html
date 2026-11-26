@@ -34,13 +34,12 @@
     <p class="status" id="status" role="status"></p>
     <div class="scroll" id="list" hidden></div>
   </div>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script>
     var status = document.getElementById('status');
     var list = document.getElementById('list');
-    var token = '';
 
     function say(text) { status.textContent = text || ''; }
 
@@ -77,7 +76,7 @@
         button.addEventListener('click', function () {
           if (!window.confirm(member.email + ' 회원을 삭제할까요?')) return;
           button.disabled = true;
-          DgMember.call({ action: 'remove', idToken: token, sub: member.sub }).then(function () {
+          DgMember.call({ action: 'remove', sub: member.sub, email: member.email }).then(function () {
             load();
           }).catch(function (err) {
             button.disabled = false;
@@ -93,7 +92,7 @@
 
     function load() {
       say('명단을 불러오는 중입니다.');
-      DgMember.call({ action: 'list', idToken: token }).then(function (data) {
+      DgMember.call({ action: 'list' }).then(function (data) {
         say('회원 ' + (data.members || []).length + '명');
         draw(data.members || []);
       }).catch(function (err) {
@@ -103,16 +102,17 @@
     }
 
     if (!DgMember.connected()) {
-      say('회원 저장 서버를 연결하면 이 화면이 열립니다.');
+      say('member-config.js에 Supabase 키를 넣으면 이 화면이 열립니다.');
+    } else if (DgMember.getSession()) {
+      load();
     } else {
-      var wait = setInterval(function () {
-        if (!window.google || !google.accounts) return;
-        clearInterval(wait);
-        DgMember.renderGoogle(document.getElementById('google'), function (idToken) {
-          token = idToken;
-          load();
-        });
-      }, 200);
+      DgMember.renderGoogle(document.getElementById('google'), function (_t, err) {
+        if (err) say(err.message);
+      });
+      say('관리자 구글 계정으로 로그인해 주세요.');
+      DgMember.finishAuthFromRedirect().then(function (result) {
+        if (result && result.member) load();
+      }).catch(function (err) { say(err.message); });
     }
   </script>
 </body>

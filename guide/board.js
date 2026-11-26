@@ -270,12 +270,7 @@
       });
     }
 
-    function syncToken(idToken) {
-      token = idToken || '';
-      if (token && DgMember.setIdToken) DgMember.setIdToken(token);
-    }
-
-    function ensureGoogle(force) {
+    function ensureGoogle() {
       if (!window.DgMember || !DgMember.connected()) {
         googleBox.innerHTML = '<p class="hint">글쓰기는 회원 로그인이 필요합니다. <a href="join.html#login">로그인</a></p>';
         return;
@@ -285,23 +280,9 @@
         googleBox.innerHTML = '<p class="hint">글을 올리려면 <a href="join.html#login">로그인</a>이 필요합니다.</p>';
         return;
       }
-      token = token || (DgMember.getIdToken && DgMember.getIdToken()) || '';
-      if (token && !force) {
-        googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 로그인된 계정으로 바로 게시할 수 있습니다.</p>';
-        googleBox.querySelector('b').textContent = s.name || s.email;
-        return;
-      }
-      googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 로그인 확인이 만료되어 구글 확인이 한 번 필요합니다.</p><div id="gis-slot"></div>';
+      token = 'session';
+      googleBox.innerHTML = '<p class="hint">작성자: <b></b> · 로그인된 계정으로 바로 게시할 수 있습니다.</p>';
       googleBox.querySelector('b').textContent = s.name || s.email;
-      try {
-        DgMember.renderGoogle(document.getElementById('gis-slot'), function (idToken) {
-          syncToken(idToken);
-          ensureGoogle(false);
-          say('로그인 확인됨. 게시·수정·삭제를 눌러 주세요.');
-        }, { text: 'signin_with', width: 280 });
-      } catch (e) {
-        googleBox.innerHTML = '<p class="hint">' + escapeHtml(e.message) + '</p>';
-      }
     }
 
     function openCompose(post) {
@@ -314,7 +295,7 @@
       btnPublish.textContent = editingId ? '수정 완료' : '등록';
       btnDelete.hidden = !editingId;
       if (composeHead) composeHead.textContent = editingId ? '글 수정' : '글쓰기';
-      ensureGoogle(false);
+      ensureGoogle();
       show('compose');
       say(editingId ? '글을 수정합니다.' : '새 글을 작성합니다.');
       titleInput.focus();
@@ -625,21 +606,20 @@
     }
 
     function requireToken() {
-      token = token || (DgMember.getIdToken && DgMember.getIdToken()) || '';
-      if (!token) {
-        say('로그인 확인이 만료되었습니다. 구글 확인을 한 번 해 주세요.');
-        ensureGoogle(true);
+      if (!session()) {
+        say('로그인이 필요합니다.');
+        ensureGoogle();
         return false;
       }
+      token = 'session';
       return true;
     }
 
     function authFailed(err) {
       var msg = (err && err.message) || '';
       if (/로그인|구글|토큰|만료|확인하지/.test(msg)) {
-        if (DgMember.clearIdToken) DgMember.clearIdToken();
         token = '';
-        ensureGoogle(true);
+        ensureGoogle();
       }
       say(msg);
     }

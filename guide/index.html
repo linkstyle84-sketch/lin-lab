@@ -390,7 +390,7 @@
 <body>
   <div class="wrap">
     <div class="home-top">
-      <p class="site-ver" title="사이트 반영 버전">v3.53 · 2026년 11월 27일 05:15</p>
+      <p class="site-ver" title="사이트 반영 버전">v3.54 · 2026년 11월 27일 05:50</p>
       <div class="topbar" id="topbar">
         <a href="character.html">내 캐릭터</a>
         <a href="join.html#login">로그인</a>
@@ -489,6 +489,8 @@
   <div class="soon" id="soon" hidden>
     <p class="soon-card" role="dialog" aria-modal="true">업데이트 준비중 입니다.</p>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script src="../count.js?v=3"></script>
   <script>
@@ -529,9 +531,8 @@
           loginBox.querySelector('.user-name b').textContent = label;
           loginBox.querySelector('#login-box-logout').addEventListener('click', doLogout);
         }
-        var token = DgMember.getIdToken ? DgMember.getIdToken() : '';
-        if (token && DgMember.connected && DgMember.connected()) {
-          DgMember.call({ action: 'character_load', idToken: token }).then(function (data) {
+        if (DgMember.connected && DgMember.connected()) {
+          DgMember.call({ action: 'character_load' }).then(function (data) {
             if (!data.character) return;
             DgMember.setCharacterCache(session.email, data.character, data.updated_at);
             DgMember.writeDpsLocal(data.character);

@@ -2,9 +2,9 @@
   var SESSION_KEY = 'dg-member-session';
   var CHARACTER_KEY = 'dg-character';
   var DPS_KEY = 'lin-dps-html-v2';
-  var ID_TOKEN_KEY = 'dg-id-token-cache';
   var KEEP_LOGIN_KEY = 'dg-keep-login';
-  var ID_TOKEN_TTL_MS = 50 * 60 * 1000;
+  var AUTH_INTENT_KEY = 'dg-auth-intent';
+  var client = null;
 
   function config() {
     return window.MEMBER_CONFIG || {};
@@ -12,10 +12,25 @@
 
   function connected() {
     var cfg = config();
-    return !!(cfg.clientId && cfg.scriptUrl);
+    var key = String(cfg.supabaseAnonKey || '');
+    return !!(cfg.supabaseUrl && key && key.indexOf('PASTE_') !== 0 && window.supabase);
   }
 
-  /* 인벤의 「로그인 상태 유지」: 켜면 localStorage, 끄면 sessionStorage(탭 닫으면 로그아웃) */
+  function sb() {
+    if (!connected()) throw new Error('Supabase 설정(URL/anon 키)을 확인해 주세요.');
+    if (!client) {
+      var cfg = config();
+      client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
+    }
+    return client;
+  }
+
   function getKeepLogin() {
     try {
       var v = localStorage.getItem(KEEP_LOGIN_KEY);
@@ -64,6 +79,7 @@
     var payload = JSON.stringify({
       email: email,
       name: String((member && member.name) || '').slice(0, 80),
+      id: member && member.id ? member.id : '',
       at: Date.now()
     });
     try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
@@ -71,62 +87,21 @@
     try { authStore().setItem(SESSION_KEY, payload); } catch (e3) {}
   }
 
-  function setIdToken(idToken) {
-    var token = String(idToken || '');
-    if (!token || token.length < 20) return;
-    var payload = JSON.stringify({ token: token, at: Date.now() });
-    try { localStorage.removeItem(ID_TOKEN_KEY); } catch (e) {}
-    try { sessionStorage.removeItem(ID_TOKEN_KEY); } catch (e2) {}
-    try { sessionStorage.removeItem('dg-id-token'); } catch (e3) {}
-    try { authStore().setItem(ID_TOKEN_KEY, payload); } catch (e4) {}
-    try { sessionStorage.setItem('dg-id-token', token); } catch (e5) {}
+  function clearSession() {
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e2) {}
+    try { localStorage.removeItem(AUTH_INTENT_KEY); } catch (e3) {}
+    try { sessionStorage.removeItem(AUTH_INTENT_KEY); } catch (e4) {}
+    if (connected()) {
+      try { sb().auth.signOut(); } catch (e5) {}
+    }
   }
 
   function getIdToken() {
-    function fromStore(store) {
-      try {
-        var raw = store.getItem(ID_TOKEN_KEY);
-        if (!raw) return '';
-        var data = JSON.parse(raw);
-        if (!data || !data.token) return '';
-        if (Date.now() - Number(data.at || 0) > ID_TOKEN_TTL_MS) {
-          store.removeItem(ID_TOKEN_KEY);
-          return '';
-        }
-        return String(data.token);
-      } catch (e) {
-        return '';
-      }
-    }
-    var token = fromStore(authStore());
-    if (!token) token = fromStore(localStorage);
-    if (!token) token = fromStore(sessionStorage);
-    if (!token) {
-      try { token = sessionStorage.getItem('dg-id-token') || ''; } catch (e) { token = ''; }
-    }
-    return token;
+    return '';
   }
-
-  function clearIdToken() {
-    try { localStorage.removeItem(ID_TOKEN_KEY); } catch (e) {}
-    try { sessionStorage.removeItem(ID_TOKEN_KEY); } catch (e2) {}
-    try { sessionStorage.removeItem('dg-id-token'); } catch (e3) {}
-  }
-
-  function clearSession() {
-    var prev = getSession();
-    try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
-    try { sessionStorage.removeItem(SESSION_KEY); } catch (e2) {}
-    clearIdToken();
-    try {
-      if (window.google && google.accounts && google.accounts.id) {
-        google.accounts.id.disableAutoSelect();
-        if (prev && prev.email) {
-          google.accounts.id.revoke(prev.email, function () {});
-        }
-      }
-    } catch (e3) {}
-  }
+  function setIdToken() {}
+  function clearIdToken() {}
 
   function getCharacterCache() {
     try {
@@ -178,32 +153,10 @@
 
   function defaultSheet() {
     return {
-      name: '',
-      cls: '요정',
-      level: 1,
-      exp: 0,
-      hp: 14,
-      hpMax: 14,
-      mp: 2,
-      mpMax: 2,
-      ac: 10,
-      weight: 4,
-      food: 100,
-      str: 13,
-      dex: 10,
-      con: 10,
-      int: 10,
-      wis: 11,
-      cha: 13,
-      magicLevel: 0,
-      magicBonus: 0,
-      resistEarth: 0,
-      resistWater: 0,
-      resistFire: 0,
-      resistWind: 0,
-      alignment: '뉴트럴',
-      er: 0,
-      weaponEnchant: 0,
+      name: '', cls: '요정', level: 1, exp: 0, hp: 14, hpMax: 14, mp: 2, mpMax: 2,
+      ac: 10, weight: 4, food: 100, str: 13, dex: 10, con: 10, int: 10, wis: 11, cha: 13,
+      magicLevel: 0, magicBonus: 0, resistEarth: 0, resistWater: 0, resistFire: 0, resistWind: 0,
+      alignment: '뉴트럴', er: 0, weaponEnchant: 0,
       gear: {
         helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
         ring1: '', gloves: '', belt: '', shield: '', weapon: '',
@@ -215,25 +168,10 @@
   function dpsFromSheet(sheet, base) {
     var s = sheet || defaultSheet();
     var out = characterSnapshot(base || readDpsLocal() || {}) || {
-      arrow: 'mithril',
-      elfRanged: null,
-      elfStatMode: 'dex',
-      extraDmg: 0,
-      extraDr: 0,
-      buffs: {},
-      buffsElf: null,
-      buffsKnight: null,
-      buffsElfMelee: null,
-      rows: [],
-      rowsElf: null,
-      rowsKnight: null,
-      selectedElf: null,
-      selectedKnight: null,
-      seq: 1,
-      sortKey: null,
-      sortDir: null,
-      selectedId: null,
-      materials: {}
+      arrow: 'mithril', elfRanged: null, elfStatMode: 'dex', extraDmg: 0, extraDr: 0,
+      buffs: {}, buffsElf: null, buffsKnight: null, buffsElfMelee: null,
+      rows: [], rowsElf: null, rowsKnight: null, selectedElf: null, selectedKnight: null,
+      seq: 1, sortKey: null, sortDir: null, selectedId: null, materials: {}
     };
     var cls = mapClsForDps(s.cls);
     var weaponRaw = s.gear && s.gear.weapon;
@@ -278,128 +216,439 @@
   function characterSnapshot(source) {
     if (!source || typeof source !== 'object') return null;
     return {
-      sheet: source.sheet || null,
-      cls: source.cls,
-      level: source.level,
-      stat: source.stat,
-      ac: source.ac,
-      er: source.er,
-      arrow: source.arrow,
-      elfRanged: source.elfRanged,
-      elfStatMode: source.elfStatMode,
-      dex: source.dex,
-      str: source.str,
-      knightStat: source.knightStat,
-      extraDmg: source.extraDmg,
-      extraDr: source.extraDr,
-      buffs: source.buffs,
-      buffsElf: source.buffsElf,
-      buffsKnight: source.buffsKnight,
-      buffsElfMelee: source.buffsElfMelee,
-      rows: source.rows,
-      rowsElf: source.rowsElf,
-      rowsKnight: source.rowsKnight,
-      selectedElf: source.selectedElf,
-      selectedKnight: source.selectedKnight,
-      seq: source.seq,
-      sortKey: source.sortKey,
-      sortDir: source.sortDir,
-      selectedId: source.selectedId,
-      materials: source.materials || {}
+      sheet: source.sheet || null, cls: source.cls, level: source.level, stat: source.stat,
+      ac: source.ac, er: source.er, arrow: source.arrow, elfRanged: source.elfRanged,
+      elfStatMode: source.elfStatMode, dex: source.dex, str: source.str, knightStat: source.knightStat,
+      extraDmg: source.extraDmg, extraDr: source.extraDr, buffs: source.buffs,
+      buffsElf: source.buffsElf, buffsKnight: source.buffsKnight, buffsElfMelee: source.buffsElfMelee,
+      rows: source.rows, rowsElf: source.rowsElf, rowsKnight: source.rowsKnight,
+      selectedElf: source.selectedElf, selectedKnight: source.selectedKnight,
+      seq: source.seq, sortKey: source.sortKey, sortDir: source.sortDir,
+      selectedId: source.selectedId, materials: source.materials || {}
     };
   }
 
-  function call(payload) {
-    var cfg = config();
-    if (!connected()) return Promise.reject(new Error('회원 저장 서버가 아직 연결되지 않았습니다.'));
-    return new Promise(function (resolve, reject) {
-      var name = 'dg-member-' + Date.now();
-      var iframe = document.createElement('iframe');
-      iframe.name = name;
-      iframe.hidden = true;
-      iframe.setAttribute('aria-hidden', 'true');
-      var form = document.createElement('form');
-      form.method = 'POST';
-      form.action = cfg.scriptUrl;
-      form.target = name;
-      form.acceptCharset = 'UTF-8';
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-      var done = false;
-      function finish(err, data) {
-        if (done) return;
-        done = true;
-        window.removeEventListener('message', onMessage);
-        window.clearTimeout(timer);
-        if (form.parentNode) form.parentNode.removeChild(form);
-        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        if (err) reject(err);
-        else resolve(data);
-      }
-      function onMessage(event) {
-        var data = event.data;
-        if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch (e) { return; }
-        }
-        if (!data || data.source !== 'dg-member') return;
-        if (data.ok) finish(null, data);
-        else finish(new Error(data.error || '처리하지 못했습니다.'));
-      }
-      var timer = window.setTimeout(function () {
-        finish(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
-      }, 60000);
-      window.addEventListener('message', onMessage);
-      document.body.appendChild(iframe);
-      document.body.appendChild(form);
-      form.submit();
+  function userMeta(user) {
+    var meta = (user && user.user_metadata) || {};
+    return {
+      id: user.id,
+      email: String(user.email || '').toLowerCase(),
+      name: String(meta.full_name || meta.name || user.email || '').slice(0, 80),
+      sub: String(meta.sub || meta.provider_id || user.id || '')
+    };
+  }
+
+  function upsertMember(user, opts) {
+    var info = userMeta(user);
+    var row = {
+      email: info.email,
+      name: info.name,
+      google_sub: info.sub,
+      last_seen: new Date().toISOString()
+    };
+    if (opts && opts.age14) row.age14 = true;
+    return sb().from('members').upsert(row, { onConflict: 'email' }).select().maybeSingle()
+      .then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return {
+          email: info.email,
+          name: (res.data && res.data.name) || info.name,
+          id: info.id,
+          joined_at: res.data && res.data.joined_at
+        };
+      });
+  }
+
+  function requireUser() {
+    return sb().auth.getUser().then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      if (!res.data || !res.data.user) throw new Error('로그인이 필요합니다.');
+      return res.data.user;
     });
   }
 
-  /* 공개 읽기(목록/상세): iframe POST 대신 JSONP GET — 대기 화면 없이 빠르게 */
-  function callJsonp(params) {
-    var cfg = config();
-    if (!connected()) return Promise.reject(new Error('회원 저장 서버가 아직 연결되지 않았습니다.'));
-    return new Promise(function (resolve, reject) {
-      var cbName = 'dgMemberJsonp' + Date.now() + Math.floor(Math.random() * 100000);
-      var script = document.createElement('script');
-      var done = false;
-      function cleanup() {
-        if (done) return;
-        done = true;
-        window.clearTimeout(timer);
-        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
-        if (script.parentNode) script.parentNode.removeChild(script);
+  function startGoogleAuth(mode, extra) {
+    if (!connected()) return Promise.reject(new Error('Supabase 키 설정을 먼저 완료해 주세요.'));
+    var intent = { mode: mode || 'login', at: Date.now() };
+    if (extra && extra.age14) intent.age14 = true;
+    try { sessionStorage.setItem(AUTH_INTENT_KEY, JSON.stringify(intent)); } catch (e) {}
+    var redirectTo = location.origin + '/guide/join.html';
+    return sb().auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo,
+        queryParams: { prompt: 'select_account' }
       }
-      var timer = window.setTimeout(function () {
-        cleanup();
-        reject(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
-      }, 20000);
-      window[cbName] = function (data) {
-        cleanup();
-        if (!data || data.ok === false) {
-          reject(new Error((data && data.error) || '처리하지 못했습니다.'));
-          return;
-        }
-        resolve(data);
-      };
-      var q = Object.keys(params || {}).map(function (key) {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(params[key] == null ? '' : params[key]);
-      }).join('&');
-      script.src = cfg.scriptUrl + (cfg.scriptUrl.indexOf('?') >= 0 ? '&' : '?') + q + '&callback=' + encodeURIComponent(cbName);
-      script.async = true;
-      script.onerror = function () {
-        cleanup();
-        reject(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
-      };
-      (document.head || document.documentElement).appendChild(script);
+    }).then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      return res;
     });
+  }
+
+  function finishAuthFromRedirect() {
+    if (!connected()) return Promise.resolve(null);
+    return sb().auth.getSession().then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      var session = res.data && res.data.session;
+      if (!session || !session.user) return null;
+      var intent = null;
+      try { intent = JSON.parse(sessionStorage.getItem(AUTH_INTENT_KEY) || 'null'); } catch (e) {}
+      var hadIntent = !!intent;
+      try { sessionStorage.removeItem(AUTH_INTENT_KEY); } catch (e2) {}
+      var age14 = !!(intent && intent.age14);
+      return upsertMember(session.user, { age14: age14 }).then(function (member) {
+        setSession(member);
+        return { member: member, intent: hadIntent ? intent : null };
+      });
+    });
+  }
+
+  function boardList(board) {
+    return sb().from('posts')
+      .select('id,board,title,author_name,author_email,created_at,updated_at,images')
+      .eq('board', board)
+      .order('created_at', { ascending: false })
+      .then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        var posts = (res.data || []).map(function (row) {
+          var images = row.images;
+          if (typeof images === 'string') {
+            try { images = JSON.parse(images); } catch (e) { images = []; }
+          }
+          if (!Array.isArray(images)) images = [];
+          return {
+            id: row.id,
+            board: row.board,
+            title: row.title,
+            author_name: row.author_name || '회원',
+            author_email: row.author_email || '',
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            has_image: images.length > 0
+          };
+        });
+        return { ok: true, board: board, posts: posts };
+      });
+  }
+
+  function boardGet(id) {
+    return sb().from('posts').select('*').eq('id', id).maybeSingle().then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      if (!res.data) throw new Error('글을 찾을 수 없습니다.');
+      var row = res.data;
+      var images = row.images;
+      if (typeof images === 'string') {
+        try { images = JSON.parse(images); } catch (e) { images = []; }
+      }
+      if (!Array.isArray(images)) images = [];
+      return {
+        ok: true,
+        post: {
+          id: row.id,
+          board: row.board,
+          title: row.title,
+          body: row.body,
+          images: images,
+          author_name: row.author_name || '회원',
+          author_email: row.author_email || '',
+          author_sub: row.author_sub || '',
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          has_image: images.length > 0
+        }
+      };
+    });
+  }
+
+  function boardCreate(payload) {
+    return requireUser().then(function (user) {
+      var info = userMeta(user);
+      var title = String(payload.title || '').trim().slice(0, 80);
+      var body = String(payload.body || '').trim().slice(0, 8000);
+      var images = Array.isArray(payload.images) ? payload.images.slice(0, 3) : [];
+      if (!title) throw new Error('제목을 입력해 주세요.');
+      if (!body) throw new Error('내용을 입력해 주세요.');
+      return sb().from('posts').insert({
+        board: payload.board,
+        title: title,
+        body: body,
+        images: images,
+        author_id: info.id,
+        author_email: info.email,
+        author_name: info.name,
+        author_sub: info.sub
+      }).select().single().then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        var row = res.data;
+        return {
+          ok: true,
+          post: {
+            id: row.id,
+            board: row.board,
+            title: row.title,
+            body: row.body,
+            images: images,
+            author_name: row.author_name,
+            author_email: row.author_email,
+            author_sub: row.author_sub,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+            has_image: images.length > 0
+          }
+        };
+      });
+    });
+  }
+
+  function boardUpdate(payload) {
+    return requireUser().then(function (user) {
+      var title = String(payload.title || '').trim().slice(0, 80);
+      var body = String(payload.body || '').trim().slice(0, 8000);
+      var images = Array.isArray(payload.images) ? payload.images.slice(0, 3) : [];
+      if (!title) throw new Error('제목을 입력해 주세요.');
+      if (!body) throw new Error('내용을 입력해 주세요.');
+      return sb().from('posts').update({
+        title: title,
+        body: body,
+        images: images,
+        updated_at: new Date().toISOString()
+      }).eq('id', payload.id).eq('author_id', user.id).select().maybeSingle()
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          if (!res.data) throw new Error('본인 글만 수정할 수 있습니다.');
+          var row = res.data;
+          return {
+            ok: true,
+            post: {
+              id: row.id,
+              board: row.board,
+              title: row.title,
+              body: row.body,
+              images: images,
+              author_name: row.author_name,
+              author_email: row.author_email,
+              author_sub: row.author_sub,
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+              has_image: images.length > 0
+            }
+          };
+        });
+    });
+  }
+
+  function boardDelete(payload) {
+    return requireUser().then(function (user) {
+      return sb().from('posts').delete().eq('id', payload.id).eq('author_id', user.id)
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          return { ok: true };
+        });
+    });
+  }
+
+  function commentList(postId) {
+    return sb().from('comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+      .then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return {
+          ok: true,
+          post_id: postId,
+          comments: (res.data || []).map(function (row) {
+            return {
+              id: row.id,
+              post_id: row.post_id,
+              board: row.board,
+              body: row.body,
+              author_name: row.author_name || '회원',
+              author_email: row.author_email || '',
+              author_sub: row.author_sub || '',
+              created_at: row.created_at
+            };
+          })
+        };
+      });
+  }
+
+  function commentCreate(payload) {
+    return requireUser().then(function (user) {
+      var info = userMeta(user);
+      var body = String(payload.body || '').trim().slice(0, 1000);
+      if (!body) throw new Error('댓글 내용을 입력해 주세요.');
+      return sb().from('posts').select('id,board').eq('id', payload.post_id).maybeSingle()
+        .then(function (postRes) {
+          if (postRes.error) throw new Error(postRes.error.message);
+          if (!postRes.data) throw new Error('글을 찾을 수 없습니다.');
+          return sb().from('comments').insert({
+            post_id: payload.post_id,
+            board: postRes.data.board,
+            body: body,
+            author_id: info.id,
+            author_email: info.email,
+            author_name: info.name,
+            author_sub: info.sub
+          }).select().single();
+        }).then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          var row = res.data;
+          return {
+            ok: true,
+            comment: {
+              id: row.id,
+              post_id: row.post_id,
+              board: row.board,
+              body: row.body,
+              author_name: row.author_name,
+              author_email: row.author_email,
+              author_sub: row.author_sub,
+              created_at: row.created_at
+            }
+          };
+        });
+    });
+  }
+
+  function commentDelete(payload) {
+    return requireUser().then(function (user) {
+      return sb().from('comments').delete().eq('id', payload.id).eq('author_id', user.id)
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          return { ok: true };
+        });
+    });
+  }
+
+  function characterSave(payload) {
+    return requireUser().then(function (user) {
+      var info = userMeta(user);
+      var data = payload.character;
+      if (!data || typeof data !== 'object') throw new Error('캐릭터 데이터가 없습니다.');
+      var now = new Date().toISOString();
+      return sb().from('characters').upsert({
+        user_id: info.id,
+        email: info.email,
+        data: data,
+        updated_at: now
+      }, { onConflict: 'email' }).select().maybeSingle().then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return { ok: true, updated_at: now, character: data };
+      });
+    });
+  }
+
+  function characterLoad() {
+    return requireUser().then(function (user) {
+      return sb().from('characters').select('data,updated_at').eq('email', user.email).maybeSingle()
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          if (!res.data) return { ok: true, character: null, updated_at: '' };
+          return { ok: true, character: res.data.data, updated_at: res.data.updated_at };
+        });
+    });
+  }
+
+  function characterClear() {
+    return requireUser().then(function (user) {
+      return sb().from('characters').delete().eq('email', user.email).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return { ok: true };
+      });
+    });
+  }
+
+  function listMembers() {
+    return requireUser().then(function (user) {
+      if (String(user.email || '').toLowerCase() !== 'linkstyle84@gmail.com') {
+        throw new Error('관리자만 볼 수 있습니다.');
+      }
+      return sb().from('members')
+        .select('google_sub,email,name,age14,joined_at,last_seen')
+        .order('joined_at', { ascending: false })
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          return {
+            ok: true,
+            members: (res.data || []).map(function (r) {
+              return {
+                sub: r.google_sub || r.email,
+                email: r.email,
+                name: r.name,
+                age14: r.age14 ? '예' : '',
+                joined_at: r.joined_at,
+                last_seen: r.last_seen
+              };
+            })
+          };
+        });
+    });
+  }
+
+  function removeMember(payload) {
+    return requireUser().then(function (user) {
+      if (String(user.email || '').toLowerCase() !== 'linkstyle84@gmail.com') {
+        throw new Error('관리자만 볼 수 있습니다.');
+      }
+      var key = String(payload.sub || payload.email || '');
+      return sb().from('members').delete().or('google_sub.eq.' + key + ',email.eq.' + key)
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          return { ok: true };
+        });
+    });
+  }
+
+  function leave() {
+    return requireUser().then(function (user) {
+      return sb().from('characters').delete().eq('user_id', user.id).then(function () {
+        return sb().from('members').delete().eq('email', user.email);
+      }).then(function (res) {
+        /* members 본인 삭제 정책이 없으면 로컬만 정리 */
+        if (res.error && !/policy|permission|RLS/i.test(res.error.message || '')) {
+          throw new Error(res.error.message);
+        }
+        clearSession();
+        clearCharacterCache();
+        return { ok: true };
+      });
+    });
+  }
+
+  function call(payload) {
+    var action = payload && payload.action;
+    if (action === 'join' || action === 'login') {
+      return startGoogleAuth(action === 'join' ? 'join' : 'login', { age14: !!payload.age14 })
+        .then(function () { return { ok: true, redirect: true }; });
+    }
+    if (action === 'leave') return leave();
+    if (action === 'list') return listMembers();
+    if (action === 'remove') return removeMember(payload);
+    if (action === 'character_save') return characterSave(payload);
+    if (action === 'character_load') return characterLoad();
+    if (action === 'character_clear') return characterClear();
+    if (action === 'board_list') return boardList(payload.board);
+    if (action === 'board_get') return boardGet(payload.id);
+    if (action === 'board_create') return boardCreate(payload);
+    if (action === 'board_update') return boardUpdate(payload);
+    if (action === 'board_delete') return boardDelete(payload);
+    if (action === 'comment_list') return commentList(payload.post_id || payload.id);
+    if (action === 'comment_create') return commentCreate(payload);
+    if (action === 'comment_delete') return commentDelete(payload);
+    return Promise.reject(new Error('알 수 없는 요청입니다.'));
+  }
+
+  function callJsonp(params) {
+    var action = params && params.action;
+    if (action === 'board_list') return boardList(params.board);
+    if (action === 'board_get') return boardGet(params.id);
+    if (action === 'comment_list') return commentList(params.post_id || params.id);
+    return Promise.reject(new Error('지원하지 않는 공개 요청입니다.'));
   }
 
   function prefetchBoardList(board) {
-    return callJsonp({ action: 'board_list', board: board }).then(function (data) {
+    return boardList(board).then(function (data) {
       try {
         localStorage.setItem('dg-board-list:' + board, JSON.stringify({
           at: Date.now(),
@@ -410,64 +659,23 @@
     });
   }
 
-  var googleReady = false;
-  var googleHandler = null;
-
   function renderGoogle(el, callback, options) {
-    var cfg = config();
-    if (!window.google || !google.accounts || !google.accounts.id) {
-      throw new Error('구글 로그인 버튼을 불러오지 못했습니다.');
-    }
-    googleHandler = callback;
-    if (!googleReady) {
-      google.accounts.id.initialize({
-        client_id: cfg.clientId,
-        callback: function (resp) {
-          if (googleHandler && resp && resp.credential) googleHandler(resp.credential);
-        },
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        ux_mode: 'popup',
-        context: 'signin',
-        use_fedcm_for_prompt: false
-      });
-      googleReady = true;
-    }
-    try { google.accounts.id.disableAutoSelect(); } catch (e) {}
-
-    var width = (options && options.width) || 320;
     var textKey = (options && options.text) || 'signin_with';
     var label = textKey === 'signup_with' ? 'Google 계정으로 가입하기' : 'Google 계정으로 로그인';
+    var width = (options && options.width) || 320;
     el.innerHTML = '';
-    el.style.position = 'relative';
-    el.style.width = width + 'px';
-    el.style.maxWidth = '100%';
-    el.style.height = '44px';
-
-    var face = document.createElement('div');
-    face.setAttribute('aria-hidden', 'true');
-    face.style.cssText = [
-      'position:absolute', 'inset:0', 'display:flex', 'align-items:center', 'justify-content:center',
-      'gap:10px', 'border:1px solid #dadce0', 'border-radius:4px', 'background:#fff',
-      'color:#3c4043', 'font:500 14px/1 "Noto Sans KR", Arial, sans-serif',
-      'box-shadow:0 1px 2px rgba(0,0,0,.08)', 'pointer-events:none', 'user-select:none'
-    ].join(';');
-    face.innerHTML = '<span style="width:18px;height:18px;display:inline-block;background:url(https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg) center/contain no-repeat"></span><span></span>';
-    face.lastChild.textContent = label;
-
-    var hit = document.createElement('div');
-    hit.style.cssText = 'position:absolute;inset:0;opacity:0.02;overflow:hidden';
-    el.appendChild(face);
-    el.appendChild(hit);
-    google.accounts.id.renderButton(hit, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      text: textKey,
-      shape: 'rectangular',
-      width: width,
-      locale: 'ko'
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.style.cssText = 'width:' + width + 'px;max-width:100%;height:44px;border:1px solid #dadce0;border-radius:4px;background:#fff;color:#3c4043;font:700 14px/1 "Noto Sans KR",sans-serif;cursor:pointer;';
+    btn.addEventListener('click', function () {
+      var mode = textKey === 'signup_with' ? 'join' : 'login';
+      startGoogleAuth(mode, { age14: mode === 'join' }).catch(function (err) {
+        if (callback) callback(null, err);
+        else alert(err.message);
+      });
     });
+    el.appendChild(btn);
   }
 
   window.DgMember = {
@@ -476,6 +684,8 @@
     callJsonp: callJsonp,
     prefetchBoardList: prefetchBoardList,
     renderGoogle: renderGoogle,
+    startGoogleAuth: startGoogleAuth,
+    finishAuthFromRedirect: finishAuthFromRedirect,
     getSession: getSession,
     setSession: setSession,
     clearSession: clearSession,
@@ -492,6 +702,7 @@
     characterSnapshot: characterSnapshot,
     defaultSheet: defaultSheet,
     dpsFromSheet: dpsFromSheet,
-    mapClsForDps: mapClsForDps
+    mapClsForDps: mapClsForDps,
+    sb: function () { return connected() ? sb() : null; }
   };
 })();

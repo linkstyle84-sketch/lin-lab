@@ -808,7 +808,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
 
   </style>
 </head>
-<body>
+<body class="dps-locked">
   <div class="stage">
   <div class="window">
   <div class="frame-edge top"></div>
@@ -834,7 +834,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
       <h1>리니지 클래식 DPS 측정기</h1>
       <div class="credit-row">
         <p>제작: <a class="channel" href="https://www.youtube.com/user/linkstyle84" target="_blank" rel="noopener">도건유튜브</a></p>
-        <p class="updated">업데이트 일시: 2026년 11월 27일 05:05 (버전: 3.51v)</p>
+        <p class="updated">업데이트 일시: 2026년 11월 27일 05:10 (버전: 3.52v)</p>
       </div>
       <p class="site-legal"><a href="/guide/privacy.html">개인정보처리방침</a> · <a href="/guide/terms.html">이용약관</a></p>
     </div>
@@ -920,7 +920,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
       <div id="modalBody"></div>
     </div>
   </div>
-  <div class="member-gate" id="memberGate" hidden>
+  <div class="member-gate" id="memberGate">
     <div class="member-gate-card" role="dialog" aria-modal="true" aria-labelledby="memberGateTitle">
       <h2 id="memberGateTitle">회원 전용</h2>
       <p>무기 DPS 측정기는 가입 회원만 사용할 수 있습니다.<br>로그인 후 다시 들어와 주세요.</p>
@@ -2761,10 +2761,14 @@ function mount() {
 }
 
 function memberSession() {
-  if (!window.DgMember || !DgMember.getSession) return null;
-  const session = DgMember.getSession();
-  if (!session || !session.email) return null;
-  return session;
+  try {
+    if (!window.DgMember || !DgMember.getSession) return null;
+    const session = DgMember.getSession();
+    if (!session || !session.email) return null;
+    return session;
+  } catch (e) {
+    return null;
+  }
 }
 
 function showMemberGate() {
@@ -2780,8 +2784,9 @@ function hideMemberGate() {
 }
 
 function boot() {
+  /* 기본은 잠금. 로그인된 회원만 해제 후 측정기 기동 */
+  showMemberGate();
   if (!memberSession()) {
-    showMemberGate();
     document.fonts.ready.then(() => holdFrame());
     return;
   }
@@ -2790,6 +2795,7 @@ function boot() {
   document.fonts.ready.then(() => holdFrame());
 }
 
+document.body.classList.add('dps-locked');
 boot();
 
   </script>

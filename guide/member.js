@@ -281,8 +281,16 @@
       }
     }).then(function (res) {
       if (res.error) throw new Error(res.error.message);
+      if (res.data && res.data.url) {
+        location.assign(res.data.url);
+      }
       return res;
     });
+  }
+
+  function memberFromUser(user) {
+    var info = userMeta(user);
+    return { email: info.email, name: info.name, id: info.id };
   }
 
   function finishAuthFromRedirect() {
@@ -296,9 +304,15 @@
       var hadIntent = !!intent;
       try { sessionStorage.removeItem(AUTH_INTENT_KEY); } catch (e2) {}
       var age14 = !!(intent && intent.age14);
+      var fallback = memberFromUser(session.user);
       return upsertMember(session.user, { age14: age14 }).then(function (member) {
         setSession(member);
         return { member: member, intent: hadIntent ? intent : null };
+      }).catch(function (err) {
+        /* members 권한/RLS 실패해도 Auth 세션이 있으면 로그인 유지 */
+        setSession(fallback);
+        console.warn('[DgMember] members upsert failed:', err && err.message);
+        return { member: fallback, intent: hadIntent ? intent : null, warn: err && err.message };
       });
     });
   }

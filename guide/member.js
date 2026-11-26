@@ -350,7 +350,7 @@
       }
       var timer = window.setTimeout(function () {
         finish(new Error('저장 서버에 연결하지 못했습니다. 잠시 뒤에 다시 눌러 주세요.'));
-      }, 25000);
+      }, 60000);
       window.addEventListener('message', onMessage);
       document.body.appendChild(iframe);
       document.body.appendChild(form);

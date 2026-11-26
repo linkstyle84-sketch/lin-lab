@@ -743,15 +743,17 @@
       if (!requireToken()) return;
       btnPublish.disabled = true;
       var isEdit = !!editingId;
+      var editId = editingId;
+      var localImages = images.slice();
       say(isEdit ? '수정하는 중입니다.' : '게시하는 중입니다.');
       var payload = isEdit
         ? {
             action: 'board_update',
             idToken: token,
-            id: editingId,
+            id: editId,
             title: titleInput.value,
             body: bodyInput.value,
-            images: images
+            images: localImages
           }
         : {
             action: 'board_create',
@@ -759,17 +761,30 @@
             board: board,
             title: titleInput.value,
             body: bodyInput.value,
-            images: images
+            images: localImages
           };
       DgMember.call(payload).then(function (res) {
-        if (res.post) {
-          writePostCache(res.post);
-          prependList(res.post);
-          editingId = '';
-          show('list');
-          say('');
+        var post = res && res.post ? res.post : null;
+        if (!post) {
+          say('저장 응답을 확인하지 못했습니다. 잠시 뒤 목록에서 확인해 주세요.');
+          loadList({ silent: true });
+          return;
         }
-        loadList({ silent: true });
+        /* 서버 응답은 이미지를 비워 보냄 — 화면에 쓰던 로컬 이미지를 붙임 */
+        if ((!post.images || !post.images.length) && localImages.length) {
+          post.images = localImages;
+          post.has_image = true;
+        }
+        writePostCache(post);
+        prependList(post);
+        editingId = '';
+        say('');
+        if (isEdit) {
+          openDetail(post);
+        } else {
+          show('list');
+          loadList({ silent: true });
+        }
       }).catch(authFailed).then(function () {
         btnPublish.disabled = false;
       });

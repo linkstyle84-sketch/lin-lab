@@ -94,6 +94,7 @@
       text-decoration: none;
       cursor: pointer;
     }
+    .btn[hidden], button.btn[hidden] { display: none !important; }
     .btn.danger { border-color: #d87a6a; color: #f0b0a4; }
     button.btn:disabled { opacity: 0.55; cursor: default; }
     .status {
@@ -456,7 +457,6 @@
       <div id="google-box"></div>
       <div class="actions">
         <button type="button" class="btn" id="btn-publish">등록</button>
-        <button type="button" class="btn" id="btn-update" hidden>수정 완료</button>
         <button type="button" class="btn danger" id="btn-delete" hidden>삭제</button>
         <button type="button" class="btn" id="btn-cancel">목록</button>
       </div>

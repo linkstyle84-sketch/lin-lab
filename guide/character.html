@@ -215,7 +215,7 @@
       color: #f5f5f5;
       font-family: "Noto Serif KR", "Times New Roman", Times, Georgia, serif;
       font-weight: 700;
-      font-size: clamp(12px, 2.15cqw, 16px);
+      font-size: clamp(11px, 1.9cqw, 14px);
       letter-spacing: 0.01em;
       line-height: 1;
       text-shadow:
@@ -236,7 +236,8 @@
       color: #f8f8f8;
     }
     .stat-val.cover {
-      background: #2c2c2c;
+      background: #3a3a3a;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
     }
     .gear {
       position: absolute;
@@ -616,15 +617,16 @@
       { key: 'doll', label: '마법인형' }
     ];
     /* character-status.png 좌측 우물 — Food→분배스탯 + Str~Cha */
+    /* character-status.png — 라벨 옆 가로 우물 안 (658x868) */
     var STAT_OVERLAYS = [
-      { id: 'foodLbl', text: '분배스탯', l: 4.3, t: 30.9, w: 14.4, h: 3.4, lbl: true },
-      { id: 'food', l: 20.8, t: 30.9, w: 14.0, h: 3.4, cover: true },
-      { id: 'str', l: 20.8, t: 38.0, w: 14.0, h: 3.4 },
-      { id: 'dex', l: 20.8, t: 41.6, w: 14.0, h: 3.4 },
-      { id: 'con', l: 20.8, t: 45.2, w: 14.0, h: 3.4 },
-      { id: 'int', l: 20.8, t: 48.8, w: 14.0, h: 3.4 },
-      { id: 'wis', l: 20.8, t: 52.4, w: 14.0, h: 3.4 },
-      { id: 'cha', l: 20.8, t: 56.0, w: 14.0, h: 3.4 }
+      { id: 'foodLbl', text: '분배스탯', l: 4.3, t: 32.2, w: 14.5, h: 2.6, lbl: true },
+      { id: 'food', l: 25.3, t: 32.2, w: 8.8, h: 2.6, cover: true },
+      { id: 'str', l: 21.0, t: 37.9, w: 7.5, h: 2.6 },
+      { id: 'dex', l: 21.0, t: 42.2, w: 7.5, h: 2.6 },
+      { id: 'con', l: 21.0, t: 46.6, w: 7.5, h: 2.6 },
+      { id: 'int', l: 21.0, t: 50.9, w: 7.5, h: 2.6 },
+      { id: 'wis', l: 21.0, t: 55.3, w: 7.5, h: 2.6 },
+      { id: 'cha', l: 21.0, t: 59.6, w: 7.5, h: 2.6 }
     ];
     var FIELDS = ['level','exp','hp','hpMax','mp','mpMax','ac','weight','food','str','dex','con','int','wis','cha','magicLevel','magicBonus','resistEarth','resistWater','resistFire','resistWind','er'];
     var sheet = null;

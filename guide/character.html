@@ -1632,15 +1632,9 @@
       var hpAvg = sheet._hpAvg || 0;
       var mpAvg = sheet._mpAvg || 0;
       var observed = sheet.hpObserved;
-      var hpCmp = '';
-      if (observed != null && observed !== '' && Number.isFinite(Number(observed))) {
-        var diff = Number(observed) - hpAvg;
-        if (diff > 0) hpCmp = '<span class="tag-bless">축 +' + diff + '</span>';
-        else if (diff < 0) hpCmp = '<span class="tag-curse">저주 ' + diff + '</span>';
-        else hpCmp = '<span class="tag-ok">평균과 동일</span>';
-      } else {
-        hpCmp = '<span class="muted">실측 HP 입력</span>';
-      }
+      var hpCmp = compareObserved(observed, hpAvg, 'HP');
+      var mpObserved = sheet.mpObserved;
+      var mpCmp = compareObserved(mpObserved, mpAvg, 'MP');
       var hpTick = hpRegenByCon(con);
       var mpTick = mpRegenByWis(wis);
       var mr = mrByWis(wis);
@@ -1713,7 +1707,10 @@
         line('최대 소지 무게(STR+CON)', String(weight))
       );
       html += block('WIS ' + wis + ' 상세',
-        line('최대MP', String(mpAvg)) +
+        '<div class="line"><span class="k">최대MP 합계(평균)</span><span class="v">' + mpAvg + '</span></div>' +
+        '<div class="hp-row"><label>실측 최대MP <input id="mp-observed" type="number" inputmode="numeric" value="' +
+          (mpObserved != null && mpObserved !== '' ? escapeHtml(String(mpObserved)) : '') +
+          '"></label> ' + mpCmp + '</div>' +
         line('MP 회복(틱)', String(mpTick)) +
         line('마법 방어력(MR)', mr + '%')
       );
@@ -1723,14 +1720,26 @@
         line('최대 소환수', maxSummonTotalByCha(cha) + '마리')
       );
       el.innerHTML = html;
-      var obs = document.getElementById('hp-observed');
-      if (obs) {
-        obs.addEventListener('change', function () {
-          sheet.hpObserved = obs.value === '' ? '' : Number(obs.value);
-          paintStatsDetail();
-        });
-        obs.addEventListener('keydown', function (e) { e.stopPropagation(); });
+      bindObservedInput('hp-observed', 'hpObserved');
+      bindObservedInput('mp-observed', 'mpObserved');
+    }
+    function compareObserved(observed, avg, label) {
+      if (observed != null && observed !== '' && Number.isFinite(Number(observed))) {
+        var diff = Number(observed) - avg;
+        if (diff > 0) return '<span class="tag-bless">축 +' + diff + '</span>';
+        if (diff < 0) return '<span class="tag-curse">저주 ' + diff + '</span>';
+        return '<span class="tag-ok">평균과 동일</span>';
       }
+      return '<span class="muted">실측 ' + label + ' 입력</span>';
+    }
+    function bindObservedInput(domId, sheetKey) {
+      var obs = document.getElementById(domId);
+      if (!obs) return;
+      obs.addEventListener('change', function () {
+        sheet[sheetKey] = obs.value === '' ? '' : Number(obs.value);
+        paintStatOverlays();
+      });
+      obs.addEventListener('keydown', function (e) { e.stopPropagation(); });
     }
     function adjustLevel(dir) {
       var cur = num('level');
@@ -1902,11 +1911,17 @@
           el.textContent = row.text || '';
         } else if (row.derived) {
           if (row.format === 'pair') {
-            var curV = num(row.id);
-            var maxV = num(row.id + 'Max');
-            if (!Number.isFinite(curV)) curV = 0;
-            if (!Number.isFinite(maxV)) maxV = curV;
-            el.textContent = curV + '/' + maxV;
+            var avgV = row.id === 'hp' ? (sheet && sheet._hpAvg) : (row.id === 'mp' ? (sheet && sheet._mpAvg) : null);
+            if (!Number.isFinite(avgV)) avgV = num(row.id + 'Max');
+            if (!Number.isFinite(avgV)) avgV = num(row.id) || 0;
+            var obsKey = row.id === 'hp' ? 'hpObserved' : (row.id === 'mp' ? 'mpObserved' : '');
+            var obsV = obsKey && sheet ? sheet[obsKey] : '';
+            if (obsV != null && obsV !== '' && Number.isFinite(Number(obsV))) {
+              /* 장비창: 평균 / 실측 입력 */
+              el.textContent = avgV + '/' + Number(obsV);
+            } else {
+              el.textContent = avgV + '/' + avgV;
+            }
           } else {
             var dV = num(row.id);
             el.textContent = Number.isFinite(dV) ? String(dV) : '';
@@ -1929,6 +1944,7 @@
       sheet.buffs = Object.assign({}, (data && data.buffs) || {});
       sheet.transform = (data && data.transform) || '';
       sheet.hpObserved = (data && data.hpObserved != null) ? data.hpObserved : '';
+      sheet.mpObserved = (data && data.mpObserved != null) ? data.mpObserved : '';
       setClass(sheet.cls || '요정', false);
       pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
@@ -1958,6 +1974,7 @@
       next.buffs = Object.assign({}, (sheet && sheet.buffs) || {});
       next.transform = (sheet && sheet.transform) || '';
       next.hpObserved = (sheet && sheet.hpObserved != null) ? sheet.hpObserved : '';
+      next.mpObserved = (sheet && sheet.mpObserved != null) ? sheet.mpObserved : '';
       sheet = next;
       return next;
     }

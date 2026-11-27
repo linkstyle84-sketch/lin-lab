@@ -161,6 +161,7 @@
       buffs: {},
       transform: '',
       hpObserved: '',
+      mpObserved: '',
       gear: {
         helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
         ring1: '', gloves: '', belt: '', shield: '', weapon: '',

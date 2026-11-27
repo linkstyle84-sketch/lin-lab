@@ -573,8 +573,10 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      width: 100%;
       margin-top: 10px;
-      z-index: 1;
+      position: relative;
+      z-index: 4;
     }
     .paper-foot-top {
       display: flex;
@@ -1025,18 +1027,18 @@
                 <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
                 <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
                 <div class="gear" id="gear" aria-label="장비 슬롯"></div>
-              </div>
-            </div>
-            <div class="paper-foot">
-              <div class="obs-box">
-                <p class="obs-tip">축저주 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>
-                <div class="obs-row">
-                  <label>실제 HP <input id="hp-observed" type="number" inputmode="numeric"></label>
-                  <span class="obs-tag" id="hp-obs-tag"></span>
-                </div>
-                <div class="obs-row">
-                  <label>실제 MP <input id="mp-observed" type="number" inputmode="numeric"></label>
-                  <span class="obs-tag" id="mp-obs-tag"></span>
+                <div class="paper-foot">
+                  <div class="obs-box">
+                    <p class="obs-tip">축저주 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>
+                    <div class="obs-row">
+                      <label>실제 HP <input id="hp-observed" type="number" inputmode="numeric"></label>
+                      <span class="obs-tag" id="hp-obs-tag"></span>
+                    </div>
+                    <div class="obs-row">
+                      <label>실제 MP <input id="mp-observed" type="number" inputmode="numeric"></label>
+                      <span class="obs-tag" id="mp-obs-tag"></span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

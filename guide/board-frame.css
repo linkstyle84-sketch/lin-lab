@@ -57,6 +57,16 @@
   white-space: nowrap;
 }
 
+.board-link.board-link-2line {
+  white-space: normal;
+  align-items: center;
+}
+
+.board-link.board-link-2line span {
+  white-space: normal;
+  line-height: 1.2;
+}
+
 .board-ico {
   width: 36px;
   height: 36px;

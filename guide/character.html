@@ -105,20 +105,6 @@
     .class-btn[aria-pressed="true"] img {
       filter: drop-shadow(0 0 8px rgba(228,195,106,.45));
     }
-    .class-btn.wip {
-      opacity: 0.55;
-      position: relative;
-    }
-    .class-btn.wip::after {
-      content: "준비중";
-      position: absolute;
-      right: 4px;
-      bottom: 3px;
-      font-size: 9px;
-      font-weight: 900;
-      color: #f0b4a0;
-      letter-spacing: -0.04em;
-    }
     .sheet {
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -994,7 +980,7 @@
           <button type="button" class="class-btn" data-cls="마법사" aria-pressed="false">
             <img src="class-icons/mage.png" alt="">마법사
           </button>
-          <button type="button" class="class-btn wip" data-cls="도적" aria-pressed="false" title="아직 준비중 입니다.">
+          <button type="button" class="class-btn" data-cls="도적" aria-pressed="false">
             <img src="class-icons/thief.png" alt="">도적
           </button>
         </div>
@@ -1168,15 +1154,12 @@
     var LEVEL_MIN = 1;
     var LEVEL_MAX = 99;
     var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };
-    /* 인게임 실측 전 — 선택·장비·스탯 설정 잠금 */
-    var CLASS_WIP = { '도적': 1 };
-    function isClassWip(cls) {
-      return !!CLASS_WIP[cls || selectedCls];
+    /* 도적: 레벨 1 고정 프리뷰 (실측 데이터 전) */
+    function isThiefPreview(cls) {
+      return (cls || selectedCls) === '도적';
     }
-    function blockIfClassWip() {
-      if (!isClassWip()) return false;
-      alertPopup('아직 준비중 입니다.');
-      return true;
+    function thiefLevelCap() {
+      return isThiefPreview() ? 1 : LEVEL_MAX;
     }
     /* lcinfo.io/classes 클래스 id (도적은 사이트 미제공 → 요정 성장 사용) */
     var CLASS_LC = {
@@ -1509,6 +1492,10 @@
       var intStat = num('int');
       var str = num('str');
       if (!Number.isFinite(level) || level < LEVEL_MIN) level = LEVEL_MIN;
+      if (isThiefPreview()) {
+        level = 1;
+        setField('level', 1);
+      }
       if (!Number.isFinite(con)) con = statFloor('con');
       if (!Number.isFinite(wis)) wis = statFloor('wis');
       if (!Number.isFinite(intStat)) intStat = statFloor('int');
@@ -1522,6 +1509,13 @@
       var extraMp = doll.mp + gearBonus.mp + buffBonus.mp;
       var avgHp = hp.avg + extraHp;
       var avgMp = mp.avg + extraMp;
+      /* 도적 프리뷰: HP/MP 고정 표기 */
+      if (isThiefPreview()) {
+        avgHp = 14;
+        avgMp = 4;
+        extraHp = 0;
+        extraMp = 0;
+      }
       setField('hp', avgHp);
       setField('hpMax', avgHp);
       setField('mp', avgMp);
@@ -1535,8 +1529,8 @@
       sheet._mpAvg = avgMp;
       sheet._hpExtra = extraHp;
       sheet._mpExtra = extraMp;
-      sheet._hpRange = { min: hp.min + extraHp, max: hp.max + extraHp, avg: avgHp };
-      sheet._mpRange = { min: mp.min + extraMp, max: mp.max + extraMp, avg: avgMp };
+      sheet._hpRange = { min: avgHp, max: avgHp, avg: avgHp };
+      sheet._mpRange = { min: avgMp, max: avgMp, avg: avgMp };
     }
     /* lcinfo: 군주 9 / 기사 5 / 요정 6 / 마법사 12 레벨당 +1 */
     function levelErBonus() {
@@ -1868,7 +1862,9 @@
       if (!sheet) return;
       var lv = num('level');
       if (lvIn && document.activeElement !== lvIn) {
+        if (isThiefPreview()) lv = 1;
         lvIn.value = Number.isFinite(lv) && lv > 0 ? String(lv) : '';
+        lvIn.max = String(thiefLevelCap());
       }
       if (hpIn && document.activeElement !== hpIn) {
         hpIn.value = hasObserved(sheet.hpObserved) ? String(sheet.hpObserved) : '';
@@ -1895,7 +1891,6 @@
         if (!el || el.dataset.bound === '1') return;
         el.dataset.bound = '1';
         el.addEventListener('input', function () {
-          if (blockIfClassWip()) return;
           if (!sheet) return;
           sheet[sheetKey] = el.value === '' ? '' : Number(el.value);
           syncObservedFoot();
@@ -1909,19 +1904,18 @@
       if (lvTop && lvTop.dataset.bound !== '1') {
         lvTop.dataset.bound = '1';
         lvTop.addEventListener('input', function () {
-          if (blockIfClassWip()) return;
           var v = Number(lvTop.value);
           if (!Number.isFinite(v)) return;
-          v = Math.max(LEVEL_MIN, Math.min(LEVEL_MAX, Math.trunc(v)));
+          v = Math.max(LEVEL_MIN, Math.min(thiefLevelCap(), Math.trunc(v)));
           setField('level', v);
           paintStatOverlays();
           paintSideRail();
         });
         lvTop.addEventListener('change', function () {
-          if (blockIfClassWip()) return;
           var v = Number(lvTop.value);
           if (!Number.isFinite(v) || v < LEVEL_MIN) v = LEVEL_MIN;
-          if (v > LEVEL_MAX) v = LEVEL_MAX;
+          var cap = thiefLevelCap();
+          if (v > cap) v = cap;
           v = Math.trunc(v);
           setField('level', v);
           lvTop.value = String(v);
@@ -1932,11 +1926,11 @@
       }
     }
     function adjustLevel(dir) {
-      if (blockIfClassWip()) return;
       var cur = num('level');
       if (!Number.isFinite(cur) || cur < LEVEL_MIN) cur = LEVEL_MIN;
+      var cap = thiefLevelCap();
       if (dir > 0) {
-        if (cur >= LEVEL_MAX) return;
+        if (cur >= cap) return;
         setField('level', cur + 1);
       } else if (dir < 0) {
         if (cur <= LEVEL_MIN) return;
@@ -1965,7 +1959,6 @@
       return sheet.buffs;
     }
     function adjustStat(id, dir) {
-      if (blockIfClassWip()) return;
       if (id === 'level') {
         adjustLevel(dir);
         return;
@@ -1988,7 +1981,6 @@
       paintSideRail();
     }
     function adjustElixir(id, dir) {
-      if (blockIfClassWip()) return;
       if (STAT_IDS.indexOf(id) === -1) return;
       if (num('level') < ELIXIR_MIN_LEVEL) {
         alertPopup('50래벨이상만 사용할 수 있습니다');
@@ -2012,10 +2004,6 @@
     }
 
     function setClass(cls, applyStats) {
-      if (applyStats && isClassWip(cls)) {
-        alertPopup('아직 준비중 입니다.');
-        return false;
-      }
       selectedCls = cls || '요정';
       document.querySelectorAll('#class-picker .class-btn').forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.dataset.cls === selectedCls ? 'true' : 'false');
@@ -2026,6 +2014,7 @@
       ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
         setField(id, base[id]);
       });
+      if (isThiefPreview()) setField('level', 1);
       if (sheet) {
         sheet.cls = selectedCls;
         sheet.elixir = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
@@ -2056,7 +2045,7 @@
           wrap.style.height = row.h + '%';
           var cur = num(row.id);
           var floor = row.level ? LEVEL_MIN : (statFloor(row.id) + elixirOf(row.id));
-          var cap = row.level ? LEVEL_MAX : (statCap(row.id) + elixirOf(row.id));
+          var cap = row.level ? thiefLevelCap() : (statCap(row.id) + elixirOf(row.id));
           var canDown = cur > floor;
           var canUp = row.level ? (cur < cap) : (foodLeft > 0 && cur < cap);
           var shown = cur;
@@ -2110,13 +2099,17 @@
           el.textContent = row.text || '';
         } else if (row.derived) {
           if (row.format === 'pair') {
-            var avgV = row.id === 'hp' ? (sheet && sheet._hpAvg) : (row.id === 'mp' ? (sheet && sheet._mpAvg) : null);
-            if (!Number.isFinite(avgV)) avgV = num(row.id + 'Max');
-            if (!Number.isFinite(avgV)) avgV = num(row.id) || 0;
-            var obsKey = row.id === 'hp' ? 'hpObserved' : (row.id === 'mp' ? 'mpObserved' : '');
-            var showV = observedValue(obsKey && sheet ? sheet[obsKey] : '', avgV);
-            /* 미입력: 평균 / 입력: 실측값 */
-            el.textContent = showV + '/' + showV;
+            if (isThiefPreview() && (row.id === 'hp' || row.id === 'mp')) {
+              el.textContent = row.id === 'hp' ? '14/14' : '4/4';
+            } else {
+              var avgV = row.id === 'hp' ? (sheet && sheet._hpAvg) : (row.id === 'mp' ? (sheet && sheet._mpAvg) : null);
+              if (!Number.isFinite(avgV)) avgV = num(row.id + 'Max');
+              if (!Number.isFinite(avgV)) avgV = num(row.id) || 0;
+              var obsKey = row.id === 'hp' ? 'hpObserved' : (row.id === 'mp' ? 'mpObserved' : '');
+              var showV = observedValue(obsKey && sheet ? sheet[obsKey] : '', avgV);
+              /* 미입력: 평균 / 입력: 실측값 */
+              el.textContent = showV + '/' + showV;
+            }
           } else {
             var dV = num(row.id);
             el.textContent = Number.isFinite(dV) ? String(dV) : '';
@@ -2140,10 +2133,7 @@
       sheet.transform = (data && data.transform) || '';
       sheet.hpObserved = (data && data.hpObserved != null) ? data.hpObserved : '';
       sheet.mpObserved = (data && data.mpObserved != null) ? data.mpObserved : '';
-      if (isClassWip(sheet.cls)) {
-        sheet.cls = '요정';
-        alertPopup('도적은 아직 준비중 입니다.');
-      }
+      if (isThiefPreview(sheet.cls)) sheet.level = 1;
       setClass(sheet.cls || '요정', false);
       pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
@@ -2523,7 +2513,6 @@
       hideIconTip();
     }
     function openIconModal(mode) {
-      if (blockIfClassWip()) return;
       if (!iconModal || !iconPickList) return;
       iconModalMode = mode;
       pendingDoll = null;
@@ -2779,7 +2768,6 @@
         btn.addEventListener('mouseleave', hideIconTip);
       }
       btn.addEventListener('click', function () {
-        if (blockIfClassWip()) return;
         openSlot(slot.key, slot.label);
       });
       host.appendChild(btn);
@@ -3150,15 +3138,10 @@
     document.getElementById('class-picker').addEventListener('click', function (e) {
       var btn = e.target.closest('.class-btn');
       if (!btn) return;
-      if (isClassWip(btn.dataset.cls)) {
-        alertPopup('아직 준비중 입니다.');
-        return;
-      }
       setClass(btn.dataset.cls, true);
     });
 
     document.getElementById('btn-save').addEventListener('click', function () {
-      if (blockIfClassWip()) return;
       var payload = buildPayload();
       saveLocal(payload);
       if (!DgMember.connected()) {

@@ -1596,13 +1596,16 @@
     function buffDetailHtml(b) {
       if (!b) return '';
       var lines = [];
-      if (b.note) lines.push(b.note);
-      if (b.ac) lines.push('AC -' + b.ac);
-      if (b.dmg) lines.push('추타 +' + b.dmg);
-      if (b.acc) lines.push('명중 +' + b.acc);
-      if (b.dr) lines.push('리덕 +' + b.dr);
-      if (b.er) lines.push('ER +' + b.er);
-      if (b.sp) lines.push('SP +' + b.sp);
+      if (b.note) {
+        lines.push(b.note);
+      } else {
+        if (b.ac) lines.push('AC -' + b.ac);
+        if (b.dmg) lines.push('추타 +' + b.dmg);
+        if (b.acc) lines.push('명중 +' + b.acc);
+        if (b.dr) lines.push('리덕 +' + b.dr);
+        if (b.er) lines.push('ER +' + b.er);
+        if (b.sp) lines.push('SP +' + b.sp);
+      }
       return '<div class="tip-row">' +
         (b.i ? '<img src="buff-icons/' + b.i + '" alt="">' : '') +
         '<div class="tip-body"><div class="tip-title">' + escapeHtml(b.n || b.id) + '</div>' +
@@ -1813,7 +1816,13 @@
           img.alt = '';
           btn.appendChild(img);
           btn.addEventListener('click', function () {
-            onMap[b.id] = !onMap[b.id];
+            var next = !onMap[b.id];
+            onMap[b.id] = next;
+            if (next && b.group) {
+              buffsForClass(selectedCls).forEach(function (o) {
+                if (o.id !== b.id && o.group === b.group) onMap[o.id] = false;
+              });
+            }
             sheet.buffs = onMap;
             recomputeAc();
             paintStatOverlays();

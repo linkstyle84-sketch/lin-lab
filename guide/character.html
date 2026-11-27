@@ -704,8 +704,9 @@
     /* character-status.png — 분배스탯 + Str~Cha(하락/수치/상승) + HP/MP */
     var STAT_OVERLAYS = [
       { id: 'level', l: 31.55, t: 5.46, w: 14.14, h: 3.66, ctrl: true, level: true },
-      { id: 'hp', l: 29.1, t: 12.20, w: 23.8, h: 3.7, derived: true, tone: 'hp' },
-      { id: 'mp', l: 29.1, t: 16.60, w: 23.8, h: 3.7, derived: true, tone: 'mp' },
+      { id: 'hp', l: 29.1, t: 12.20, w: 23.8, h: 3.7, derived: true, tone: 'hp', format: 'pair' },
+      { id: 'mp', l: 29.1, t: 16.60, w: 23.8, h: 3.7, derived: true, tone: 'mp', format: 'pair' },
+      { id: 'ac', l: 29.1, t: 20.85, w: 23.8, h: 3.7, derived: true },
       { id: 'foodLbl', text: '분배스탯', l: 4.2, t: 32.02, w: 11.2, h: 2.8, lbl: true },
       { id: 'food', l: 24.8, t: 32.02, w: 9.4, h: 2.8, cover: true },
       { id: 'str', l: 14.70, t: 37.85, w: 13.2, h: 3.4, ctrl: true },
@@ -1022,11 +1023,16 @@
         if (row.lbl) {
           el.textContent = row.text || '';
         } else if (row.derived) {
-          var curV = num(row.id);
-          var maxV = num(row.id + 'Max');
-          if (!Number.isFinite(curV)) curV = 0;
-          if (!Number.isFinite(maxV)) maxV = curV;
-          el.textContent = curV + '/' + maxV;
+          if (row.format === 'pair') {
+            var curV = num(row.id);
+            var maxV = num(row.id + 'Max');
+            if (!Number.isFinite(curV)) curV = 0;
+            if (!Number.isFinite(maxV)) maxV = curV;
+            el.textContent = curV + '/' + maxV;
+          } else {
+            var dV = num(row.id);
+            el.textContent = Number.isFinite(dV) ? String(dV) : '';
+          }
         } else {
           var v = num(row.id);
           el.textContent = Number.isFinite(v) ? String(v) : '';
@@ -1046,6 +1052,7 @@
         el.value = sheet[id] != null ? sheet[id] : '';
       });
       paintGear();
+      recomputeAc();
       paintStatOverlays();
     }
 
@@ -1177,9 +1184,10 @@
       var gear = (sheet && sheet.gear) || {};
       Object.keys(gear).forEach(function (key) {
         var g = gear[key];
+        /* DBITEMS.a 는 AC 하락 절대값(판금 갑옷 a=7 → AC-7) */
         if (g && typeof g === 'object' && g.ac != null) sum += Number(g.ac) || 0;
       });
-      document.getElementById('ac').value = 10 - sum;
+      setField('ac', 10 - sum);
     }
 
     function openSlot(key, label) {
@@ -1215,7 +1223,7 @@
         adjustStat(id, Number(btn.dataset.dir));
       });
     });
-    ['level', 'food', 'str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function (id) {
+    ['level', 'food', 'str', 'dex', 'con', 'int', 'wis', 'cha', 'ac'].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.readOnly = true;
@@ -1240,6 +1248,7 @@
       if (editKey === 'weapon') sheet.weaponEnchant = Number(document.getElementById('modal-enchant').value) || 0;
       recomputeAc();
       paintGear();
+      paintStatOverlays();
       closeModal();
     });
     document.getElementById('modal-clear').addEventListener('click', function () {
@@ -1249,6 +1258,7 @@
       if (editKey === 'weapon') sheet.weaponEnchant = 0;
       recomputeAc();
       paintGear();
+      paintStatOverlays();
       closeModal();
     });
     modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });

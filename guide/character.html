@@ -818,25 +818,49 @@
     .icon-tip .tip-body { min-width: 0; }
     .icon-tip .tip-title { color: #fff; font-weight: 800; word-break: keep-all; }
     .icon-tip .tip-sub { color: #cfcfcf; margin-top: 3px; font-size: 11px; white-space: pre-wrap; word-break: keep-all; }
+    #icon-modal .modal {
+      width: min(720px, 100%);
+      padding: 22px;
+    }
+    #icon-modal .modal h2 { font-size: 24px; margin-bottom: 14px; }
+    #icon-modal .row-actions button {
+      padding: 12px 14px;
+      font-size: 15px;
+    }
     .pick-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-      gap: 8px;
-      max-height: min(52vh, 480px);
+      grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+      gap: 12px;
+      max-height: min(68vh, 640px);
       overflow: auto;
-      padding: 4px 2px 8px;
+      padding: 6px 2px 12px;
     }
     .pick-icon {
-      width: 44px;
-      height: 44px;
-      padding: 3px;
+      width: 66px;
+      height: 66px;
+      padding: 4px;
       border: 1px solid rgba(160, 160, 160, 0.45);
-      border-radius: 4px;
+      border-radius: 5px;
       background: #0a0a0a;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .icon-tip .tip-buffs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: 280px;
+    }
+    .icon-tip .tip-buffs img {
+      width: 36px;
+      height: 36px;
+    }
+    .icon-tip .tip-empty {
+      color: #cfcfcf;
+      font-size: 12px;
+      font-weight: 700;
     }
     .pick-icon img {
       width: 100%;
@@ -1585,6 +1609,18 @@
         (lines.length ? '<div class="tip-sub">' + escapeHtml(lines.join('\n')) + '</div>' : '') +
         '</div></div>';
     }
+    function selectedBuffsTipHtml() {
+      var onMap = ensureBuffs();
+      var active = buffsForClass(selectedCls).filter(function (b) { return !!onMap[b.id]; });
+      if (!active.length) {
+        return '<div class="tip-empty">선택된 버프 없음</div>';
+      }
+      var imgs = active.map(function (b) {
+        return '<img src="buff-icons/' + b.i + '" alt="' + escapeHtml(b.n || b.id) + '" title="' + escapeHtml(b.n || b.id) + '">';
+      }).join('');
+      return '<div class="tip-title" style="margin-bottom:6px">선택 버프 ' + active.length + '개</div>' +
+        '<div class="tip-buffs">' + imgs + '</div>';
+    }
     function dollDetailHtml(d) {
       if (!d) return '';
       return '<div class="tip-row">' +
@@ -1711,7 +1747,7 @@
         sideRailEl.appendChild(wrap);
       });
 
-      function addPickRow(iconSrc, labelText, onClick) {
+      function addPickRow(iconSrc, labelText, onClick, onHover) {
         var row = document.createElement('div');
         row.className = 'side-row';
         var btn = document.createElement('button');
@@ -1727,11 +1763,20 @@
         btn.appendChild(ico);
         btn.appendChild(lab);
         btn.addEventListener('click', onClick);
+        if (onHover) {
+          btn.addEventListener('mouseenter', function () { onHover(btn); });
+          btn.addEventListener('mouseleave', hideIconTip);
+        }
         row.appendChild(btn);
         sideRailEl.appendChild(row);
       }
 
-      addPickRow('ui/elixir/btn-buff.png', '버프선택', function () { openIconModal('buff'); });
+      addPickRow(
+        'ui/elixir/btn-buff.png',
+        '버프선택',
+        function () { openIconModal('buff'); },
+        function (btn) { showIconTip(btn, selectedBuffsTipHtml()); }
+      );
       var doll = selectedDoll();
       addPickRow(
         doll && doll.i ? ('dolls/' + doll.i) : 'ui/elixir/btn-doll-pick.png',

@@ -237,32 +237,42 @@
       align-items: flex-start;
       justify-content: center;
       gap: 8px;
+      container-type: inline-size;
     }
+    /* 장비칸 아이콘 ≈ 슬롯(15.2%)의 78% — 장비창 폭 기준으로 맞춤 */
     .side-rail {
+      --gear-ico: min(62px, calc((100cqi - 120px) * 0.152 * 0.78));
       flex: 0 0 auto;
-      width: 168px;
+      width: calc(var(--gear-ico) + 44px);
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      align-items: center;
+      gap: 8px;
       padding-top: 8px;
     }
     .side-row {
-      display: grid;
-      grid-template-columns: 26px 18px minmax(0, 1fr) 18px;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 3px;
-      min-height: 28px;
+      width: 100%;
     }
-    .side-row.pick-row {
-      grid-template-columns: 26px minmax(0, 1fr);
+    .side-ctrl {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
     }
     .side-ico {
-      width: 26px;
-      height: 26px;
+      width: var(--gear-ico);
+      height: var(--gear-ico);
       object-fit: contain;
       image-rendering: pixelated;
       background: #000;
       border: 1px solid rgba(180, 180, 180, 0.35);
+      border-radius: 2px;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.75));
     }
     .side-step {
       width: 18px;
@@ -276,14 +286,17 @@
       font-weight: 900;
       line-height: 1;
       cursor: pointer;
+      flex: 0 0 auto;
     }
     .side-step:hover { border-color: var(--gold); color: var(--gold); }
     .side-label {
-      min-width: 0;
+      width: 100%;
       color: var(--ink);
       font-size: 10px;
       font-weight: 800;
       letter-spacing: -0.02em;
+      text-align: center;
+      line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -291,28 +304,19 @@
     .side-label.has { color: var(--gold); }
     .side-pick {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      min-height: 26px;
-      padding: 2px 6px;
-      border: 1px solid rgba(160, 160, 160, 0.45);
-      border-radius: 3px;
-      background: linear-gradient(180deg, #2a2a2a, #121212);
-      color: var(--ink);
+      gap: 3px;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
       font: inherit;
-      font-size: 11px;
-      font-weight: 800;
       cursor: pointer;
-      text-align: left;
     }
-    .side-pick:hover { border-color: var(--gold); color: var(--gold); }
-    .side-pick img.picked {
-      width: 18px;
-      height: 18px;
-      object-fit: contain;
-      image-rendering: pixelated;
-    }
+    .side-pick:hover .side-ico { border-color: var(--gold); }
+    .side-pick:hover .side-label { color: var(--gold); }
     .doll-wrap {
       position: relative;
       width: min(100%, 520px);
@@ -852,8 +856,14 @@
       .sheet-body { grid-template-columns: 1fr; }
       .stats { border-left: 0; border-top: 1px solid var(--line); }
       .paper-stage { flex-wrap: wrap; }
-      .side-rail { width: 100%; flex-direction: row; flex-wrap: wrap; }
-      .side-row { width: calc(50% - 4px); }
+      .side-rail {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        --gear-ico: min(56px, 14vw);
+      }
+      .side-row { width: auto; min-width: calc(var(--gear-ico) + 44px); }
       .doll-wrap { width: min(100%, 480px); margin: 0 auto; }
     }
   </style>
@@ -1631,71 +1641,69 @@
         var e = elixirOf(row.id);
         var wrap = document.createElement('div');
         wrap.className = 'side-row';
-        var ico = document.createElement('img');
-        ico.className = 'side-ico';
-        ico.src = row.icon;
-        ico.alt = '';
+
+        var ctrl = document.createElement('div');
+        ctrl.className = 'side-ctrl';
+
         var down = document.createElement('button');
         down.type = 'button';
         down.className = 'side-step';
         down.setAttribute('aria-label', row.label + ' 하락');
         down.textContent = '−';
         down.addEventListener('click', function () { adjustElixir(row.id, -1); });
-        var lab = document.createElement('span');
-        lab.className = 'side-label' + (e > 0 ? ' has' : '');
-        lab.textContent = e > 0 ? (row.label + ' +' + e) : row.label;
+
+        var ico = document.createElement('img');
+        ico.className = 'side-ico';
+        ico.src = row.icon;
+        ico.alt = '';
+
         var up = document.createElement('button');
         up.type = 'button';
         up.className = 'side-step';
         up.setAttribute('aria-label', row.label + ' 상승');
         up.textContent = '+';
         up.addEventListener('click', function () { adjustElixir(row.id, 1); });
-        wrap.appendChild(ico);
-        wrap.appendChild(down);
+
+        ctrl.appendChild(down);
+        ctrl.appendChild(ico);
+        ctrl.appendChild(up);
+
+        var lab = document.createElement('div');
+        lab.className = 'side-label' + (e > 0 ? ' has' : '');
+        lab.textContent = e > 0 ? (row.label + ' +' + e) : row.label;
+
+        wrap.appendChild(ctrl);
         wrap.appendChild(lab);
-        wrap.appendChild(up);
         sideRailEl.appendChild(wrap);
       });
 
-      var buffRow = document.createElement('div');
-      buffRow.className = 'side-row pick-row';
-      var buffIco = document.createElement('img');
-      buffIco.className = 'side-ico';
-      buffIco.src = 'ui/elixir/btn-buff.png';
-      buffIco.alt = '';
-      var buffBtn = document.createElement('button');
-      buffBtn.type = 'button';
-      buffBtn.className = 'side-pick';
-      buffBtn.textContent = '버프선택';
-      buffBtn.addEventListener('click', function () { openIconModal('buff'); });
-      buffRow.appendChild(buffIco);
-      buffRow.appendChild(buffBtn);
-      sideRailEl.appendChild(buffRow);
-
-      var doll = selectedDoll();
-      var dollRow = document.createElement('div');
-      dollRow.className = 'side-row pick-row';
-      var dollIco = document.createElement('img');
-      dollIco.className = 'side-ico';
-      dollIco.src = 'ui/elixir/btn-doll-pick.png';
-      dollIco.alt = '';
-      var dollBtn = document.createElement('button');
-      dollBtn.type = 'button';
-      dollBtn.className = 'side-pick';
-      if (doll && doll.i) {
-        var p = document.createElement('img');
-        p.className = 'picked';
-        p.src = 'dolls/' + doll.i;
-        p.alt = '';
-        dollBtn.appendChild(p);
-        dollBtn.appendChild(document.createTextNode(doll.n || '인형 선택'));
-      } else {
-        dollBtn.textContent = '인형 선택';
+      function addPickRow(iconSrc, labelText, onClick) {
+        var row = document.createElement('div');
+        row.className = 'side-row';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'side-pick';
+        var ico = document.createElement('img');
+        ico.className = 'side-ico';
+        ico.src = iconSrc;
+        ico.alt = '';
+        var lab = document.createElement('div');
+        lab.className = 'side-label';
+        lab.textContent = labelText;
+        btn.appendChild(ico);
+        btn.appendChild(lab);
+        btn.addEventListener('click', onClick);
+        row.appendChild(btn);
+        sideRailEl.appendChild(row);
       }
-      dollBtn.addEventListener('click', function () { openIconModal('doll'); });
-      dollRow.appendChild(dollIco);
-      dollRow.appendChild(dollBtn);
-      sideRailEl.appendChild(dollRow);
+
+      addPickRow('ui/elixir/btn-buff.png', '버프선택', function () { openIconModal('buff'); });
+      var doll = selectedDoll();
+      addPickRow(
+        doll && doll.i ? ('dolls/' + doll.i) : 'ui/elixir/btn-doll-pick.png',
+        doll && doll.n ? doll.n : '인형 선택',
+        function () { openIconModal('doll'); }
+      );
     }
     function closeIconModal() {
       if (!iconModal) return;

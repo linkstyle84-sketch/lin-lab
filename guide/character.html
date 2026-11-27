@@ -105,6 +105,20 @@
     .class-btn[aria-pressed="true"] img {
       filter: drop-shadow(0 0 8px rgba(228,195,106,.45));
     }
+    .class-btn.wip {
+      opacity: 0.55;
+      position: relative;
+    }
+    .class-btn.wip::after {
+      content: "준비중";
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      font-size: 9px;
+      font-weight: 900;
+      color: #f0b4a0;
+      letter-spacing: -0.04em;
+    }
     .sheet {
       border: 1px solid var(--line);
       border-radius: 18px;
@@ -980,7 +994,7 @@
           <button type="button" class="class-btn" data-cls="마법사" aria-pressed="false">
             <img src="class-icons/mage.png" alt="">마법사
           </button>
-          <button type="button" class="class-btn" data-cls="도적" aria-pressed="false">
+          <button type="button" class="class-btn wip" data-cls="도적" aria-pressed="false" title="아직 준비중 입니다.">
             <img src="class-icons/thief.png" alt="">도적
           </button>
         </div>
@@ -1154,6 +1168,16 @@
     var LEVEL_MIN = 1;
     var LEVEL_MAX = 99;
     var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };
+    /* 인게임 실측 전 — 선택·장비·스탯 설정 잠금 */
+    var CLASS_WIP = { '도적': 1 };
+    function isClassWip(cls) {
+      return !!CLASS_WIP[cls || selectedCls];
+    }
+    function blockIfClassWip() {
+      if (!isClassWip()) return false;
+      alertPopup('아직 준비중 입니다.');
+      return true;
+    }
     /* lcinfo.io/classes 클래스 id (도적은 사이트 미제공 → 요정 성장 사용) */
     var CLASS_LC = {
       '군주': 'prince',
@@ -1871,6 +1895,7 @@
         if (!el || el.dataset.bound === '1') return;
         el.dataset.bound = '1';
         el.addEventListener('input', function () {
+          if (blockIfClassWip()) return;
           if (!sheet) return;
           sheet[sheetKey] = el.value === '' ? '' : Number(el.value);
           syncObservedFoot();
@@ -1884,6 +1909,7 @@
       if (lvTop && lvTop.dataset.bound !== '1') {
         lvTop.dataset.bound = '1';
         lvTop.addEventListener('input', function () {
+          if (blockIfClassWip()) return;
           var v = Number(lvTop.value);
           if (!Number.isFinite(v)) return;
           v = Math.max(LEVEL_MIN, Math.min(LEVEL_MAX, Math.trunc(v)));
@@ -1892,6 +1918,7 @@
           paintSideRail();
         });
         lvTop.addEventListener('change', function () {
+          if (blockIfClassWip()) return;
           var v = Number(lvTop.value);
           if (!Number.isFinite(v) || v < LEVEL_MIN) v = LEVEL_MIN;
           if (v > LEVEL_MAX) v = LEVEL_MAX;
@@ -1905,6 +1932,7 @@
       }
     }
     function adjustLevel(dir) {
+      if (blockIfClassWip()) return;
       var cur = num('level');
       if (!Number.isFinite(cur) || cur < LEVEL_MIN) cur = LEVEL_MIN;
       if (dir > 0) {
@@ -1937,6 +1965,7 @@
       return sheet.buffs;
     }
     function adjustStat(id, dir) {
+      if (blockIfClassWip()) return;
       if (id === 'level') {
         adjustLevel(dir);
         return;
@@ -1959,6 +1988,7 @@
       paintSideRail();
     }
     function adjustElixir(id, dir) {
+      if (blockIfClassWip()) return;
       if (STAT_IDS.indexOf(id) === -1) return;
       if (num('level') < ELIXIR_MIN_LEVEL) {
         alertPopup('50래벨이상만 사용할 수 있습니다');
@@ -1982,12 +2012,16 @@
     }
 
     function setClass(cls, applyStats) {
+      if (applyStats && isClassWip(cls)) {
+        alertPopup('아직 준비중 입니다.');
+        return false;
+      }
       selectedCls = cls || '요정';
       document.querySelectorAll('#class-picker .class-btn').forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.dataset.cls === selectedCls ? 'true' : 'false');
       });
       syncErInputMode();
-      if (!applyStats) return;
+      if (!applyStats) return true;
       var base = classBase();
       ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
         setField(id, base[id]);
@@ -2000,6 +2034,7 @@
       paintStatOverlays();
       paintSideRail();
       if (iconModal && !iconModal.hidden && iconModalMode === 'buff') renderIconPickList();
+      return true;
     }
 
     function paintStatOverlays() {
@@ -2105,6 +2140,10 @@
       sheet.transform = (data && data.transform) || '';
       sheet.hpObserved = (data && data.hpObserved != null) ? data.hpObserved : '';
       sheet.mpObserved = (data && data.mpObserved != null) ? data.mpObserved : '';
+      if (isClassWip(sheet.cls)) {
+        sheet.cls = '요정';
+        alertPopup('도적은 아직 준비중 입니다.');
+      }
       setClass(sheet.cls || '요정', false);
       pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
@@ -2484,6 +2523,7 @@
       hideIconTip();
     }
     function openIconModal(mode) {
+      if (blockIfClassWip()) return;
       if (!iconModal || !iconPickList) return;
       iconModalMode = mode;
       pendingDoll = null;
@@ -2739,6 +2779,7 @@
         btn.addEventListener('mouseleave', hideIconTip);
       }
       btn.addEventListener('click', function () {
+        if (blockIfClassWip()) return;
         openSlot(slot.key, slot.label);
       });
       host.appendChild(btn);
@@ -3109,10 +3150,15 @@
     document.getElementById('class-picker').addEventListener('click', function (e) {
       var btn = e.target.closest('.class-btn');
       if (!btn) return;
+      if (isClassWip(btn.dataset.cls)) {
+        alertPopup('아직 준비중 입니다.');
+        return;
+      }
       setClass(btn.dataset.cls, true);
     });
 
     document.getElementById('btn-save').addEventListener('click', function () {
+      if (blockIfClassWip()) return;
       var payload = buildPayload();
       saveLocal(payload);
       if (!DgMember.connected()) {

@@ -104,14 +104,31 @@
     }
     .sheet-top {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
+      gap: 8px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--line);
       font-weight: 900;
     }
-    .sheet-top .title { color: var(--gold); letter-spacing: 0.04em; }
+    .sheet-top .top-btn {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 14px;
+      background: rgba(228, 195, 106, 0.1);
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .sheet-top .top-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .sheet-top .top-btn.danger { color: #f0b4a0; }
+    .sheet-top .top-btn.danger:hover { border-color: #f0b4a0; color: #ffd2c4; }
+    #level { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     .sheet-body {
       display: grid;
       grid-template-columns: minmax(320px, 1.15fr) minmax(240px, 0.85fr);
@@ -667,10 +684,9 @@
       </div>
       <section class="sheet" aria-label="캐릭터 정보">
         <div class="sheet-top">
-          <div class="title">Level</div>
-          <div class="value">
-            <input id="level" class="wide" type="number" min="1" max="99" step="1" aria-label="레벨">
-          </div>
+          <input id="level" type="number" min="1" max="99" step="1" aria-hidden="true" tabindex="-1">
+          <button type="button" class="top-btn" id="btn-save">저장</button>
+          <button type="button" class="top-btn danger" id="btn-clear">삭제</button>
         </div>
         <div class="sheet-body">
           <div class="paper">
@@ -718,11 +734,7 @@
           </div>
         </div>
       </section>
-      <p class="hint">장비창에서 무기·방어구·장신구를 고르고, 오른쪽에서 레벨·스탯을 조절합니다. 저장하면 DPS 측정기를 열 때 자동으로 반영됩니다.</p>
-      <div class="actions">
-        <button type="button" id="btn-save">내 캐릭터 저장하기</button>
-        <button type="button" id="btn-clear" class="danger">내 캐릭터 삭제하기</button>
-      </div>
+      <p class="hint">장비창에서 무기·방어구·장신구를 고르고, 오른쪽에서 레벨·스탯을 조절합니다. 상단 저장 버튼을 누르면 DPS 측정기를 열 때 자동으로 반영됩니다.</p>
       <div id="google" class="google" hidden></div>
       <p class="status" id="status" role="status"></p>
     </div>

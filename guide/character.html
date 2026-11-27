@@ -991,8 +991,10 @@
     <div class="modal" role="dialog" aria-modal="true">
       <h2 id="icon-modal-title">선택</h2>
       <div class="pick-grid" id="icon-pick-list"></div>
-      <div class="row-actions">
+      <div class="row-actions" id="icon-modal-actions">
         <button type="button" id="icon-modal-ok">확인</button>
+        <button type="button" id="icon-modal-unsummon" hidden>소환해제</button>
+        <button type="button" id="icon-modal-summon" hidden>소환</button>
       </div>
     </div>
   </div>
@@ -1092,8 +1094,12 @@
     var iconModal = document.getElementById('icon-modal');
     var iconPickList = document.getElementById('icon-pick-list');
     var iconModalTitle = document.getElementById('icon-modal-title');
+    var iconModalOk = document.getElementById('icon-modal-ok');
+    var iconModalUnsummon = document.getElementById('icon-modal-unsummon');
+    var iconModalSummon = document.getElementById('icon-modal-summon');
     var iconTip = document.getElementById('icon-tip');
     var iconModalMode = '';
+    var pendingDoll = null;
 
     function say(text) { status.textContent = text || ''; }
     var confirmBg = document.getElementById('confirm-bg');
@@ -1766,18 +1772,62 @@
         function () { openIconModal('doll'); }
       );
     }
+    function syncIconModalActions() {
+      var isDoll = iconModalMode === 'doll';
+      if (iconModalOk) iconModalOk.hidden = isDoll;
+      if (iconModalUnsummon) iconModalUnsummon.hidden = !isDoll;
+      if (iconModalSummon) iconModalSummon.hidden = !isDoll;
+    }
     function closeIconModal() {
       if (!iconModal) return;
       iconModal.hidden = true;
       iconModalMode = '';
+      pendingDoll = null;
       hideIconTip();
     }
     function openIconModal(mode) {
       if (!iconModal || !iconPickList) return;
       iconModalMode = mode;
+      pendingDoll = null;
+      if (mode === 'doll') {
+        var cur = selectedDoll();
+        if (cur && cur.id) {
+          pendingDoll = findDoll(cur.id) || {
+            id: cur.id,
+            n: cur.n || cur.name || cur.id,
+            i: cur.i || cur.icon || '',
+            fx: cur.fx || cur.opt || ''
+          };
+        }
+      }
       iconModalTitle.textContent = mode === 'buff' ? '버프 선택' : '인형 선택';
+      syncIconModalActions();
       renderIconPickList();
       iconModal.hidden = false;
+    }
+    function summonPendingDoll() {
+      if (!pendingDoll || !pendingDoll.id) {
+        say('소환할 인형을 선택하세요.');
+        return;
+      }
+      sheet = readForm();
+      sheet.gear.doll = {
+        id: pendingDoll.id,
+        name: pendingDoll.n || pendingDoll.name || pendingDoll.id,
+        icon: pendingDoll.i || pendingDoll.icon || '',
+        opt: pendingDoll.fx || pendingDoll.opt || ''
+      };
+      paintGear();
+      paintSideRail();
+      closeIconModal();
+    }
+    function unsummonDoll() {
+      sheet = readForm();
+      sheet.gear.doll = '';
+      pendingDoll = null;
+      paintGear();
+      paintSideRail();
+      closeIconModal();
     }
     function renderIconPickList() {
       if (!iconPickList) return;
@@ -1814,21 +1864,18 @@
         });
         return;
       }
-      var cur = selectedDoll();
+      var selectedId = pendingDoll && pendingDoll.id;
       (window.DBDOLLS || []).forEach(function (d) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'pick-icon' + (cur && cur.id === d.id ? ' on' : '');
+        btn.className = 'pick-icon' + (selectedId === d.id ? ' on' : '');
         btn.setAttribute('aria-label', d.n);
         var img = document.createElement('img');
         img.src = 'dolls/' + d.i;
         img.alt = '';
         btn.appendChild(img);
         btn.addEventListener('click', function () {
-          sheet = readForm();
-          sheet.gear.doll = { id: d.id, name: d.n, icon: d.i, opt: d.fx || '' };
-          paintGear();
-          paintSideRail();
+          pendingDoll = d;
           renderIconPickList();
         });
         btn.addEventListener('mouseenter', function () { showIconTip(btn, dollDetailHtml(d)); });
@@ -2262,8 +2309,9 @@
         if (e.target === iconModal) closeIconModal();
       });
     }
-    var iconModalOk = document.getElementById('icon-modal-ok');
     if (iconModalOk) iconModalOk.addEventListener('click', closeIconModal);
+    if (iconModalUnsummon) iconModalUnsummon.addEventListener('click', unsummonDoll);
+    if (iconModalSummon) iconModalSummon.addEventListener('click', summonPendingDoll);
     window.addEventListener('scroll', hideIconTip, true);
     window.addEventListener('resize', hideIconTip);
 

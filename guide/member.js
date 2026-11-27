@@ -195,6 +195,22 @@
       out.buffs = Object.assign({}, s.buffs);
       if (cls === '기사') out.buffsKnight = Object.assign({}, s.buffs);
       else out.buffsElf = Object.assign({}, s.buffs);
+      var list = (typeof window !== 'undefined' && window.DBBUFFS) ? window.DBBUFFS : [];
+      for (var i = 0; i < list.length; i++) {
+        var b = list[i];
+        if (!out.buffs[b.id]) continue;
+        var addStr = Number(b.str);
+        var addDex = Number(b.dex);
+        if (Number.isFinite(addStr) && addStr > 0) {
+          out.str += addStr;
+          out.knightStat += addStr;
+          if (cls === '기사') out.stat += addStr;
+        }
+        if (Number.isFinite(addDex) && addDex > 0) {
+          out.dex += addDex;
+          if (cls !== '기사') out.stat += addDex;
+        }
+      }
     }
     if (weaponName) {
       var rows = Array.isArray(out.rows) ? out.rows.slice() : [];

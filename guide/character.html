@@ -1450,6 +1450,10 @@
           var cap = row.level ? LEVEL_MAX : (statCap(row.id) + elixirOf(row.id));
           var canDown = cur > floor;
           var canUp = row.level ? (cur < cap) : (foodLeft > 0 && cur < cap);
+          var shown = cur;
+          if (!row.level && (row.id === 'str' || row.id === 'dex')) {
+            shown = cur + buffStatBonus(row.id);
+          }
 
           var down = document.createElement('button');
           down.type = 'button';
@@ -1464,7 +1468,7 @@
 
           var numEl = document.createElement('span');
           numEl.className = 'stat-num';
-          numEl.textContent = Number.isFinite(cur) ? String(cur) : '';
+          numEl.textContent = Number.isFinite(shown) ? String(shown) : '';
 
           var up = document.createElement('button');
           up.type = 'button';
@@ -2170,6 +2174,16 @@
         if (!on[b.id]) return;
         var ac = Number(b.ac);
         if (Number.isFinite(ac) && ac > 0) bonus += ac;
+      });
+      return bonus;
+    }
+    function buffStatBonus(id) {
+      var on = ensureBuffs();
+      var bonus = 0;
+      (window.DBBUFFS || []).forEach(function (b) {
+        if (!on[b.id]) return;
+        var v = Number(b[id]);
+        if (Number.isFinite(v) && v > 0) bonus += v;
       });
       return bonus;
     }

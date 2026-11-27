@@ -857,19 +857,20 @@
     };
     var WEAPON_CATS = ['전체'].concat(SLOT_CATS.weapon);
     /* character-status.png 658x868 — 우물 edge-fit + 부위 재매핑 (86px) */
+    /* 기준 이미지 658×868. 우·하 1px 이동 후 상하좌우 각 3px 확대 → left/top −2px, size +6px */
     var SLOTS = [
-      { key: 'necklace', label: '목걸이', l: 54.41, t: 15.79, w: 13.07, h: 9.91 },
-      { key: 'helmet', label: '투구', l: 69.91, t: 10.60, w: 13.07, h: 9.91 },
-      { key: 'cloak', label: '망토', l: 74.01, t: 27.19, w: 13.07, h: 9.91 },
-      { key: 'shirt', label: '티', l: 43.01, t: 27.31, w: 13.07, h: 9.91 },
-      { key: 'armor', label: '갑옷', l: 58.66, t: 27.19, w: 13.07, h: 9.91 },
-      { key: 'ring1', label: '반지(좌)', l: 29.79, t: 38.94, w: 13.07, h: 9.91 },
-      { key: 'weapon', label: '무기', l: 30.70, t: 51.27, w: 13.07, h: 9.91 },
-      { key: 'belt', label: '벨트', l: 60.48, t: 38.94, w: 13.07, h: 9.91 },
-      { key: 'ring2', label: '반지(우)', l: 72.34, t: 53.35, w: 13.07, h: 9.91 },
-      { key: 'gloves', label: '장갑', l: 45.13, t: 45.17, w: 13.07, h: 9.91 },
-      { key: 'shield', label: '방패', l: 75.83, t: 42.06, w: 13.07, h: 9.91 },
-      { key: 'boots', label: '신발', l: 75.68, t: 76.96, w: 13.07, h: 9.91 }
+      { key: 'necklace', label: '목걸이', l: 54.11, t: 15.56, w: 13.98, h: 10.60 },
+      { key: 'helmet', label: '투구', l: 69.61, t: 10.37, w: 13.98, h: 10.60 },
+      { key: 'cloak', label: '망토', l: 73.71, t: 26.96, w: 13.98, h: 10.60 },
+      { key: 'shirt', label: '티', l: 42.71, t: 27.08, w: 13.98, h: 10.60 },
+      { key: 'armor', label: '갑옷', l: 58.36, t: 26.96, w: 13.98, h: 10.60 },
+      { key: 'ring1', label: '반지(좌)', l: 29.49, t: 38.71, w: 13.98, h: 10.60 },
+      { key: 'weapon', label: '무기', l: 30.40, t: 51.04, w: 13.98, h: 10.60 },
+      { key: 'belt', label: '벨트', l: 60.18, t: 38.71, w: 13.98, h: 10.60 },
+      { key: 'ring2', label: '반지(우)', l: 72.04, t: 53.12, w: 13.98, h: 10.60 },
+      { key: 'gloves', label: '장갑', l: 44.83, t: 44.94, w: 13.98, h: 10.60 },
+      { key: 'shield', label: '방패', l: 75.53, t: 41.83, w: 13.98, h: 10.60 },
+      { key: 'boots', label: '신발', l: 75.38, t: 76.73, w: 13.98, h: 10.60 }
     ];
     var EXTRA_SLOTS = [
       { key: 'doll', label: '마법인형' }

@@ -863,7 +863,7 @@ footer.note { margin-top: 8px; color: var(--muted); font-size: 14px; }
       </div>
     </div>
     <div class="top-right">
-      <p class="ver-stamp" title="배포 버전">v4.17 · 2026년 11월 28일 00:30</p>
+      <p class="ver-stamp" title="배포 버전">v4.18 · 2026년 11월 28일 00:40</p>
       <div class="top-actions">
         <button type="button" class="ghost" id="openSetup">처음 설정 하기</button>
         <button type="button" class="ghost" id="openCompare">무기비교</button>
@@ -1098,7 +1098,22 @@ function summarize(db, profile) {
     }
   }
   dmg += Number(profile.extraDmg) || 0;
+  acc += Number(profile.extraAcc) || 0;
+  buffSp += Number(profile.extraSp) || 0;
   dr += Number(profile.extraDr) || 0;
+  const doll = profile.dollBonus || {};
+  dmg += Number(doll.dmg) || 0;
+  acc += Number(doll.acc) || 0;
+  buffSp += Number(doll.sp) || 0;
+  /* 원거리는 elf_ranged와 같이 dmg/acc에도 넣고, 근거리 계산 시 ranged를 빼 상쇄 */
+  const dollRd = Number(doll.rangedDmg) || 0;
+  const dollRa = Number(doll.rangedAcc) || 0;
+  dmg += dollRd;
+  acc += dollRa;
+  rangedDmg += dollRd;
+  rangedAcc += dollRa;
+  meleeDmg += Number(doll.meleeDmg) || 0;
+  meleeAcc += Number(doll.meleeAcc) || 0;
   return { buffDmg: dmg, buffAcc: acc, dr, meleeDmg, meleeAcc, rangedDmg, rangedAcc, maxDice, buffSp };
 }
 
@@ -1362,6 +1377,8 @@ const state = {
   popup: null,
   compareMode: 'all',
   materials: {},
+  sheet: null,
+  dollBonus: null,
 };
 
 function defaultBuffs() {
@@ -1548,8 +1565,8 @@ function migrateClassRows() {
 
 function save() {
   stashClassRows(state.cls);
-  const { cls, level, stat, ac, er, arrow, elfRanged, elfStatMode, dex, str, knightStat, extraDmg, extraDr, buffs, buffsElf, buffsKnight, buffsElfMelee, rows, rowsElf, rowsKnight, selectedElf, selectedKnight, seq, sortKey, sortDir, selectedId, materials } = state;
-  localStorage.setItem('lin-dps-html-v2', JSON.stringify({ cls, level, stat, ac, er, arrow, elfRanged, elfStatMode, dex, str, knightStat, extraDmg, extraDr, buffs, buffsElf, buffsKnight, buffsElfMelee, rows, rowsElf, rowsKnight, selectedElf, selectedKnight, seq, sortKey, sortDir, selectedId, materials }));
+  const { cls, level, stat, ac, er, arrow, elfRanged, elfStatMode, dex, str, knightStat, extraDmg, extraDr, buffs, buffsElf, buffsKnight, buffsElfMelee, rows, rowsElf, rowsKnight, selectedElf, selectedKnight, seq, sortKey, sortDir, selectedId, materials, sheet, dollBonus } = state;
+  localStorage.setItem('lin-dps-html-v2', JSON.stringify({ cls, level, stat, ac, er, arrow, elfRanged, elfStatMode, dex, str, knightStat, extraDmg, extraDr, buffs, buffsElf, buffsKnight, buffsElfMelee, rows, rowsElf, rowsKnight, selectedElf, selectedKnight, seq, sortKey, sortDir, selectedId, materials, sheet, dollBonus }));
 }
 
 function useBuffSet() {
@@ -1625,6 +1642,25 @@ function buffStatBonus(key) {
   return n;
 }
 
+function resolveDollBonus() {
+  if (state.dollBonus && typeof state.dollBonus === 'object') return state.dollBonus;
+  const raw = state.sheet && state.sheet.gear && state.sheet.gear.doll;
+  if (!raw) return null;
+  const id = typeof raw === 'string' ? raw : raw.id;
+  if (!id || typeof DBDOLLS === 'undefined') return null;
+  const hit = (DBDOLLS || []).find((d) => d.id === id);
+  if (!hit) return null;
+  return {
+    dmg: Number(hit.dmg) || 0,
+    acc: Number(hit.acc) || 0,
+    meleeDmg: Number(hit.meleeDmg) || 0,
+    meleeAcc: Number(hit.meleeAcc) || 0,
+    rangedDmg: Number(hit.rangedDmg) || 0,
+    rangedAcc: Number(hit.rangedAcc) || 0,
+    sp: Number(hit.sp) || 0,
+  };
+}
+
 function profile() {
   const buffs = { ...state.buffs };
   for (const b of DB.buffs) {
@@ -1650,7 +1686,10 @@ function profile() {
     dex: baseDex + dexBonus,
     str: baseStr + strBonus,
     extraDmg: state.extraDmg,
+    extraAcc: state.extraAcc || 0,
+    extraSp: state.extraSp || 0,
     extraDr: state.extraDr,
+    dollBonus: resolveDollBonus(),
     materials: state.materials || {},
     buffs,
   };

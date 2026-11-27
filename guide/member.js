@@ -212,6 +212,28 @@
         }
       }
     }
+    out.dollBonus = (function () {
+      var raw = s.gear && s.gear.doll;
+      if (!raw) return null;
+      var id = typeof raw === 'string' ? raw : raw.id;
+      if (!id) return null;
+      var dolls = (typeof window !== 'undefined' && window.DBDOLLS) ? window.DBDOLLS : [];
+      for (var di = 0; di < dolls.length; di++) {
+        if (dolls[di].id === id) {
+          var d = dolls[di];
+          return {
+            dmg: Number(d.dmg) || 0,
+            acc: Number(d.acc) || 0,
+            meleeDmg: Number(d.meleeDmg) || 0,
+            meleeAcc: Number(d.meleeAcc) || 0,
+            rangedDmg: Number(d.rangedDmg) || 0,
+            rangedAcc: Number(d.rangedAcc) || 0,
+            sp: Number(d.sp) || 0
+          };
+        }
+      }
+      return null;
+    })();
     if (weaponName) {
       var rows = Array.isArray(out.rows) ? out.rows.slice() : [];
       var found = rows.find(function (row) { return row && row.name === weaponName; });
@@ -247,7 +269,8 @@
       rows: source.rows, rowsElf: source.rowsElf, rowsKnight: source.rowsKnight,
       selectedElf: source.selectedElf, selectedKnight: source.selectedKnight,
       seq: source.seq, sortKey: source.sortKey, sortDir: source.sortDir,
-      selectedId: source.selectedId, materials: source.materials || {}
+      selectedId: source.selectedId, materials: source.materials || {},
+      dollBonus: source.dollBonus || null
     };
   }
 

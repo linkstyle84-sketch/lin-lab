@@ -1298,6 +1298,23 @@
       if (id === 'knight') return Math.floor(r / 6);
       return 0;
     }
+    function dollBonus() {
+      var d = selectedDoll();
+      if (!d || !d.id) {
+        return { ac: 0, hp: 0, mp: 0, weight: 0, dr: 0, sp: 0, dmg: 0, acc: 0, meleeDmg: 0, meleeAcc: 0, rangedDmg: 0, rangedAcc: 0 };
+      }
+      var full = findDoll(d.id) || d;
+      function n(key) {
+        var v = Number(full[key]);
+        return Number.isFinite(v) && v > 0 ? v : 0;
+      }
+      return {
+        ac: n('ac'), hp: n('hp'), mp: n('mp'), weight: n('weight'), dr: n('dr'), sp: n('sp'),
+        dmg: n('dmg'), acc: n('acc'),
+        meleeDmg: n('meleeDmg'), meleeAcc: n('meleeAcc'),
+        rangedDmg: n('rangedDmg'), rangedAcc: n('rangedAcc')
+      };
+    }
     function syncDerivedStats() {
       var level = num('level');
       var con = num('con');
@@ -1309,10 +1326,11 @@
       if (!Number.isFinite(intStat)) intStat = statFloor('int');
       var hp = calcHpRange(level, con);
       var mp = calcMpRange(level, wis);
-      setField('hp', hp.avg);
-      setField('hpMax', hp.avg);
-      setField('mp', mp.avg);
-      setField('mpMax', mp.avg);
+      var doll = dollBonus();
+      setField('hp', hp.avg + doll.hp);
+      setField('hpMax', hp.avg + doll.hp);
+      setField('mp', mp.avg + doll.mp);
+      setField('mpMax', mp.avg + doll.mp);
       setField('magicBonus', calcMagicBonus(intStat));
       setField('magicLevel', calcMagicLevel(level));
     }
@@ -1866,6 +1884,7 @@
         opt: pendingDoll.fx || pendingDoll.opt || ''
       };
       paintGear();
+      paintStatOverlays();
       paintSideRail();
       closeIconModal();
     }
@@ -1874,6 +1893,7 @@
       sheet.gear.doll = '';
       pendingDoll = null;
       paintGear();
+      paintStatOverlays();
       paintSideRail();
       closeIconModal();
     }
@@ -2242,14 +2262,19 @@
       });
       return bonus;
     }
+    function dollAcBonus() {
+      return dollBonus().ac || 0;
+    }
     function recomputeAc() {
       var sum = 0;
       var gear = (sheet && sheet.gear) || {};
       Object.keys(gear).forEach(function (key) {
+        if (key === 'doll') return;
         sum += gearPieceAc(gear[key]);
       });
       sum += setAcBonus();
       sum += buffAcBonus();
+      sum += dollAcBonus();
       setField('ac', 10 - sum - levelAcBonus());
     }
 

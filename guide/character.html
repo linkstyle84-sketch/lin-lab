@@ -517,26 +517,6 @@
       user-select: none;
     }
     .slot.empty .guide { display: flex; }
-    .slot.extra {
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 100%;
-      min-height: 44px;
-      margin-top: 8px;
-      border: 1px solid rgba(228,195,106,.28);
-      border-radius: 10px;
-      background: linear-gradient(180deg, #1b1510, var(--slot));
-      font-weight: 900;
-    }
-    .slot.extra .v { display: block; position: static; transform: none; max-width: none; border: 0; background: none; color: var(--ink); font-size: 12px; }
-    .slot.extra.empty .v { display: none; }
-    .slot.extra .guide {
-      color: rgba(203,185,148,.55);
-      font-size: 12px;
-      text-shadow: none;
-    }
-    .slot.extra.empty .guide { display: flex; flex-direction: row; gap: 4px; }
     .paper-foot {
       display: flex;
       justify-content: space-between;
@@ -945,7 +925,6 @@
                 <div class="gear" id="gear" aria-label="장비 슬롯"></div>
               </div>
             </div>
-            <div id="gear-extra"></div>
             <div class="paper-foot">
               <label class="align">성향
                 <select id="alignment">
@@ -1058,9 +1037,6 @@
       { key: 'shield', label: '방패', l: 74.93, t: 41.37, w: 15.20, h: 11.52 },
       { key: 'boots', label: '신발', l: 74.78, t: 76.27, w: 15.20, h: 11.52 }
     ];
-    var EXTRA_SLOTS = [
-      { key: 'doll', label: '마법인형' }
-    ];
     var ELIXIR_ROWS = [
       { id: 'str', label: 'STR엘릭서', icon: 'ui/elixir/elixir-str.png' },
       { id: 'dex', label: 'DEX엘릭서', icon: 'ui/elixir/elixir-dex.png' },
@@ -1108,7 +1084,6 @@
     var weaponCat = '전체';
     var status = document.getElementById('status');
     var gearEl = document.getElementById('gear');
-    var gearExtraEl = document.getElementById('gear-extra');
     var statOverlayEl = document.getElementById('stat-overlay');
     var sideRailEl = document.getElementById('side-rail');
     var modal = document.getElementById('modal');
@@ -1933,38 +1908,31 @@
       return wrap;
     }
 
-    function paintOneSlot(slot, host, extra) {
+    function paintOneSlot(slot, host) {
       var btn = document.createElement('button');
       var value = (sheet.gear && sheet.gear[slot.key]) || '';
       var label = gearLabel(value);
       var icon = gearIcon(value);
       var caption = slotCaption(slot, label);
       btn.type = 'button';
-      btn.className = 'slot' + (extra ? ' extra' : '') + (label ? '' : ' empty');
+      btn.className = 'slot' + (label ? '' : ' empty');
       btn.dataset.key = slot.key;
       btn.setAttribute('aria-label', slot.label + (label ? ': ' + caption : ' 선택'));
-      if (!extra) {
-        btn.style.left = slot.l + '%';
-        btn.style.top = slot.t + '%';
-        btn.style.width = slot.w + '%';
-        btn.style.height = slot.h + '%';
-      }
+      btn.style.left = slot.l + '%';
+      btn.style.top = slot.t + '%';
+      btn.style.width = slot.w + '%';
+      btn.style.height = slot.h + '%';
       if (!label) {
         var guide = document.createElement('span');
         guide.className = 'guide';
-        if (extra) {
-          guide.textContent = slot.label + ' 선택';
-        } else {
-          guide.appendChild(document.createTextNode(slot.label));
-          guide.appendChild(document.createElement('br'));
-          guide.appendChild(document.createTextNode('선택'));
-        }
+        guide.appendChild(document.createTextNode(slot.label));
+        guide.appendChild(document.createElement('br'));
+        guide.appendChild(document.createTextNode('선택'));
         btn.appendChild(guide);
       }
       if (icon) {
         var img = document.createElement('img');
-        if (slot.key === 'doll') img.src = (String(icon).indexOf('/') >= 0 ? icon : ('dolls/' + icon));
-        else img.src = 'item-icons/' + icon;
+        img.src = 'item-icons/' + icon;
         img.alt = '';
         btn.appendChild(img);
       }
@@ -1975,10 +1943,6 @@
         btn.addEventListener('mouseleave', hideIconTip);
       }
       btn.addEventListener('click', function () {
-        if (slot.key === 'doll') {
-          openIconModal('doll');
-          return;
-        }
         openSlot(slot.key, slot.label);
       });
       host.appendChild(btn);
@@ -1986,11 +1950,7 @@
 
     function paintGear() {
       gearEl.innerHTML = '';
-      if (gearExtraEl) gearExtraEl.innerHTML = '';
-      SLOTS.forEach(function (slot) { paintOneSlot(slot, gearEl, false); });
-      if (gearExtraEl) {
-        EXTRA_SLOTS.forEach(function (slot) { paintOneSlot(slot, gearExtraEl, true); });
-      }
+      SLOTS.forEach(function (slot) { paintOneSlot(slot, gearEl); });
     }
 
     function paintWeaponCats() {

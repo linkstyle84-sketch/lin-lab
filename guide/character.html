@@ -1013,8 +1013,7 @@
       <h2 id="icon-modal-title">선택</h2>
       <div class="pick-grid" id="icon-pick-list"></div>
       <div class="row-actions">
-        <button type="button" id="icon-modal-clear">선택해제</button>
-        <button type="button" id="icon-modal-close">닫기</button>
+        <button type="button" id="icon-modal-ok">확인</button>
       </div>
     </div>
   </div>
@@ -2265,25 +2264,8 @@
         if (e.target === iconModal) closeIconModal();
       });
     }
-    var iconModalClose = document.getElementById('icon-modal-close');
-    if (iconModalClose) iconModalClose.addEventListener('click', closeIconModal);
-    var iconModalClear = document.getElementById('icon-modal-clear');
-    if (iconModalClear) {
-      iconModalClear.addEventListener('click', function () {
-        if (iconModalMode === 'buff') {
-          sheet.buffs = {};
-          renderIconPickList();
-          return;
-        }
-        if (iconModalMode === 'doll') {
-          sheet = readForm();
-          sheet.gear.doll = '';
-          paintGear();
-          paintSideRail();
-          renderIconPickList();
-        }
-      });
-    }
+    var iconModalOk = document.getElementById('icon-modal-ok');
+    if (iconModalOk) iconModalOk.addEventListener('click', closeIconModal);
     window.addEventListener('scroll', hideIconTip, true);
     window.addEventListener('resize', hideIconTip);
 

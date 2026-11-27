@@ -139,6 +139,23 @@
       padding: 16px 14px 18px;
       border-left: 1px solid var(--line);
       background: linear-gradient(270deg, #15110e, #1a1612);
+      min-height: 200px;
+    }
+    .stats-placeholder {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      padding: 28px 8px;
+      opacity: 0.75;
+    }
+    .hidden-fields {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
     .row {
       display: grid;
@@ -753,34 +770,34 @@
               <label class="er-box">ER <input id="er" type="number"></label>
             </div>
           </div>
-          <div class="stats">
-            <div class="row hp"><span class="label">Hit Points</span><span class="value num"><input id="hp" type="number"> / <input id="hpMax" type="number"></span></div>
-            <div class="row mp"><span class="label">Mana Points</span><span class="value num"><input id="mp" type="number"> / <input id="mpMax" type="number"></span></div>
-            <div class="row"><span class="label">Armor Class</span><span class="value"><input id="ac" type="number"></span></div>
-            <div class="divider"></div>
-            <div class="row"><span class="label">Weight</span><span class="value"><input id="weight" type="number"> %</span></div>
-            <div class="row"><span class="label">분배스탯</span><span class="value"><input id="food" type="number" min="0" step="1" aria-label="분배스탯"></span></div>
-            <div class="divider"></div>
-            <div class="row" data-stat="str"><span class="label">Str</span><span class="value"><input id="str" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="row" data-stat="dex"><span class="label">Dex</span><span class="value"><input id="dex" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="row" data-stat="con"><span class="label">Con</span><span class="value"><input id="con" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="row" data-stat="int"><span class="label">Int</span><span class="value"><input id="int" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="row" data-stat="wis"><span class="label">Wis</span><span class="value"><input id="wis" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="row" data-stat="cha"><span class="label">Cha</span><span class="value"><input id="cha" type="number"><span class="step"><button type="button" data-dir="1">▲</button><button type="button" data-dir="-1">▼</button></span></span></div>
-            <div class="divider"></div>
-            <div class="row"><span class="label">Magic Level</span><span class="value"><input id="magicLevel" type="number"></span></div>
-            <div class="row"><span class="label">Magic Bonus</span><span class="value"><input id="magicBonus" type="number"></span></div>
-            <div class="divider"></div>
-            <div class="resist">
-              <label>땅<input id="resistEarth" type="number"></label>
-              <label>물<input id="resistWater" type="number"></label>
-              <label>불<input id="resistFire" type="number"></label>
-              <label>바람<input id="resistWind" type="number"></label>
+          <div class="stats" aria-label="추가 스탯 영역">
+            <div class="stats-placeholder">추가 항목 준비 중</div>
+            <div class="hidden-fields" aria-hidden="true">
+              <input id="exp" type="number">
+              <input id="hp" type="number">
+              <input id="hpMax" type="number">
+              <input id="mp" type="number">
+              <input id="mpMax" type="number">
+              <input id="ac" type="number">
+              <input id="weight" type="number">
+              <input id="food" type="number" min="0" step="1">
+              <input id="str" type="number">
+              <input id="dex" type="number">
+              <input id="con" type="number">
+              <input id="int" type="number">
+              <input id="wis" type="number">
+              <input id="cha" type="number">
+              <input id="magicLevel" type="number">
+              <input id="magicBonus" type="number">
+              <input id="resistEarth" type="number">
+              <input id="resistWater" type="number">
+              <input id="resistFire" type="number">
+              <input id="resistWind" type="number">
             </div>
           </div>
         </div>
       </section>
-      <p class="hint">장비창에서 무기·방어구·장신구를 고르고, 오른쪽에서 레벨·스탯을 조절합니다. 상단 저장 버튼을 누르면 DPS 측정기를 열 때 자동으로 반영됩니다.</p>
+      <p class="hint">장비창에서 레벨·스탯과 무기·방어구·장신구를 조절합니다. 상단 저장 버튼을 누르면 DPS 측정기를 열 때 자동으로 반영됩니다.</p>
       <div id="google" class="google" hidden></div>
       <p class="status" id="status" role="status"></p>
     </div>

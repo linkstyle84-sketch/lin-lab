@@ -203,7 +203,7 @@
     .stat-overlay {
       position: absolute;
       inset: 0;
-      z-index: 1;
+      z-index: 3;
       pointer-events: none;
     }
     .stat-val {
@@ -212,18 +212,22 @@
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      color: #f5f5f5;
+      color: #fff;
       font-family: "Noto Serif KR", "Times New Roman", Times, Georgia, serif;
-      font-weight: 700;
-      font-size: clamp(11px, 1.9cqw, 14px);
-      letter-spacing: 0.01em;
+      font-weight: 900;
+      font-size: clamp(13px, 2.35cqw, 17px);
+      letter-spacing: 0.02em;
       line-height: 1;
       text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000,
-         0 1px 1px #000;
+        -1.5px -1.5px 0 #000,
+         1.5px -1.5px 0 #000,
+        -1.5px  1.5px 0 #000,
+         1.5px  1.5px 0 #000,
+        -1px 0 0 #000,
+         1px 0 0 #000,
+         0 -1px 0 #000,
+         0 1px 0 #000,
+         0 2px 2px #000;
       white-space: nowrap;
       user-select: none;
     }
@@ -231,13 +235,77 @@
       justify-content: flex-start;
       padding: 0 2px;
       font-size: clamp(10px, 1.85cqw, 13px);
+      font-weight: 800;
       letter-spacing: -0.04em;
       background: #4e4e4e;
       color: #f8f8f8;
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
     }
     .stat-val.cover {
       background: #3a3a3a;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+    }
+    .stat-ctrl {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1px;
+      box-sizing: border-box;
+      padding: 0 1px;
+      pointer-events: none;
+    }
+    .stat-ctrl .stat-num {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      color: #fff;
+      font-family: "Noto Serif KR", "Times New Roman", Times, Georgia, serif;
+      font-weight: 900;
+      font-size: clamp(13px, 2.35cqw, 17px);
+      line-height: 1;
+      text-align: center;
+      text-shadow:
+        -1.5px -1.5px 0 #000,
+         1.5px -1.5px 0 #000,
+        -1.5px  1.5px 0 #000,
+         1.5px  1.5px 0 #000,
+        -1px 0 0 #000,
+         1px 0 0 #000,
+         0 -1px 0 #000,
+         0 1px 0 #000;
+      user-select: none;
+    }
+    .stat-btn {
+      flex: 0 0 auto;
+      width: clamp(14px, 3.2cqw, 21px);
+      height: clamp(14px, 3.2cqw, 21px);
+      padding: 0;
+      border: 0;
+      background: transparent url("ui/stat-up.png") center / contain no-repeat;
+      cursor: pointer;
+      pointer-events: auto;
+      image-rendering: pixelated;
+    }
+    .stat-btn.down { background-image: url("ui/stat-down.png"); }
+    .stat-btn:disabled,
+    .stat-btn[aria-disabled="true"] {
+      cursor: default;
+      background-image: url("ui/stat-up-off.png");
+    }
+    .stat-btn.down:disabled,
+    .stat-btn.down[aria-disabled="true"] {
+      background-image: url("ui/stat-down-off.png");
+    }
+    .stat-btn:focus-visible {
+      outline: 1px solid rgba(228, 195, 106, 0.9);
+      outline-offset: 1px;
     }
     .gear {
       position: absolute;
@@ -616,18 +684,19 @@
     var EXTRA_SLOTS = [
       { key: 'doll', label: '마법인형' }
     ];
-    /* character-status.png 좌측 우물 — Food→분배스탯 + Str~Cha */
-    /* character-status.png — 라벨 옆 가로 우물 안 (658x868) */
+    /* character-status.png — 분배스탯 + Str~Cha(하락/수치/상승) */
     var STAT_OVERLAYS = [
       { id: 'foodLbl', text: '분배스탯', l: 4.3, t: 32.2, w: 14.5, h: 2.6, lbl: true },
       { id: 'food', l: 25.3, t: 32.2, w: 8.8, h: 2.6, cover: true },
-      { id: 'str', l: 21.0, t: 37.9, w: 7.5, h: 2.6 },
-      { id: 'dex', l: 21.0, t: 42.2, w: 7.5, h: 2.6 },
-      { id: 'con', l: 21.0, t: 46.6, w: 7.5, h: 2.6 },
-      { id: 'int', l: 21.0, t: 50.9, w: 7.5, h: 2.6 },
-      { id: 'wis', l: 21.0, t: 55.3, w: 7.5, h: 2.6 },
-      { id: 'cha', l: 21.0, t: 59.6, w: 7.5, h: 2.6 }
+      { id: 'str', l: 18.8, t: 37.5, w: 13.8, h: 3.4, ctrl: true },
+      { id: 'dex', l: 18.8, t: 41.8, w: 13.8, h: 3.4, ctrl: true },
+      { id: 'con', l: 18.8, t: 46.2, w: 13.8, h: 3.4, ctrl: true },
+      { id: 'int', l: 18.8, t: 50.5, w: 13.8, h: 3.4, ctrl: true },
+      { id: 'wis', l: 18.8, t: 54.9, w: 13.8, h: 3.4, ctrl: true },
+      { id: 'cha', l: 18.8, t: 59.2, w: 13.8, h: 3.4, ctrl: true }
     ];
+    var STAT_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };
     var FIELDS = ['level','exp','hp','hpMax','mp','mpMax','ac','weight','food','str','dex','con','int','wis','cha','magicLevel','magicBonus','resistEarth','resistWater','resistFire','resistWind','er'];
     var sheet = null;
     var token = '';
@@ -668,30 +737,105 @@
       '도적': { str: 15, dex: 11, con: 11, wis: 14, cha: 8, int: 9, food: 7 }
     };
 
+    function classBase() {
+      return CLASS_BASE[selectedCls] || CLASS_BASE['요정'];
+    }
+    function statFloor(id) {
+      var base = classBase();
+      return Number(base[id]) || 1;
+    }
+    function statCap(id) {
+      if (id === 'str' && STR_CAP_CLASSES[selectedCls]) return 20;
+      return 18;
+    }
+    function setField(id, value) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.value = value;
+      if (sheet) sheet[id] = value;
+    }
+    function adjustStat(id, dir) {
+      if (STAT_IDS.indexOf(id) === -1) return;
+      var cur = num(id);
+      var food = num('food');
+      var floor = statFloor(id);
+      var cap = statCap(id);
+      if (dir > 0) {
+        if (food <= 0 || cur >= cap) return;
+        setField(id, cur + 1);
+        setField('food', food - 1);
+      } else if (dir < 0) {
+        if (cur <= floor) return;
+        setField(id, cur - 1);
+        setField('food', food + 1);
+      }
+      paintStatOverlays();
+    }
+
     function setClass(cls, applyStats) {
       selectedCls = cls || '요정';
       document.querySelectorAll('#class-picker .class-btn').forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.dataset.cls === selectedCls ? 'true' : 'false');
       });
       if (!applyStats) return;
-      var base = CLASS_BASE[selectedCls] || CLASS_BASE['요정'];
+      var base = classBase();
       ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.value = base[id];
+        setField(id, base[id]);
       });
-      if (sheet) {
-        sheet.cls = selectedCls;
-        sheet.str = base.str; sheet.dex = base.dex; sheet.con = base.con;
-        sheet.wis = base.wis; sheet.cha = base.cha; sheet.int = base.int;
-        sheet.food = base.food;
-      }
-      if (applyStats) paintStatOverlays();
+      if (sheet) sheet.cls = selectedCls;
+      paintStatOverlays();
     }
 
     function paintStatOverlays() {
       if (!statOverlayEl) return;
       statOverlayEl.innerHTML = '';
+      var foodLeft = num('food');
       STAT_OVERLAYS.forEach(function (row) {
+        if (row.ctrl) {
+          var wrap = document.createElement('div');
+          wrap.className = 'stat-ctrl';
+          wrap.style.left = row.l + '%';
+          wrap.style.top = row.t + '%';
+          wrap.style.width = row.w + '%';
+          wrap.style.height = row.h + '%';
+          var cur = num(row.id);
+          var floor = statFloor(row.id);
+          var cap = statCap(row.id);
+          var canDown = cur > floor;
+          var canUp = foodLeft > 0 && cur < cap;
+
+          var down = document.createElement('button');
+          down.type = 'button';
+          down.className = 'stat-btn down';
+          down.setAttribute('aria-label', row.id + ' 하락');
+          down.disabled = !canDown;
+          down.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            adjustStat(row.id, -1);
+          });
+
+          var numEl = document.createElement('span');
+          numEl.className = 'stat-num';
+          numEl.textContent = Number.isFinite(cur) ? String(cur) : '';
+
+          var up = document.createElement('button');
+          up.type = 'button';
+          up.className = 'stat-btn up';
+          up.setAttribute('aria-label', row.id + ' 상승');
+          up.disabled = !canUp;
+          up.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            adjustStat(row.id, 1);
+          });
+
+          wrap.appendChild(down);
+          wrap.appendChild(numEl);
+          wrap.appendChild(up);
+          statOverlayEl.appendChild(wrap);
+          return;
+        }
         var el = document.createElement('span');
         el.className = 'stat-val' + (row.lbl ? ' lbl' : '') + (row.cover ? ' cover' : '');
         el.style.left = row.l + '%';
@@ -885,16 +1029,14 @@
     document.querySelectorAll('.row[data-stat] .step button').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var id = btn.closest('.row').dataset.stat;
-        var el = document.getElementById(id);
-        el.value = Math.max(1, Math.min(50, (Number(el.value) || 0) + Number(btn.dataset.dir)));
-        paintStatOverlays();
+        adjustStat(id, Number(btn.dataset.dir));
       });
     });
     ['food', 'str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('input', paintStatOverlays);
-      el.addEventListener('change', paintStatOverlays);
+      el.readOnly = true;
+      el.addEventListener('keydown', function (e) { e.preventDefault(); });
     });
 
     document.getElementById('modal-search').addEventListener('input', renderPickList);

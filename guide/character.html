@@ -262,9 +262,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1px;
+      gap: 0;
       box-sizing: border-box;
-      padding: 0 1px;
+      padding: 0;
       pointer-events: none;
     }
     .stat-ctrl .stat-num {
@@ -293,8 +293,8 @@
     }
     .stat-btn {
       flex: 0 0 auto;
-      width: clamp(14px, 3.2cqw, 21px);
-      height: clamp(14px, 3.2cqw, 21px);
+      width: clamp(13px, 2.85cqw, 19px);
+      height: clamp(13px, 2.85cqw, 19px);
       padding: 0;
       border: 0;
       background: transparent url("ui/stat-up.png") center / contain no-repeat;
@@ -697,12 +697,12 @@
     var STAT_OVERLAYS = [
       { id: 'foodLbl', text: '분배스탯', l: 4.2, t: 31.9, w: 11.2, h: 2.8, lbl: true },
       { id: 'food', l: 24.8, t: 31.9, w: 9.4, h: 2.8, cover: true },
-      { id: 'str', l: 15.5, t: 37.5, w: 14.5, h: 3.4, ctrl: true },
-      { id: 'dex', l: 15.5, t: 41.8, w: 14.5, h: 3.4, ctrl: true },
-      { id: 'con', l: 15.5, t: 46.2, w: 14.5, h: 3.4, ctrl: true },
-      { id: 'int', l: 15.5, t: 50.5, w: 14.5, h: 3.4, ctrl: true },
-      { id: 'wis', l: 15.5, t: 54.9, w: 14.5, h: 3.4, ctrl: true },
-      { id: 'cha', l: 15.5, t: 59.2, w: 14.5, h: 3.4, ctrl: true }
+      { id: 'str', l: 14.0, t: 37.5, w: 13.2, h: 3.4, ctrl: true },
+      { id: 'dex', l: 14.0, t: 41.8, w: 13.2, h: 3.4, ctrl: true },
+      { id: 'con', l: 14.0, t: 46.2, w: 13.2, h: 3.4, ctrl: true },
+      { id: 'int', l: 14.0, t: 50.5, w: 13.2, h: 3.4, ctrl: true },
+      { id: 'wis', l: 14.0, t: 54.9, w: 13.2, h: 3.4, ctrl: true },
+      { id: 'cha', l: 14.0, t: 59.2, w: 13.2, h: 3.4, ctrl: true }
     ];
     var STAT_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };

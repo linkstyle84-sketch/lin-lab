@@ -1425,16 +1425,46 @@
       if (selectedCls === '군주' || selectedCls === '마법사') return Math.trunc(level / 8);
       return 0;
     }
+    function gearNames() {
+      var gear = (sheet && sheet.gear) || {};
+      var names = [];
+      Object.keys(gear).forEach(function (key) {
+        var g = gear[key];
+        if (g && typeof g === 'object' && g.name) names.push(g.name);
+      });
+      return names;
+    }
+    /* 수호 세트(반지+목걸이+벨트) AC -1 */
+    function setAcBonus() {
+      var names = gearNames();
+      var has = function (n) { return names.indexOf(n) !== -1; };
+      var bonus = 0;
+      if (has('수호의 반지') && has('수호의 목걸이') && has('수호의 벨트')) bonus += 1;
+      return bonus;
+    }
+    function lookupGearAc(name) {
+      var src = window.DBGEAR || {};
+      var ids = Object.keys(src);
+      for (var i = 0; i < ids.length; i++) {
+        var it = src[ids[i]];
+        if (it && it.n === name && it.a != null) return Number(it.a) || 0;
+      }
+      return null;
+    }
+    function gearPieceAc(g) {
+      if (!g || typeof g !== 'object') return 0;
+      var base = g.ac;
+      if (base == null && g.name) base = lookupGearAc(g.name);
+      if (base == null) return 0;
+      return (Number(base) || 0) + (Number(g.enchant) || 0);
+    }
     function recomputeAc() {
       var sum = 0;
       var gear = (sheet && sheet.gear) || {};
       Object.keys(gear).forEach(function (key) {
-        var g = gear[key];
-        /* DBGEAR.a / 장비.ac 는 AC 하락 절대값. 강화 1당 AC -1 추가 */
-        if (g && typeof g === 'object' && g.ac != null) {
-          sum += (Number(g.ac) || 0) + (Number(g.enchant) || 0);
-        }
+        sum += gearPieceAc(gear[key]);
       });
+      sum += setAcBonus();
       setField('ac', 10 - sum - levelAcBonus());
     }
 

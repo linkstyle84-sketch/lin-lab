@@ -571,11 +571,17 @@
     .slot.empty .guide { display: flex; }
     .paper-foot {
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+      z-index: 1;
+    }
+    .paper-foot-top {
+      display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: end;
       gap: 12px;
-      margin-top: 10px;
-      z-index: 1;
     }
     .align {
       border: 1px solid var(--line);
@@ -594,6 +600,48 @@
       font-weight: 900;
     }
     .er-box input { width: 64px; }
+    .obs-box {
+      border: 1px solid rgba(228,195,106,.22);
+      border-radius: 10px;
+      padding: 8px 10px 9px;
+      background: rgba(0,0,0,.28);
+    }
+    .obs-tip {
+      margin: 0 0 7px;
+      color: #d7c7a8;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+    .obs-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 5px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #cfc4b2;
+    }
+    .obs-row:last-child { margin-bottom: 0; }
+    .obs-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .obs-row input {
+      width: 78px;
+      border: 1px solid rgba(228,195,106,.3);
+      border-radius: 5px;
+      padding: 3px 6px;
+      background: #0c0a08;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .obs-tag { font-weight: 900; min-width: 4.5em; }
+    .obs-tag.bless { color: #7ec8ff; }
+    .obs-tag.curse { color: #ff9b8a; }
+    .obs-tag.same { color: #9fdfb0; }
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -980,14 +1028,27 @@
               </div>
             </div>
             <div class="paper-foot">
-              <label class="align">성향
-                <select id="alignment">
-                  <option value="뉴트럴">뉴트럴</option>
-                  <option value="라우풀">라우풀</option>
-                  <option value="카오틱">카오틱</option>
-                </select>
-              </label>
-              <label class="er-box">ER <input id="er" type="number"></label>
+              <div class="paper-foot-top">
+                <label class="align">성향
+                  <select id="alignment">
+                    <option value="뉴트럴">뉴트럴</option>
+                    <option value="라우풀">라우풀</option>
+                    <option value="카오틱">카오틱</option>
+                  </select>
+                </label>
+                <label class="er-box">ER <input id="er" type="number"></label>
+              </div>
+              <div class="obs-box">
+                <p class="obs-tip">축저부 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>
+                <div class="obs-row">
+                  <label>실제 HP <input id="hp-observed" type="number" inputmode="numeric"></label>
+                  <span class="obs-tag" id="hp-obs-tag"></span>
+                </div>
+                <div class="obs-row">
+                  <label>실제 MP <input id="mp-observed" type="number" inputmode="numeric"></label>
+                  <span class="obs-tag" id="mp-obs-tag"></span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="stats" aria-label="캐릭터 상세 스탯">
@@ -1631,10 +1692,8 @@
       var atk = computeAttackBreakdown();
       var hpAvg = sheet._hpAvg || 0;
       var mpAvg = sheet._mpAvg || 0;
-      var observed = sheet.hpObserved;
-      var hpCmp = compareObserved(observed, hpAvg, 'HP');
-      var mpObserved = sheet.mpObserved;
-      var mpCmp = compareObserved(mpObserved, mpAvg, 'MP');
+      var displayHp = observedValue(sheet.hpObserved, hpAvg);
+      var displayMp = observedValue(sheet.mpObserved, mpAvg);
       var hpTick = hpRegenByCon(con);
       var mpTick = mpRegenByWis(wis);
       var mr = mrByWis(wis);
@@ -1698,19 +1757,13 @@
         line('SP', '<span class="muted">준비중</span>')
       );
       html += block('CON ' + con + ' 상세',
-        '<div class="line"><span class="k">최대HP 합계(평균)</span><span class="v">' + hpAvg + '</span></div>' +
-        '<div class="hp-row"><label>실측 최대HP <input id="hp-observed" type="number" inputmode="numeric" value="' +
-          (observed != null && observed !== '' ? escapeHtml(String(observed)) : '') +
-          '"></label> ' + hpCmp + '</div>' +
+        line('최대HP', String(displayHp)) +
         line('HP 회복(틱)', hpTick.min + '~' + hpTick.max +
           ' <span class="muted">(대기 3초 / 이동 6초 / 전투 12초)</span>') +
         line('최대 소지 무게(STR+CON)', String(weight))
       );
       html += block('WIS ' + wis + ' 상세',
-        '<div class="line"><span class="k">최대MP 합계(평균)</span><span class="v">' + mpAvg + '</span></div>' +
-        '<div class="hp-row"><label>실측 최대MP <input id="mp-observed" type="number" inputmode="numeric" value="' +
-          (mpObserved != null && mpObserved !== '' ? escapeHtml(String(mpObserved)) : '') +
-          '"></label> ' + mpCmp + '</div>' +
+        line('최대MP', String(displayMp)) +
         line('MP 회복(틱)', String(mpTick)) +
         line('마법 방어력(MR)', mr + '%')
       );
@@ -1720,26 +1773,60 @@
         line('최대 소환수', maxSummonTotalByCha(cha) + '마리')
       );
       el.innerHTML = html;
-      bindObservedInput('hp-observed', 'hpObserved');
-      bindObservedInput('mp-observed', 'mpObserved');
     }
-    function compareObserved(observed, avg, label) {
-      if (observed != null && observed !== '' && Number.isFinite(Number(observed))) {
-        var diff = Number(observed) - avg;
-        if (diff > 0) return '<span class="tag-bless">축 +' + diff + '</span>';
-        if (diff < 0) return '<span class="tag-curse">저주 ' + diff + '</span>';
-        return '<span class="tag-ok">평균과 동일</span>';
+    function hasObserved(v) {
+      return v != null && v !== '' && Number.isFinite(Number(v));
+    }
+    function observedValue(observed, avg) {
+      return hasObserved(observed) ? Number(observed) : avg;
+    }
+    function blessCurseText(observed, avg) {
+      if (!hasObserved(observed)) return { text: '', cls: '' };
+      var diff = Number(observed) - avg;
+      if (diff > 0) return { text: '축+' + diff, cls: 'bless' };
+      if (diff < 0) return { text: '저주+' + Math.abs(diff), cls: 'curse' };
+      return { text: '평균과 동일', cls: 'same' };
+    }
+    function syncObservedFoot() {
+      var hpIn = document.getElementById('hp-observed');
+      var mpIn = document.getElementById('mp-observed');
+      var hpTag = document.getElementById('hp-obs-tag');
+      var mpTag = document.getElementById('mp-obs-tag');
+      if (!sheet) return;
+      if (hpIn && document.activeElement !== hpIn) {
+        hpIn.value = hasObserved(sheet.hpObserved) ? String(sheet.hpObserved) : '';
       }
-      return '<span class="muted">실측 ' + label + ' 입력</span>';
+      if (mpIn && document.activeElement !== mpIn) {
+        mpIn.value = hasObserved(sheet.mpObserved) ? String(sheet.mpObserved) : '';
+      }
+      var hpAvg = sheet._hpAvg || 0;
+      var mpAvg = sheet._mpAvg || 0;
+      if (hpTag) {
+        var hpInfo = blessCurseText(sheet.hpObserved, hpAvg);
+        hpTag.textContent = hpInfo.text;
+        hpTag.className = 'obs-tag' + (hpInfo.cls ? (' ' + hpInfo.cls) : '');
+      }
+      if (mpTag) {
+        var mpInfo = blessCurseText(sheet.mpObserved, mpAvg);
+        mpTag.textContent = mpInfo.text;
+        mpTag.className = 'obs-tag' + (mpInfo.cls ? (' ' + mpInfo.cls) : '');
+      }
     }
-    function bindObservedInput(domId, sheetKey) {
-      var obs = document.getElementById(domId);
-      if (!obs) return;
-      obs.addEventListener('change', function () {
-        sheet[sheetKey] = obs.value === '' ? '' : Number(obs.value);
-        paintStatOverlays();
-      });
-      obs.addEventListener('keydown', function (e) { e.stopPropagation(); });
+    function bindObservedFootInputs() {
+      function wire(domId, sheetKey) {
+        var el = document.getElementById(domId);
+        if (!el || el.dataset.bound === '1') return;
+        el.dataset.bound = '1';
+        el.addEventListener('input', function () {
+          if (!sheet) return;
+          sheet[sheetKey] = el.value === '' ? '' : Number(el.value);
+          syncObservedFoot();
+          paintStatOverlays();
+        });
+        el.addEventListener('keydown', function (e) { e.stopPropagation(); });
+      }
+      wire('hp-observed', 'hpObserved');
+      wire('mp-observed', 'mpObserved');
     }
     function adjustLevel(dir) {
       var cur = num('level');
@@ -1844,6 +1931,7 @@
       syncDerivedStats();
       recomputeAc();
       syncErInputMode();
+      syncObservedFoot();
       paintStatsDetail();
       statOverlayEl.innerHTML = '';
       var foodLeft = num('food');
@@ -1915,13 +2003,9 @@
             if (!Number.isFinite(avgV)) avgV = num(row.id + 'Max');
             if (!Number.isFinite(avgV)) avgV = num(row.id) || 0;
             var obsKey = row.id === 'hp' ? 'hpObserved' : (row.id === 'mp' ? 'mpObserved' : '');
-            var obsV = obsKey && sheet ? sheet[obsKey] : '';
-            if (obsV != null && obsV !== '' && Number.isFinite(Number(obsV))) {
-              /* 장비창: 평균 / 실측 입력 */
-              el.textContent = avgV + '/' + Number(obsV);
-            } else {
-              el.textContent = avgV + '/' + avgV;
-            }
+            var showV = observedValue(obsKey && sheet ? sheet[obsKey] : '', avgV);
+            /* 미입력: 평균 / 입력: 실측값 */
+            el.textContent = showV + '/' + showV;
           } else {
             var dV = num(row.id);
             el.textContent = Number.isFinite(dV) ? String(dV) : '';
@@ -2988,6 +3072,8 @@
         done();
       });
     });
+
+    bindObservedFootInputs();
 
     var wait = setInterval(function () {
       if (!window.DgMember) return;

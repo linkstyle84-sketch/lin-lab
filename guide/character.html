@@ -1398,19 +1398,23 @@
       setField('magicBonus', calcMagicBonus(intStat));
       setField('magicLevel', calcMagicLevel(level));
       setField('weight', calcMaxWeight(str, con) + doll.weight);
-      if (selectedCls === '군주') {
-        setField('er', levelErBonus() + buffErBonus());
-      }
+      /* lcinfo.io/classes — 클래스별 레벨 ER + 버프 ER */
+      setField('er', levelErBonus() + buffErBonus());
       sheet._hpAvg = avgHp;
       sheet._mpAvg = avgMp;
       sheet._hpRange = { min: hp.min + doll.hp, max: hp.max + doll.hp, avg: avgHp };
       sheet._mpRange = { min: mp.min + doll.mp, max: mp.max + doll.mp, avg: avgMp };
     }
-    /* 군주 ER: 10렙당 +1 */
+    /* lcinfo: 군주 9 / 기사 5 / 요정 6 / 마법사 12 레벨당 +1 */
     function levelErBonus() {
-      if (selectedCls !== '군주') return 0;
       var level = Math.max(0, Math.trunc(num('level')) || 0);
-      return Math.trunc(level / 10);
+      var step = 0;
+      if (selectedCls === '군주') step = 9;
+      else if (selectedCls === '기사') step = 5;
+      else if (selectedCls === '요정') step = 6;
+      else if (selectedCls === '마법사') step = 12;
+      else return 0;
+      return Math.trunc(level / step);
     }
     function buffErBonus() {
       var on = ensureBuffs();
@@ -1422,11 +1426,11 @@
       });
       return sum;
     }
+    /* lcinfo: (floor((STR+CON)/2)+1)*150 */
     function calcMaxWeight(str, con) {
-      /* 가이드 예시(STR11·CON18=2250)에 맞춘 식: STR×100 + CON×50 + 250 */
       var s = Number(str) || 0;
       var c = Number(con) || 0;
-      return Math.max(0, s * 100 + c * 50 + 250);
+      return (Math.floor((s + c) / 2) + 1) * 150;
     }
     function dexAcBonus() {
       var dex = num('dex') + buffStatBonus('dex');
@@ -1435,13 +1439,17 @@
       if (dex >= 16) return 1;
       return 0;
     }
+    /* lcinfo: CON 13 이하 최대 1, 이후 CON-13 / 대기 3초·이동 6초·전투 12초 */
     function hpRegenByCon(con) {
       var c = Math.trunc(con) || 0;
       var max = Math.max(1, c - 13);
       return { min: 1, max: max };
     }
+    /* lcinfo WIS 구간 */
     function mpRegenByWis(wis) {
       var w = Math.trunc(wis) || 0;
+      if (w >= 24) return 6;
+      if (w >= 22) return 5;
       if (w >= 19) return 4;
       if (w >= 17) return 3;
       if (w >= 15) return 2;
@@ -1452,21 +1460,23 @@
       if (w <= 12) return 0;
       return (w - 12) * 2;
     }
+    /* lcinfo: 군주 혈맹원 — 49 이하 CHA×2, 50 이상 CHA×3 */
     function clanMembersByCha(cha, level) {
       if (selectedCls !== '군주') return 0;
       var c = Math.trunc(cha) || 0;
       var lv = Math.trunc(level) || 1;
       return c * (lv >= 50 ? 3 : 2);
     }
+    /* lcinfo: 서먼 몬스터 수 = CHA / 4 */
     function summonCountByCha(cha) {
-      var c = Math.trunc(cha) || 0;
-      if (c >= 36) return 7;
-      if (c >= 30) return 6;
-      if (c >= 24) return 5;
-      if (c >= 18) return 4;
-      if (c >= 12) return 3;
-      if (c >= 7) return 2;
-      return 1;
+      return Math.floor((Math.trunc(cha) || 0) / 4);
+    }
+    /* lcinfo: 최대 소환수 = CHA/6 + 클래스 보너스(요정+2, 군주/마법사+1) */
+    function maxSummonTotalByCha(cha) {
+      var base = Math.floor((Math.trunc(cha) || 0) / 6);
+      if (selectedCls === '요정') return base + 2;
+      if (selectedCls === '군주' || selectedCls === '마법사') return base + 1;
+      return base;
     }
     function combatCls() {
       return selectedCls === '요정' ? '요정' : '기사';
@@ -1680,7 +1690,7 @@
       html += block('STR ' + str + ' 상세',
         line('근거리 대미지', rangedWeapon ? '—' : signed(atk.strDmg)) +
         line('근거리 명중', rangedWeapon ? '—' : signed(atk.strAcc)) +
-        line('무게', String(weight))
+        line('최대 소지 무게(STR+CON)', String(weight))
       );
       html += block('DEX ' + dex + ' 상세',
         line('원거리 대미지', meleeWeapon ? '—' : signed(atk.dexDmg)) +
@@ -1700,7 +1710,7 @@
           '"></label> ' + hpCmp + '</div>' +
         line('HP 회복(틱)', hpTick.min + '~' + hpTick.max +
           ' <span class="muted">(대기 3초 / 이동 6초 / 전투 12초)</span>') +
-        line('무게', String(weight))
+        line('최대 소지 무게(STR+CON)', String(weight))
       );
       html += block('WIS ' + wis + ' 상세',
         line('최대MP', String(mpAvg)) +
@@ -1709,7 +1719,8 @@
       );
       html += block('CHA ' + cha + ' 상세',
         line('보유 가능 혈맹원', clanMembersByCha(cha, level) + '명') +
-        line('소환 몬스터', summonCountByCha(cha) + '마리')
+        line('서먼 몬스터', summonCountByCha(cha) + '마리') +
+        line('최대 소환수', maxSummonTotalByCha(cha) + '마리')
       );
       el.innerHTML = html;
       var obs = document.getElementById('hp-observed');
@@ -2836,16 +2847,19 @@
     var erInput = document.getElementById('er');
     if (erInput) {
       erInput.addEventListener('input', function () {
-        if (selectedCls === '군주') return;
-        if (sheet) sheet.er = num('er');
-        paintStatsDetail();
+        /* 클래스별 레벨 ER 자동 계산 — 수동 입력 무시 */
       });
     }
     function syncErInputMode() {
       if (!erInput) return;
-      var auto = selectedCls === '군주';
-      erInput.readOnly = auto;
-      erInput.title = auto ? '군주 ER: 10레벨당 +1 (자동)' : '';
+      erInput.readOnly = true;
+      var tip = {
+        '군주': '군주 ER: 9레벨당 +1 (lcinfo)',
+        '기사': '기사 ER: 5레벨당 +1 (lcinfo)',
+        '요정': '요정 ER: 6레벨당 +1 (lcinfo)',
+        '마법사': '마법사 ER: 12레벨당 +1 (lcinfo)'
+      };
+      erInput.title = tip[selectedCls] || '클래스별 레벨 ER 자동';
     }
 
     document.getElementById('modal-search').addEventListener('input', renderPickList);

@@ -1043,6 +1043,7 @@
     function paintStatOverlays() {
       if (!statOverlayEl) return;
       syncDerivedStats();
+      recomputeAc();
       statOverlayEl.innerHTML = '';
       var foodLeft = num('food');
       STAT_OVERLAYS.forEach(function (row) {
@@ -1416,6 +1417,14 @@
       });
     }
 
+    /* 레벨 AC: 군주·마법사 8렙당 -1, 기사 7렙당 -1, 요정 6렙당 -1 (도적은 미정) */
+    function levelAcBonus() {
+      var level = Math.max(0, Math.trunc(num('level')) || 0);
+      if (selectedCls === '요정') return Math.trunc(level / 6);
+      if (selectedCls === '기사') return Math.trunc(level / 7);
+      if (selectedCls === '군주' || selectedCls === '마법사') return Math.trunc(level / 8);
+      return 0;
+    }
     function recomputeAc() {
       var sum = 0;
       var gear = (sheet && sheet.gear) || {};
@@ -1426,7 +1435,7 @@
           sum += (Number(g.ac) || 0) + (Number(g.enchant) || 0);
         }
       });
-      setField('ac', 10 - sum);
+      setField('ac', 10 - sum - levelAcBonus());
     }
 
     function openSlot(key, label) {

@@ -509,6 +509,33 @@
       font: inherit;
       font-weight: 800;
     }
+    .weapon-cats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 0 10px;
+    }
+    .weapon-cats[hidden] { display: none !important; }
+    .weapon-cat {
+      border: 1px solid rgba(228,195,106,.35);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #15110c;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .weapon-cat:hover {
+      border-color: var(--gold);
+      color: var(--ink);
+    }
+    .weapon-cat[aria-pressed="true"] {
+      border-color: var(--gold);
+      background: rgba(228,195,106,.16);
+      color: var(--gold);
+    }
     .pick-list {
       display: grid;
       gap: 6px;
@@ -705,6 +732,7 @@
     <div class="modal" role="dialog" aria-modal="true">
       <h2 id="modal-title">장비 선택</h2>
       <input id="modal-search" type="search" placeholder="이름 검색" aria-label="아이템 검색">
+      <div class="weapon-cats" id="weapon-cats" hidden role="group" aria-label="무기 종류"></div>
       <div class="pick-list" id="pick-list"></div>
       <div class="row-actions">
         <button type="button" id="modal-clear">장착해제</button>
@@ -733,6 +761,7 @@
       boots: ['부츠'],
       doll: []
     };
+    var WEAPON_CATS = ['전체'].concat(SLOT_CATS.weapon);
     /* character-status.png 658x868 — 우물 edge-fit + 부위 재매핑 (86px) */
     var SLOTS = [
       { key: 'necklace', label: '목걸이', l: 54.41, t: 15.79, w: 13.07, h: 9.91 },
@@ -785,12 +814,14 @@
     var pendingCloudSave = false;
     var editKey = '';
     var picked = null;
+    var weaponCat = '전체';
     var status = document.getElementById('status');
     var gearEl = document.getElementById('gear');
     var gearExtraEl = document.getElementById('gear-extra');
     var statOverlayEl = document.getElementById('stat-overlay');
     var modal = document.getElementById('modal');
     var pickList = document.getElementById('pick-list');
+    var weaponCatsEl = document.getElementById('weapon-cats');
 
     function say(text) { status.textContent = text || ''; }
     function num(id) {
@@ -1250,6 +1281,30 @@
       }
     }
 
+    function paintWeaponCats() {
+      if (!weaponCatsEl) return;
+      if (editKey !== 'weapon') {
+        weaponCatsEl.hidden = true;
+        weaponCatsEl.innerHTML = '';
+        return;
+      }
+      weaponCatsEl.hidden = false;
+      weaponCatsEl.innerHTML = '';
+      WEAPON_CATS.forEach(function (cat) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'weapon-cat';
+        btn.textContent = cat;
+        btn.setAttribute('aria-pressed', cat === weaponCat ? 'true' : 'false');
+        btn.addEventListener('click', function () {
+          weaponCat = cat;
+          paintWeaponCats();
+          renderPickList();
+        });
+        weaponCatsEl.appendChild(btn);
+      });
+    }
+
     function itemListForSlot(key, query) {
       var cats = SLOT_CATS[key] || [];
       var q = String(query || '').trim().toLowerCase();
@@ -1276,6 +1331,7 @@
           var it = src[id];
           if (!it || !it.n) return;
           if (cats.length && cats.indexOf(it.c) === -1) return;
+          if (key === 'weapon' && weaponCat !== '전체' && it.c !== weaponCat) return;
           if (key === 'weapon' && /화살/.test(it.n)) return;
           if (!canWearItem(it)) return;
           if (q && it.n.toLowerCase().indexOf(q) === -1) return;
@@ -1374,6 +1430,7 @@
     function openSlot(key, label) {
       editKey = key;
       picked = null;
+      weaponCat = '전체';
       var current = sheet.gear && sheet.gear[key];
       if (current && typeof current === 'object') {
         picked = {
@@ -1385,12 +1442,16 @@
           max: current.max != null ? Number(current.max) : 15,
           opt: current.opt || ''
         };
+        if (key === 'weapon' && current.cat && WEAPON_CATS.indexOf(current.cat) !== -1) {
+          weaponCat = current.cat;
+        }
       }
       document.getElementById('modal-title').textContent = label + ' 선택 · ' + (selectedCls || '');
       document.getElementById('modal-search').value = '';
       pickEnchant = current && typeof current === 'object' ? (Number(current.enchant) || 0) : 0;
       if (key === 'weapon' && !pickEnchant) pickEnchant = Number(sheet.weaponEnchant) || 0;
       if (picked) clampPickEnchant(picked);
+      paintWeaponCats();
       modal.hidden = false;
       renderPickList();
       document.getElementById('modal-search').focus();
@@ -1401,6 +1462,11 @@
       editKey = '';
       picked = null;
       pickEnchant = 0;
+      weaponCat = '전체';
+      if (weaponCatsEl) {
+        weaponCatsEl.hidden = true;
+        weaponCatsEl.innerHTML = '';
+      }
     }
 
     function buildPayload() {

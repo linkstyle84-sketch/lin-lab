@@ -1167,6 +1167,8 @@
       if (editKey === 'doll') return 0;
       var max = item && item.max != null ? Number(item.max) : 15;
       if (!Number.isFinite(max) || max < 0) max = 15;
+      /* 무기는 안전인첸(보통 6)과 별개로 시뮬상 11강까지 허용. 인첸불가(max=0)는 유지 */
+      if (editKey === 'weapon' && max > 0) max = 11;
       return max;
     }
     function clampPickEnchant(item) {

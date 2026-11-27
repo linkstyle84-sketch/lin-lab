@@ -1597,6 +1597,7 @@
       if (!b) return '';
       var lines = [];
       if (b.note) lines.push(b.note);
+      if (b.ac) lines.push('AC -' + b.ac);
       if (b.dmg) lines.push('추타 +' + b.dmg);
       if (b.acc) lines.push('명중 +' + b.acc);
       if (b.dr) lines.push('리덕 +' + b.dr);
@@ -1814,6 +1815,9 @@
           btn.addEventListener('click', function () {
             onMap[b.id] = !onMap[b.id];
             sheet.buffs = onMap;
+            recomputeAc();
+            paintStatOverlays();
+            paintSideRail();
             renderIconPickList();
           });
           btn.addEventListener('mouseenter', function () { showIconTip(btn, buffDetailHtml(b)); });
@@ -2150,6 +2154,16 @@
       if (base == null) return 0;
       return (Number(base) || 0) + (Number(g.enchant) || 0);
     }
+    function buffAcBonus() {
+      var on = ensureBuffs();
+      var bonus = 0;
+      (window.DBBUFFS || []).forEach(function (b) {
+        if (!on[b.id]) return;
+        var ac = Number(b.ac);
+        if (Number.isFinite(ac) && ac > 0) bonus += ac;
+      });
+      return bonus;
+    }
     function recomputeAc() {
       var sum = 0;
       var gear = (sheet && sheet.gear) || {};
@@ -2157,6 +2171,7 @@
         sum += gearPieceAc(gear[key]);
       });
       sum += setAcBonus();
+      sum += buffAcBonus();
       setField('ac', 10 - sum - levelAcBonus());
     }
 

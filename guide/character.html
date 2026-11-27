@@ -695,6 +695,7 @@
     ];
     /* character-status.png — 분배스탯 + Str~Cha(하락/수치/상승) */
     var STAT_OVERLAYS = [
+      { id: 'level', l: 31.55, t: 6.15, w: 14.14, h: 3.66, ctrl: true, level: true },
       { id: 'foodLbl', text: '분배스탯', l: 4.2, t: 31.9, w: 11.2, h: 2.8, lbl: true },
       { id: 'food', l: 24.8, t: 31.9, w: 9.4, h: 2.8, cover: true },
       { id: 'str', l: 14.55, t: 37.5, w: 13.2, h: 3.4, ctrl: true },
@@ -705,6 +706,8 @@
       { id: 'cha', l: 14.55, t: 59.2, w: 13.2, h: 3.4, ctrl: true }
     ];
     var STAT_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+    var LEVEL_MIN = 1;
+    var LEVEL_MAX = 99;
     var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };
     var FIELDS = ['level','exp','hp','hpMax','mp','mpMax','ac','weight','food','str','dex','con','int','wis','cha','magicLevel','magicBonus','resistEarth','resistWater','resistFire','resistWind','er'];
     var sheet = null;
@@ -763,7 +766,23 @@
       el.value = value;
       if (sheet) sheet[id] = value;
     }
+    function adjustLevel(dir) {
+      var cur = num('level');
+      if (!Number.isFinite(cur) || cur < LEVEL_MIN) cur = LEVEL_MIN;
+      if (dir > 0) {
+        if (cur >= LEVEL_MAX) return;
+        setField('level', cur + 1);
+      } else if (dir < 0) {
+        if (cur <= LEVEL_MIN) return;
+        setField('level', cur - 1);
+      }
+      paintStatOverlays();
+    }
     function adjustStat(id, dir) {
+      if (id === 'level') {
+        adjustLevel(dir);
+        return;
+      }
       if (STAT_IDS.indexOf(id) === -1) return;
       var cur = num(id);
       var food = num('food');
@@ -808,15 +827,15 @@
           wrap.style.width = row.w + '%';
           wrap.style.height = row.h + '%';
           var cur = num(row.id);
-          var floor = statFloor(row.id);
-          var cap = statCap(row.id);
+          var floor = row.level ? LEVEL_MIN : statFloor(row.id);
+          var cap = row.level ? LEVEL_MAX : statCap(row.id);
           var canDown = cur > floor;
-          var canUp = foodLeft > 0 && cur < cap;
+          var canUp = row.level ? (cur < cap) : (foodLeft > 0 && cur < cap);
 
           var down = document.createElement('button');
           down.type = 'button';
           down.className = 'stat-btn down';
-          down.setAttribute('aria-label', row.id + ' 하락');
+          down.setAttribute('aria-label', row.level ? '레벨 하락' : (row.id + ' 하락'));
           down.disabled = !canDown;
           down.addEventListener('click', function (e) {
             e.preventDefault();
@@ -831,7 +850,7 @@
           var up = document.createElement('button');
           up.type = 'button';
           up.className = 'stat-btn up';
-          up.setAttribute('aria-label', row.id + ' 상승');
+          up.setAttribute('aria-label', row.level ? '레벨 상승' : (row.id + ' 상승'));
           up.disabled = !canUp;
           up.addEventListener('click', function (e) {
             e.preventDefault();
@@ -1041,7 +1060,7 @@
         adjustStat(id, Number(btn.dataset.dir));
       });
     });
-    ['food', 'str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function (id) {
+    ['level', 'food', 'str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       el.readOnly = true;

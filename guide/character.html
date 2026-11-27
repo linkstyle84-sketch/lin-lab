@@ -1401,9 +1401,11 @@
       if (sheet) {
         sheet.cls = selectedCls;
         sheet.elixir = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+        pruneBuffsForClass();
       }
       paintStatOverlays();
       paintSideRail();
+      if (iconModal && !iconModal.hidden && iconModalMode === 'buff') renderIconPickList();
     }
 
     function paintStatOverlays() {
@@ -1498,6 +1500,7 @@
       );
       sheet.buffs = Object.assign({}, (data && data.buffs) || {});
       setClass(sheet.cls || '요정', false);
+      pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
       FIELDS.forEach(function (id) {
         var el = document.getElementById(id);
@@ -1620,6 +1623,37 @@
       for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
       return null;
     }
+    /* DPS 측정기와 동일: 기사 전용 / 요정 전용·숨김 공통 / 그 외는 공통만 */
+    var ELF_HIDE_COMMON = {
+      '브레스오브파이어': 1, '버서커스': 1, '블레스웨폰': 1, '글로잉오라': 1, '브레이브오라': 1
+    };
+    function buffAllowedForClass(b, cls) {
+      if (!b || !b.i) return false;
+      var scope = b.scope || 'common';
+      if (scope === 'victim') return false;
+      if (cls === '기사') return scope === 'common' || scope === 'knight';
+      if (cls === '요정') {
+        if (scope === 'elf') return true;
+        return scope === 'common' && !ELF_HIDE_COMMON[b.id];
+      }
+      /* 군주·마법사·도적: 공통 버프만 */
+      return scope === 'common';
+    }
+    function buffsForClass(cls) {
+      var out = [];
+      (window.DBBUFFS || []).forEach(function (b) {
+        if (buffAllowedForClass(b, cls || selectedCls)) out.push(b);
+      });
+      return out;
+    }
+    function pruneBuffsForClass() {
+      var onMap = ensureBuffs();
+      var keep = {};
+      buffsForClass(selectedCls).forEach(function (b) {
+        if (onMap[b.id]) keep[b.id] = true;
+      });
+      sheet.buffs = keep;
+    }
     function findDoll(id) {
       var list = window.DBDOLLS || [];
       for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
@@ -1724,8 +1758,7 @@
       hideIconTip();
       if (iconModalMode === 'buff') {
         var onMap = ensureBuffs();
-        (window.DBBUFFS || []).forEach(function (b) {
-          if (!b.i) return;
+        buffsForClass(selectedCls).forEach(function (b) {
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'pick-icon' + (onMap[b.id] ? ' on' : '');

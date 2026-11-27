@@ -159,6 +159,7 @@
       alignment: '뉴트럴', er: 0, weaponEnchant: 0,
       elixir: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
       buffs: {},
+      transform: '',
       gear: {
         helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
         ring1: '', gloves: '', belt: '', shield: '', weapon: '',
@@ -234,16 +235,23 @@
       }
       return null;
     })();
+    var transformName = '';
+    if (s.transform) {
+      if (typeof s.transform === 'string') transformName = s.transform;
+      else transformName = s.transform.id || s.transform.name || s.transform.n || '';
+      if (transformName === '노변신') transformName = '';
+    }
     if (weaponName) {
       var rows = Array.isArray(out.rows) ? out.rows.slice() : [];
       var found = rows.find(function (row) { return row && row.name === weaponName; });
       if (found) {
         found.enchant = enchant;
+        if (transformName) found.transform = transformName;
         out.selectedId = found.id;
       } else {
         var id = (out.seq || 1) + 1;
         out.seq = id;
-        rows.unshift({ id: id, name: weaponName, enchant: enchant, transform: '' });
+        rows.unshift({ id: id, name: weaponName, enchant: enchant, transform: transformName || '' });
         out.selectedId = id;
       }
       out.rows = rows;

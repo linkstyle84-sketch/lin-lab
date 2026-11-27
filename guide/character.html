@@ -996,6 +996,8 @@
         <button type="button" id="icon-modal-ok">확인</button>
         <button type="button" id="icon-modal-unsummon" hidden>소환해제</button>
         <button type="button" id="icon-modal-summon" hidden>소환</button>
+        <button type="button" id="icon-modal-xf-off" hidden>변신해제</button>
+        <button type="button" id="icon-modal-xf-on" hidden>변신</button>
       </div>
     </div>
   </div>
@@ -1007,6 +1009,7 @@
   <script src="db-gear.js"></script>
   <script src="db-buffs.js"></script>
   <script src="db-dolls.js"></script>
+  <script src="db-transforms.js"></script>
   <script>
     var SLOT_CATS = {
       helmet: ['투구'],
@@ -1098,9 +1101,12 @@
     var iconModalOk = document.getElementById('icon-modal-ok');
     var iconModalUnsummon = document.getElementById('icon-modal-unsummon');
     var iconModalSummon = document.getElementById('icon-modal-summon');
+    var iconModalXfOff = document.getElementById('icon-modal-xf-off');
+    var iconModalXfOn = document.getElementById('icon-modal-xf-on');
     var iconTip = document.getElementById('icon-tip');
     var iconModalMode = '';
     var pendingDoll = null;
+    var pendingTransform = null;
 
     function say(text) { status.textContent = text || ''; }
     var confirmBg = document.getElementById('confirm-bg');
@@ -1526,6 +1532,7 @@
         (data && data.elixir) || {}
       );
       sheet.buffs = Object.assign({}, (data && data.buffs) || {});
+      sheet.transform = (data && data.transform) || '';
       setClass(sheet.cls || '요정', false);
       pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
@@ -1553,6 +1560,7 @@
         (sheet && sheet.elixir) || {}
       );
       next.buffs = Object.assign({}, (sheet && sheet.buffs) || {});
+      next.transform = (sheet && sheet.transform) || '';
       sheet = next;
       return next;
     }
@@ -1831,6 +1839,13 @@
         function () { openIconModal('buff'); },
         function (btn) { showIconTip(btn, selectedBuffsTipHtml()); }
       );
+      var xf = selectedTransform();
+      addPickRow(
+        xf && xf.i ? ('transforms/' + xf.i) : 'ui/elixir/btn-transform.png',
+        xf && xf.n ? xf.n : '변신 선택',
+        function () { openIconModal('transform'); },
+        function (btn) { showIconTip(btn, transformDetailHtml(xf)); }
+      );
       var doll = selectedDoll();
       addPickRow(
         doll && doll.i ? ('dolls/' + doll.i) : 'ui/elixir/btn-doll-pick.png',
@@ -1838,23 +1853,76 @@
         function () { openIconModal('doll'); }
       );
     }
+    function transformClassKey() {
+      if (selectedCls === '요정') return '요정';
+      return '기사';
+    }
+    function transformsForClass() {
+      var key = transformClassKey();
+      var level = num('level');
+      if (!Number.isFinite(level) || level < 1) level = 1;
+      var list = (window.DBTRANSFORMS || []).filter(function (t) {
+        if (!t || !t.i) return false;
+        if (!t.classes || t.classes.indexOf(key) === -1) return false;
+        if (t.id === '노변신') return true;
+        return !t.lv || t.lv <= level;
+      });
+      list.sort(function (a, b) {
+        if (a.id === '노변신') return -1;
+        if (b.id === '노변신') return 1;
+        return (a.lv || 0) - (b.lv || 0) || String(a.n).localeCompare(String(b.n), 'ko');
+      });
+      return list;
+    }
+    function findTransform(id) {
+      var list = window.DBTRANSFORMS || [];
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return null;
+    }
+    function selectedTransform() {
+      var raw = sheet && sheet.transform;
+      if (!raw) return null;
+      if (typeof raw === 'string') {
+        if (!raw || raw === '노변신') return null;
+        return findTransform(raw) || { id: raw, n: raw, i: '변신 주문서.png' };
+      }
+      if (raw.id || raw.name || raw.n) {
+        var id = raw.id || raw.name || raw.n;
+        if (id === '노변신') return null;
+        return findTransform(id) || { id: id, n: raw.n || raw.name || id, i: raw.i || raw.icon || '변신 주문서.png' };
+      }
+      return null;
+    }
+    function transformDetailHtml(t) {
+      if (!t) return '<div class="tip-empty">선택된 변신 없음</div>';
+      return '<div class="tip-row">' +
+        (t.i ? '<img src="transforms/' + t.i + '" alt="">' : '') +
+        '<div class="tip-body"><div class="tip-title">' + escapeHtml(t.n || t.id) + '</div>' +
+        (t.lv ? '<div class="tip-sub">요구 레벨 ' + t.lv + '</div>' : '') +
+        '</div></div>';
+    }
     function syncIconModalActions() {
       var isDoll = iconModalMode === 'doll';
-      if (iconModalOk) iconModalOk.hidden = isDoll;
+      var isXf = iconModalMode === 'transform';
+      if (iconModalOk) iconModalOk.hidden = isDoll || isXf;
       if (iconModalUnsummon) iconModalUnsummon.hidden = !isDoll;
       if (iconModalSummon) iconModalSummon.hidden = !isDoll;
+      if (iconModalXfOff) iconModalXfOff.hidden = !isXf;
+      if (iconModalXfOn) iconModalXfOn.hidden = !isXf;
     }
     function closeIconModal() {
       if (!iconModal) return;
       iconModal.hidden = true;
       iconModalMode = '';
       pendingDoll = null;
+      pendingTransform = null;
       hideIconTip();
     }
     function openIconModal(mode) {
       if (!iconModal || !iconPickList) return;
       iconModalMode = mode;
       pendingDoll = null;
+      pendingTransform = null;
       if (mode === 'doll') {
         var cur = selectedDoll();
         if (cur && cur.id) {
@@ -1865,11 +1933,38 @@
             fx: cur.fx || cur.opt || ''
           };
         }
+      } else if (mode === 'transform') {
+        var curXf = selectedTransform();
+        if (curXf && curXf.id) pendingTransform = findTransform(curXf.id) || curXf;
       }
-      iconModalTitle.textContent = mode === 'buff' ? '버프 선택' : '인형 선택';
+      iconModalTitle.textContent = mode === 'buff' ? '버프 선택' : (mode === 'transform' ? '변신 선택' : '인형 선택');
       syncIconModalActions();
       renderIconPickList();
       iconModal.hidden = false;
+    }
+    function applyPendingTransform() {
+      if (!pendingTransform || !pendingTransform.id) {
+        say('변신을 선택하세요.');
+        return;
+      }
+      sheet = readForm();
+      if (pendingTransform.id === '노변신') sheet.transform = '';
+      else {
+        sheet.transform = {
+          id: pendingTransform.id,
+          name: pendingTransform.n || pendingTransform.id,
+          icon: pendingTransform.i || ''
+        };
+      }
+      paintSideRail();
+      closeIconModal();
+    }
+    function clearTransform() {
+      sheet = readForm();
+      sheet.transform = '';
+      pendingTransform = null;
+      paintSideRail();
+      closeIconModal();
     }
     function summonPendingDoll() {
       if (!pendingDoll || !pendingDoll.id) {
@@ -1927,6 +2022,27 @@
             renderIconPickList();
           });
           btn.addEventListener('mouseenter', function () { showIconTip(btn, buffDetailHtml(b)); });
+          btn.addEventListener('mouseleave', hideIconTip);
+          iconPickList.appendChild(btn);
+        });
+        return;
+      }
+      if (iconModalMode === 'transform') {
+        var selectedXf = pendingTransform && pendingTransform.id;
+        transformsForClass().forEach(function (t) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pick-icon' + (selectedXf === t.id ? ' on' : '');
+          btn.setAttribute('aria-label', t.n || t.id);
+          var img = document.createElement('img');
+          img.src = 'transforms/' + t.i;
+          img.alt = '';
+          btn.appendChild(img);
+          btn.addEventListener('click', function () {
+            pendingTransform = t;
+            renderIconPickList();
+          });
+          btn.addEventListener('mouseenter', function () { showIconTip(btn, transformDetailHtml(t)); });
           btn.addEventListener('mouseleave', hideIconTip);
           iconPickList.appendChild(btn);
         });
@@ -2385,6 +2501,8 @@
     if (iconModalOk) iconModalOk.addEventListener('click', closeIconModal);
     if (iconModalUnsummon) iconModalUnsummon.addEventListener('click', unsummonDoll);
     if (iconModalSummon) iconModalSummon.addEventListener('click', summonPendingDoll);
+    if (iconModalXfOff) iconModalXfOff.addEventListener('click', clearTransform);
+    if (iconModalXfOn) iconModalXfOn.addEventListener('click', applyPendingTransform);
     window.addEventListener('scroll', hideIconTip, true);
     window.addEventListener('resize', hideIconTip);
 

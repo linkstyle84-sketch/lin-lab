@@ -512,13 +512,31 @@
     .pick-list {
       display: grid;
       gap: 6px;
-      max-height: 360px;
+      max-height: min(52vh, 480px);
       overflow: auto;
       margin: 0 0 10px;
       padding: 4px;
       border: 1px solid rgba(228,195,106,.16);
       border-radius: 12px;
       background: #100c09;
+    }
+    #enchant-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    #enchant-wrap input {
+      width: 72px;
+      margin: 0;
+    }
+    #enchant-max-hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
     .pick-item {
       display: grid;
@@ -653,10 +671,11 @@
     <div class="modal" role="dialog" aria-modal="true">
       <h2 id="modal-title">장비 선택</h2>
       <input id="modal-search" type="search" placeholder="이름 검색" aria-label="아이템 검색">
-      <div class="pick-list" id="pick-list"></div>
-      <label class="hint" id="enchant-wrap" hidden>강화
-        <input id="modal-enchant" type="number" min="0" max="15" step="1" value="0">
+      <label id="enchant-wrap">강화
+        <input id="modal-enchant" type="number" min="0" max="15" step="1" value="0" aria-label="강화 수치">
+        <span id="enchant-max-hint"></span>
       </label>
+      <div class="pick-list" id="pick-list"></div>
       <div class="row-actions">
         <button type="button" id="modal-clear">비우기</button>
         <button type="button" id="modal-ok">선택 확정</button>
@@ -667,6 +686,7 @@
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script src="db-stack.js"></script>
+  <script src="db-gear.js"></script>
   <script>
     var SLOT_CATS = {
       helmet: ['투구'],
@@ -1070,8 +1090,36 @@
 
     function slotCaption(slot, label) {
       if (!label) return slot.label;
-      if (slot.key === 'weapon' && sheet.weaponEnchant) return label + ' +' + sheet.weaponEnchant;
+      var value = sheet.gear && sheet.gear[slot.key];
+      var enc = 0;
+      if (value && typeof value === 'object') enc = Number(value.enchant) || 0;
+      if (slot.key === 'weapon' && !enc) enc = Number(sheet.weaponEnchant) || 0;
+      if (enc > 0) return label + ' +' + enc;
       return label;
+    }
+    function canWearItem(it) {
+      if (!it || !it.k || !it.k.length) return true;
+      return it.k.indexOf(selectedCls) !== -1;
+    }
+    function syncEnchantUi(item) {
+      var wrap = document.getElementById('enchant-wrap');
+      var input = document.getElementById('modal-enchant');
+      var hint = document.getElementById('enchant-max-hint');
+      if (!wrap || !input) return;
+      if (editKey === 'doll') {
+        wrap.hidden = true;
+        return;
+      }
+      wrap.hidden = false;
+      var max = item && item.max != null ? Number(item.max) : 15;
+      if (!Number.isFinite(max) || max < 0) max = 15;
+      input.max = String(max);
+      var cur = Number(input.value);
+      if (!Number.isFinite(cur) || cur < 0) cur = 0;
+      if (cur > max) cur = max;
+      input.value = String(cur);
+      if (hint) hint.textContent = max > 0 ? ('0~' + max + '강') : '강화 불가';
+      input.disabled = max <= 0;
     }
 
     function paintOneSlot(slot, host, extra) {
@@ -1131,25 +1179,44 @@
       var cats = SLOT_CATS[key] || [];
       var q = String(query || '').trim().toLowerCase();
       var out = [];
-      var src = window.DBITEMS || {};
-      Object.keys(src).forEach(function (id) {
-        var it = src[id];
-        if (!it || !it.n) return;
-        if (key === 'doll') {
-          if (it.n.indexOf('인형') === -1) return;
-        } else if (cats.length && cats.indexOf(it.c) === -1) return;
-        if (q && it.n.toLowerCase().indexOf(q) === -1) return;
-        out.push({
-          id: id,
-          name: it.n,
-          icon: it.i || '',
-          cat: it.c || '',
-          ac: it.a != null ? Number(it.a) : null,
-          opt: Array.isArray(it.o) ? it.o.join(', ') : ''
+      if (key === 'doll') {
+        var dolls = window.DBITEMS || {};
+        Object.keys(dolls).forEach(function (id) {
+          var it = dolls[id];
+          if (!it || !it.n || it.n.indexOf('인형') === -1) return;
+          if (q && it.n.toLowerCase().indexOf(q) === -1) return;
+          out.push({
+            id: id,
+            name: it.n,
+            icon: it.i || '',
+            cat: it.c || '마법인형',
+            ac: null,
+            max: 0,
+            opt: Array.isArray(it.o) ? it.o.join(', ') : ''
+          });
         });
-      });
+      } else {
+        var src = window.DBGEAR || {};
+        Object.keys(src).forEach(function (id) {
+          var it = src[id];
+          if (!it || !it.n) return;
+          if (cats.length && cats.indexOf(it.c) === -1) return;
+          if (key === 'weapon' && /화살/.test(it.n)) return;
+          if (!canWearItem(it)) return;
+          if (q && it.n.toLowerCase().indexOf(q) === -1) return;
+          out.push({
+            id: id,
+            name: it.n,
+            icon: it.i || '',
+            cat: it.c || '',
+            ac: it.a != null ? Number(it.a) : null,
+            max: it.max != null ? Number(it.max) : 15,
+            opt: it.o || ''
+          });
+        });
+      }
       out.sort(function (a, b) { return a.name.localeCompare(b.name, 'ko'); });
-      return out.slice(0, 120);
+      return out;
     }
 
     function renderPickList() {
@@ -1158,6 +1225,7 @@
       pickList.innerHTML = '';
       if (!list.length) {
         pickList.innerHTML = '<div class="pick-empty">검색 결과가 없습니다.</div>';
+        syncEnchantUi(picked);
         return;
       }
       list.forEach(function (it) {
@@ -1173,10 +1241,12 @@
         btn.lastChild.textContent = it.opt || '';
         btn.addEventListener('click', function () {
           picked = it;
+          syncEnchantUi(it);
           renderPickList();
         });
         pickList.appendChild(btn);
       });
+      syncEnchantUi(picked);
     }
 
     function recomputeAc() {
@@ -1184,8 +1254,10 @@
       var gear = (sheet && sheet.gear) || {};
       Object.keys(gear).forEach(function (key) {
         var g = gear[key];
-        /* DBITEMS.a 는 AC 하락 절대값(판금 갑옷 a=7 → AC-7) */
-        if (g && typeof g === 'object' && g.ac != null) sum += Number(g.ac) || 0;
+        /* DBGEAR.a / 장비.ac 는 AC 하락 절대값. 강화 1당 AC -1 추가 */
+        if (g && typeof g === 'object' && g.ac != null) {
+          sum += (Number(g.ac) || 0) + (Number(g.enchant) || 0);
+        }
       });
       setField('ac', 10 - sum);
     }
@@ -1194,11 +1266,23 @@
       editKey = key;
       picked = null;
       var current = sheet.gear && sheet.gear[key];
-      if (current && typeof current === 'object') picked = current;
-      document.getElementById('modal-title').textContent = label + ' 선택';
+      if (current && typeof current === 'object') {
+        picked = {
+          id: current.id,
+          name: current.name,
+          icon: current.icon || '',
+          cat: current.cat || '',
+          ac: current.ac != null ? Number(current.ac) : null,
+          max: current.max != null ? Number(current.max) : 15,
+          opt: current.opt || ''
+        };
+      }
+      document.getElementById('modal-title').textContent = label + ' 선택 · ' + (selectedCls || '');
       document.getElementById('modal-search').value = '';
-      document.getElementById('enchant-wrap').hidden = key !== 'weapon';
-      document.getElementById('modal-enchant').value = sheet.weaponEnchant || (picked && picked.enchant) || 0;
+      var enc = current && typeof current === 'object' ? (Number(current.enchant) || 0) : 0;
+      if (key === 'weapon' && !enc) enc = Number(sheet.weaponEnchant) || 0;
+      document.getElementById('modal-enchant').value = String(enc);
+      syncEnchantUi(picked);
       modal.hidden = false;
       renderPickList();
       document.getElementById('modal-search').focus();
@@ -1238,14 +1322,22 @@
         return;
       }
       sheet = readForm();
+      var enc = Number(document.getElementById('modal-enchant').value) || 0;
+      var maxEnc = picked.max != null ? Number(picked.max) : 15;
+      if (!Number.isFinite(maxEnc) || maxEnc < 0) maxEnc = 15;
+      if (enc < 0) enc = 0;
+      if (enc > maxEnc) enc = maxEnc;
       sheet.gear[editKey] = {
         id: picked.id,
         name: picked.name,
         icon: picked.icon || '',
+        cat: picked.cat || '',
         ac: picked.ac,
-        enchant: editKey === 'weapon' ? (Number(document.getElementById('modal-enchant').value) || 0) : 0
+        max: maxEnc,
+        opt: picked.opt || '',
+        enchant: enc
       };
-      if (editKey === 'weapon') sheet.weaponEnchant = Number(document.getElementById('modal-enchant').value) || 0;
+      if (editKey === 'weapon') sheet.weaponEnchant = enc;
       recomputeAc();
       paintGear();
       paintStatOverlays();
@@ -1260,6 +1352,9 @@
       paintGear();
       paintStatOverlays();
       closeModal();
+    });
+    document.getElementById('modal-enchant').addEventListener('change', function () {
+      syncEnchantUi(picked);
     });
     modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
 

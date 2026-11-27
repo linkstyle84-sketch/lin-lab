@@ -1841,7 +1841,7 @@
       );
       var xf = selectedTransform();
       addPickRow(
-        xf && xf.i ? ('transforms/' + xf.i) : 'ui/elixir/btn-transform.png',
+        xf && xf.i ? ('transforms/' + xf.i) : 'ui/elixir/btn-transform.png?v=2',
         xf && xf.n ? xf.n : '변신 선택',
         function () { openIconModal('transform'); },
         function (btn) { showIconTip(btn, transformDetailHtml(xf)); }

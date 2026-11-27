@@ -370,10 +370,14 @@
     .side-pick:hover .side-ico { border-color: var(--gold); }
     .side-pick:hover .side-label { color: var(--gold); }
     .doll-wrap {
-      position: relative;
       width: min(100%, 520px);
       margin: 0;
       container-type: inline-size;
+    }
+    /* 장비 좌표(%)는 이미지만 기준 — paper-foot은 밖에 둬야 싱크가 안 깨짐 */
+    .doll-stage {
+      position: relative;
+      width: 100%;
     }
     .doll-bg {
       display: block;
@@ -1024,9 +1028,11 @@
             <div class="paper-stage">
               <aside class="side-rail" id="side-rail" aria-label="엘릭서·버프·인형"></aside>
               <div class="doll-wrap">
-                <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
-                <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
-                <div class="gear" id="gear" aria-label="장비 슬롯"></div>
+                <div class="doll-stage">
+                  <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
+                  <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
+                  <div class="gear" id="gear" aria-label="장비 슬롯"></div>
+                </div>
                 <div class="paper-foot">
                   <div class="obs-box">
                     <p class="obs-tip">축저주 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>

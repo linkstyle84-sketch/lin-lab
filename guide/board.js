@@ -474,13 +474,15 @@
     }
 
     function openPost(id) {
+      var remoteApplied = false;
       var cached = readPostCache(id);
       if (cached) {
         say('');
         openDetail(cached);
       }
+      /* 로컬 스냅샷은 원격 응답 전에만 사용 (늦게 도착하면 최신 글을 덮지 않음) */
       fetchPostLocal(id).then(function (res) {
-        if (!res.post) return;
+        if (remoteApplied || !res.post) return;
         if (cached && cached.images && cached.images.length && !(res.post.images && res.post.images.length)) {
           res.post.images = cached.images;
         }
@@ -489,10 +491,11 @@
         openDetail(res.post);
       }).catch(function () {});
       fetchPostRemote(id).then(function (res) {
+        remoteApplied = true;
         say('');
         openDetail(res.post);
       }).catch(function (err) {
-        if (!cached) say(err.message);
+        if (!cached && !remoteApplied) say(err.message || '글을 불러오지 못했습니다.');
       });
     }
 
@@ -562,25 +565,29 @@
 
     function loadList(opts) {
       var silent = opts && opts.silent;
+      var remoteApplied = false;
       show('list');
       var cached = readListCache();
       paintPosts(cached || []);
       if (!silent) say('');
 
+      /* 로컬 JSON은 즉시 표시용. 원격(Supabase)이 도착하면 덮어쓰지 않음 */
       fetchListLocal().then(function (data) {
+        if (remoteApplied) return;
         applyList(data.posts || []);
-        say('');
+        if (!silent) say('');
       }).catch(function () {
         /* 로컬 스냅샷 없으면 캐시/빈 화면 유지 */
       });
 
-      /* 백그라운드 동기화(느려도 화면은 이미 떠 있음) */
+      /* Supabase가 최종 목록 */
       fetchListRemote().then(function (data) {
+        remoteApplied = true;
         applyList(data.posts || []);
-        say('');
+        if (!silent) say('');
       }).catch(function (err) {
-        if (!cached && !silent) {
-          /* 로컬도 실패했을 때만 상태 문구 */
+        if (!silent && !(cached && cached.length)) {
+          say((err && err.message) || '목록을 불러오지 못했습니다.');
         }
       });
     }

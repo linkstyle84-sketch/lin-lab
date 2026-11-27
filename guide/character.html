@@ -767,28 +767,29 @@
     [hidden] { display: none !important; }
     .icon-tip {
       position: fixed;
-      z-index: 120;
+      z-index: 200;
       display: none;
-      max-width: min(320px, calc(100vw - 24px));
-      padding: 6px 8px;
-      border: 1px solid #c8c8c8;
-      background: rgba(0, 0, 0, 0.94);
+      min-width: 180px;
+      max-width: min(360px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 1px solid #e4c36a;
+      background: rgba(0, 0, 0, 0.96);
       color: #fff;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      line-height: 1.45;
+      line-height: 1.5;
       pointer-events: none;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
     }
     .icon-tip.on { display: block; }
     .icon-tip .tip-row {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 10px;
     }
     .icon-tip img {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       object-fit: contain;
       image-rendering: pixelated;
       background: #000;
@@ -796,8 +797,8 @@
       flex: 0 0 auto;
     }
     .icon-tip .tip-body { min-width: 0; }
-    .icon-tip .tip-title { color: #fff; font-weight: 800; word-break: keep-all; }
-    .icon-tip .tip-sub { color: #cfcfcf; margin-top: 3px; font-size: 11px; white-space: pre-wrap; word-break: keep-all; }
+    .icon-tip .tip-title { color: #ffe7a3; font-weight: 900; word-break: keep-all; }
+    .icon-tip .tip-sub { color: #f2f2f2; margin-top: 5px; font-size: 12px; white-space: pre-wrap; word-break: keep-all; }
     #icon-modal .modal {
       width: min(720px, 100%);
       padding: 22px;
@@ -1569,28 +1570,39 @@
       iconTip.classList.add('on');
       iconTip.setAttribute('aria-hidden', 'false');
       var r = anchor.getBoundingClientRect();
-      var tipW = iconTip.offsetWidth || 200;
-      var tipH = iconTip.offsetHeight || 40;
-      var left = r.left;
-      var top = r.bottom + 6;
-      if (left + tipW > window.innerWidth - 8) left = Math.max(8, window.innerWidth - tipW - 8);
-      if (top + tipH > window.innerHeight - 8) top = Math.max(8, r.top - tipH - 6);
+      var tipW = iconTip.offsetWidth || 220;
+      var tipH = iconTip.offsetHeight || 48;
+      var left = r.right + 8;
+      var top = r.top;
+      if (left + tipW > window.innerWidth - 8) left = Math.max(8, r.left - tipW - 8);
+      if (top + tipH > window.innerHeight - 8) top = Math.max(8, window.innerHeight - tipH - 8);
+      if (top < 8) top = 8;
       iconTip.style.left = Math.round(left) + 'px';
       iconTip.style.top = Math.round(top) + 'px';
     }
+    function isBuffMetaNote(note) {
+      return /^(타격자|기사|근거리|요정|요정 원거리 택1|근거리최대)$/.test(String(note || '').trim());
+    }
+    function buffOptionLines(b) {
+      if (!b) return [];
+      var note = String(b.note || '').trim();
+      if (note && !isBuffMetaNote(note)) {
+        return note.split(/\s*,\s*/).map(function (s) { return s.trim(); }).filter(Boolean);
+      }
+      var lines = [];
+      if (b.ac) lines.push('AC -' + b.ac);
+      if (b.str) lines.push('STR +' + b.str);
+      if (b.dex) lines.push('DEX +' + b.dex);
+      if (b.dmg) lines.push('추타 +' + b.dmg);
+      if (b.acc) lines.push('명중 +' + b.acc);
+      if (b.dr) lines.push('대미지 감소 +' + b.dr);
+      if (b.er) lines.push('ER +' + b.er);
+      if (b.sp) lines.push('SP +' + b.sp);
+      return lines;
+    }
     function buffDetailHtml(b) {
       if (!b) return '';
-      var lines = [];
-      if (b.note) {
-        lines.push(b.note);
-      } else {
-        if (b.ac) lines.push('AC -' + b.ac);
-        if (b.dmg) lines.push('추타 +' + b.dmg);
-        if (b.acc) lines.push('명중 +' + b.acc);
-        if (b.dr) lines.push('리덕 +' + b.dr);
-        if (b.er) lines.push('ER +' + b.er);
-        if (b.sp) lines.push('SP +' + b.sp);
-      }
+      var lines = buffOptionLines(b);
       return '<div class="tip-row">' +
         (b.i ? '<img src="buff-icons/' + b.i + '" alt="">' : '') +
         '<div class="tip-body"><div class="tip-title">' + escapeHtml(b.n || b.id) + '</div>' +
@@ -1663,10 +1675,45 @@
       /* 군주·마법사·도적: 공통 버프만 */
       return scope === 'common';
     }
+    var BUFF_SORT_ORDER = [
+      '보안서비스', '구독', '청명한기운', '전강',
+      '실드', '블레스드아머', '인챈트마이티', '인챈트덱스터리티',
+      '바운스어택', '브레스오브파이어', '브레스오브어스', '버서커스', '블레스웨폰',
+      '글로잉오라', '브레이브오라',
+      '윈드샷', '아이오브스톰', '스톰샷', '인챈트웨폰', '버닝웨폰', '소울오브프레임',
+      '페스티벌든든한간식', '청명한팬케이크', '청명한밤파이', '청명한무화과찹쌀떡',
+      '맛있는왕뚜껑', '든든한왕뚜껑', '화끈한왕뚜껑', '개운한왕뚜껑'
+    ];
+    var BUFF_SORT_INDEX = (function () {
+      var map = {};
+      BUFF_SORT_ORDER.forEach(function (id, i) { map[id] = i; });
+      return map;
+    })();
+    function isFoodBuff(b) {
+      if (!b) return false;
+      var id = String(b.id || '');
+      var n = String(b.n || '');
+      if (/왕뚜껑|간식|팬케이크|밤파이|찹쌀|음식/.test(id + n)) return true;
+      return false;
+    }
+    function isWangFoodBuff(b) {
+      return !!(b && /왕뚜껑/.test(String(b.id || '') + String(b.n || '')));
+    }
+    function buffSortKey(b) {
+      if (BUFF_SORT_INDEX[b.id] != null) return BUFF_SORT_INDEX[b.id];
+      if (isWangFoodBuff(b)) return 9000;
+      if (isFoodBuff(b)) return 8000;
+      return 5000;
+    }
     function buffsForClass(cls) {
       var out = [];
       (window.DBBUFFS || []).forEach(function (b) {
         if (buffAllowedForClass(b, cls || selectedCls)) out.push(b);
+      });
+      out.sort(function (a, b) {
+        var da = buffSortKey(a) - buffSortKey(b);
+        if (da) return da;
+        return String(a.n || a.id).localeCompare(String(b.n || b.id), 'ko');
       });
       return out;
     }

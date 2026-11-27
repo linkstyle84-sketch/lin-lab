@@ -520,27 +520,9 @@
       border-radius: 12px;
       background: #100c09;
     }
-    #enchant-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-    #enchant-wrap input {
-      width: 72px;
-      margin: 0;
-    }
-    #enchant-max-hint {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-    }
     .pick-item {
       display: grid;
-      grid-template-columns: 36px 1fr auto;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
       gap: 8px;
       align-items: center;
       width: 100%;
@@ -554,9 +536,61 @@
       text-align: left;
       cursor: pointer;
     }
+    .pick-item.on {
+      grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) auto;
+    }
     .pick-item:hover, .pick-item.on { border-color: var(--gold); background: rgba(228,195,106,.1); }
     .pick-item img { width: 32px; height: 32px; object-fit: contain; }
     .pick-item .meta { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .pick-item .opt {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+    .pick-item.on .opt { max-width: 160px; }
+    .pick-enchant {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex: 0 0 auto;
+      pointer-events: auto;
+    }
+    .pick-enchant .enc-btn {
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid rgba(228,195,106,.45);
+      border-radius: 8px;
+      background: #1a1510;
+      color: var(--gold);
+      font: inherit;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .pick-enchant .enc-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .pick-enchant .enc-val {
+      min-width: 42px;
+      text-align: center;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .pick-enchant .enc-hint {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
     .pick-empty { padding: 16px 8px; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center; }
     .modal .row-actions { display: flex; gap: 8px; }
     .modal .row-actions button { flex: 1; }
@@ -671,10 +705,6 @@
     <div class="modal" role="dialog" aria-modal="true">
       <h2 id="modal-title">장비 선택</h2>
       <input id="modal-search" type="search" placeholder="이름 검색" aria-label="아이템 검색">
-      <label id="enchant-wrap">강화
-        <input id="modal-enchant" type="number" min="0" max="15" step="1" value="0" aria-label="강화 수치">
-        <span id="enchant-max-hint"></span>
-      </label>
       <div class="pick-list" id="pick-list"></div>
       <div class="row-actions">
         <button type="button" id="modal-clear">비우기</button>
@@ -1097,29 +1127,74 @@
       if (enc > 0) return label + ' +' + enc;
       return label;
     }
+    var pickEnchant = 0;
     function canWearItem(it) {
       if (!it || !it.k || !it.k.length) return true;
       return it.k.indexOf(selectedCls) !== -1;
     }
-    function syncEnchantUi(item) {
-      var wrap = document.getElementById('enchant-wrap');
-      var input = document.getElementById('modal-enchant');
-      var hint = document.getElementById('enchant-max-hint');
-      if (!wrap || !input) return;
-      if (editKey === 'doll') {
-        wrap.hidden = true;
-        return;
-      }
-      wrap.hidden = false;
+    function itemEnchantMax(item) {
+      if (editKey === 'doll') return 0;
       var max = item && item.max != null ? Number(item.max) : 15;
       if (!Number.isFinite(max) || max < 0) max = 15;
-      input.max = String(max);
-      var cur = Number(input.value);
-      if (!Number.isFinite(cur) || cur < 0) cur = 0;
-      if (cur > max) cur = max;
-      input.value = String(cur);
-      if (hint) hint.textContent = max > 0 ? ('0~' + max + '강') : '강화 불가';
-      input.disabled = max <= 0;
+      return max;
+    }
+    function clampPickEnchant(item) {
+      var max = itemEnchantMax(item);
+      if (!Number.isFinite(pickEnchant) || pickEnchant < 0) pickEnchant = 0;
+      if (pickEnchant > max) pickEnchant = max;
+      return max;
+    }
+    function buildEnchantControl(item) {
+      var max = clampPickEnchant(item);
+      var wrap = document.createElement('div');
+      wrap.className = 'pick-enchant';
+      wrap.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      var down = document.createElement('button');
+      down.type = 'button';
+      down.className = 'enc-btn';
+      down.setAttribute('aria-label', '강화 하락');
+      down.textContent = '−';
+      down.disabled = pickEnchant <= 0 || max <= 0;
+
+      var val = document.createElement('span');
+      val.className = 'enc-val';
+      val.textContent = max <= 0 ? '불가' : ('+' + pickEnchant);
+
+      var up = document.createElement('button');
+      up.type = 'button';
+      up.className = 'enc-btn';
+      up.setAttribute('aria-label', '강화 상승');
+      up.textContent = '+';
+      up.disabled = pickEnchant >= max || max <= 0;
+
+      var hint = document.createElement('span');
+      hint.className = 'enc-hint';
+      hint.textContent = max > 0 ? ('0~' + max) : '';
+
+      down.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pickEnchant <= 0) return;
+        pickEnchant -= 1;
+        renderPickList();
+      });
+      up.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pickEnchant >= max) return;
+        pickEnchant += 1;
+        renderPickList();
+      });
+
+      wrap.appendChild(down);
+      wrap.appendChild(val);
+      wrap.appendChild(up);
+      if (hint.textContent) wrap.appendChild(hint);
+      return wrap;
     }
 
     function paintOneSlot(slot, host, extra) {
@@ -1225,28 +1300,62 @@
       pickList.innerHTML = '';
       if (!list.length) {
         pickList.innerHTML = '<div class="pick-empty">검색 결과가 없습니다.</div>';
-        syncEnchantUi(picked);
         return;
       }
+      if (picked) clampPickEnchant(picked);
       list.forEach(function (it) {
-        var btn = document.createElement('button');
+        var row = document.createElement('div');
         var selected = picked && String(picked.id) === String(it.id);
-        btn.type = 'button';
-        btn.className = 'pick-item' + (selected ? ' on' : '');
-        btn.innerHTML = (it.icon ? '<img alt="">' : '<span></span>') +
-          '<span><b></b><div class="meta"></div></span><span class="meta"></span>';
-        if (it.icon) btn.querySelector('img').src = 'item-icons/' + it.icon;
-        btn.querySelector('b').textContent = it.name;
-        btn.querySelector('.meta').textContent = it.cat + (it.ac != null ? ' · AC ' + (-it.ac) : '');
-        btn.lastChild.textContent = it.opt || '';
-        btn.addEventListener('click', function () {
+        row.className = 'pick-item' + (selected ? ' on' : '');
+        row.setAttribute('role', 'button');
+        row.tabIndex = 0;
+
+        if (it.icon) {
+          var img = document.createElement('img');
+          img.alt = '';
+          img.src = 'item-icons/' + it.icon;
+          row.appendChild(img);
+        } else {
+          row.appendChild(document.createElement('span'));
+        }
+
+        var info = document.createElement('span');
+        var nameEl = document.createElement('b');
+        nameEl.textContent = it.name;
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = it.cat + (it.ac != null ? ' · AC ' + (-it.ac) : '');
+        info.appendChild(nameEl);
+        info.appendChild(meta);
+        row.appendChild(info);
+
+        var opt = document.createElement('span');
+        opt.className = 'opt';
+        opt.textContent = it.opt || '';
+        row.appendChild(opt);
+
+        if (selected && editKey !== 'doll') {
+          row.appendChild(buildEnchantControl(it));
+        }
+
+        function selectRow() {
+          var same = picked && String(picked.id) === String(it.id);
           picked = it;
-          syncEnchantUi(it);
+          if (!same) {
+            pickEnchant = 0;
+            clampPickEnchant(it);
+          }
           renderPickList();
+        }
+        row.addEventListener('click', selectRow);
+        row.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectRow();
+          }
         });
-        pickList.appendChild(btn);
+        pickList.appendChild(row);
       });
-      syncEnchantUi(picked);
     }
 
     function recomputeAc() {
@@ -1279,10 +1388,9 @@
       }
       document.getElementById('modal-title').textContent = label + ' 선택 · ' + (selectedCls || '');
       document.getElementById('modal-search').value = '';
-      var enc = current && typeof current === 'object' ? (Number(current.enchant) || 0) : 0;
-      if (key === 'weapon' && !enc) enc = Number(sheet.weaponEnchant) || 0;
-      document.getElementById('modal-enchant').value = String(enc);
-      syncEnchantUi(picked);
+      pickEnchant = current && typeof current === 'object' ? (Number(current.enchant) || 0) : 0;
+      if (key === 'weapon' && !pickEnchant) pickEnchant = Number(sheet.weaponEnchant) || 0;
+      if (picked) clampPickEnchant(picked);
       modal.hidden = false;
       renderPickList();
       document.getElementById('modal-search').focus();
@@ -1292,6 +1400,7 @@
       modal.hidden = true;
       editKey = '';
       picked = null;
+      pickEnchant = 0;
     }
 
     function buildPayload() {
@@ -1322,11 +1431,8 @@
         return;
       }
       sheet = readForm();
-      var enc = Number(document.getElementById('modal-enchant').value) || 0;
-      var maxEnc = picked.max != null ? Number(picked.max) : 15;
-      if (!Number.isFinite(maxEnc) || maxEnc < 0) maxEnc = 15;
-      if (enc < 0) enc = 0;
-      if (enc > maxEnc) enc = maxEnc;
+      var maxEnc = clampPickEnchant(picked);
+      var enc = pickEnchant;
       sheet.gear[editKey] = {
         id: picked.id,
         name: picked.name,
@@ -1352,9 +1458,6 @@
       paintGear();
       paintStatOverlays();
       closeModal();
-    });
-    document.getElementById('modal-enchant').addEventListener('change', function () {
-      syncEnchantUi(picked);
     });
     modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
 

@@ -153,14 +153,66 @@
       background: linear-gradient(270deg, #15110e, #1a1612);
       min-height: 200px;
     }
-    .stats-placeholder {
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-      text-align: center;
-      padding: 28px 8px;
-      opacity: 0.75;
+    .stats-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #e8e0d4;
+      max-height: min(72vh, 720px);
+      overflow: auto;
+      padding-right: 4px;
     }
+    .stats-block {
+      border: 1px solid rgba(228,195,106,.18);
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      padding: 8px 10px 9px;
+    }
+    .stats-block h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: -0.02em;
+    }
+    .stats-block .line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: baseline;
+      margin: 0 0 3px;
+      font-weight: 700;
+    }
+    .stats-block .line .k { color: #bdb3a4; }
+    .stats-block .line .v { color: #f3ecdf; font-weight: 800; text-align: right; }
+    .stats-block .sub {
+      color: #9f9587;
+      font-size: 11px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .stats-block .hp-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin: 2px 0 4px;
+    }
+    .stats-block .hp-row input {
+      width: 72px;
+      border: 1px solid rgba(228,195,106,.28);
+      border-radius: 5px;
+      padding: 3px 6px;
+      background: #0c0a08;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .stats-block .tag-ok { color: #9fdfb0; }
+    .stats-block .tag-bless { color: #7ec8ff; }
+    .stats-block .tag-curse { color: #ff9b8a; }
+    .stats-block .muted { color: #8f8578; }
     .hidden-fields {
       position: absolute;
       width: 1px;
@@ -938,8 +990,8 @@
               <label class="er-box">ER <input id="er" type="number"></label>
             </div>
           </div>
-          <div class="stats" aria-label="추가 스탯 영역">
-            <div class="stats-placeholder">추가 항목 준비 중</div>
+          <div class="stats" aria-label="캐릭터 상세 스탯">
+            <div class="stats-detail" id="stats-detail"></div>
             <div class="hidden-fields" aria-hidden="true">
               <input id="exp" type="number">
               <input id="hp" type="number">
@@ -1011,6 +1063,7 @@
   <script src="db-buffs.js"></script>
   <script src="db-dolls.js"></script>
   <script src="db-transforms.js"></script>
+  <script src="db-combat.js"></script>
   <script>
     var SLOT_CATS = {
       helmet: ['투구'],
@@ -1327,19 +1380,321 @@
       var con = num('con');
       var wis = num('wis');
       var intStat = num('int');
+      var str = num('str');
       if (!Number.isFinite(level) || level < LEVEL_MIN) level = LEVEL_MIN;
       if (!Number.isFinite(con)) con = statFloor('con');
       if (!Number.isFinite(wis)) wis = statFloor('wis');
       if (!Number.isFinite(intStat)) intStat = statFloor('int');
+      if (!Number.isFinite(str)) str = statFloor('str');
       var hp = calcHpRange(level, con);
       var mp = calcMpRange(level, wis);
       var doll = dollBonus();
-      setField('hp', hp.avg + doll.hp);
-      setField('hpMax', hp.avg + doll.hp);
-      setField('mp', mp.avg + doll.mp);
-      setField('mpMax', mp.avg + doll.mp);
+      var avgHp = hp.avg + doll.hp;
+      var avgMp = mp.avg + doll.mp;
+      setField('hp', avgHp);
+      setField('hpMax', avgHp);
+      setField('mp', avgMp);
+      setField('mpMax', avgMp);
       setField('magicBonus', calcMagicBonus(intStat));
       setField('magicLevel', calcMagicLevel(level));
+      setField('weight', calcMaxWeight(str, con) + doll.weight);
+      sheet._hpAvg = avgHp;
+      sheet._mpAvg = avgMp;
+      sheet._hpRange = { min: hp.min + doll.hp, max: hp.max + doll.hp, avg: avgHp };
+      sheet._mpRange = { min: mp.min + doll.mp, max: mp.max + doll.mp, avg: avgMp };
+    }
+    function calcMaxWeight(str, con) {
+      /* 가이드 예시(STR11·CON18=2250)에 맞춘 식: STR×100 + CON×50 + 250 */
+      var s = Number(str) || 0;
+      var c = Number(con) || 0;
+      return Math.max(0, s * 100 + c * 50 + 250);
+    }
+    function dexAcBonus() {
+      var dex = num('dex') + buffStatBonus('dex');
+      if (dex >= 23) return 3;
+      if (dex >= 19) return 2;
+      if (dex >= 16) return 1;
+      return 0;
+    }
+    function hpRegenByCon(con) {
+      var c = Math.trunc(con) || 0;
+      var max = Math.max(1, c - 13);
+      return { min: 1, max: max };
+    }
+    function mpRegenByWis(wis) {
+      var w = Math.trunc(wis) || 0;
+      if (w >= 19) return 4;
+      if (w >= 17) return 3;
+      if (w >= 15) return 2;
+      return 1;
+    }
+    function mrByWis(wis) {
+      var w = Math.trunc(wis) || 0;
+      if (w <= 12) return 0;
+      return (w - 12) * 2;
+    }
+    function clanMembersByCha(cha, level) {
+      if (selectedCls !== '군주') return 0;
+      var c = Math.trunc(cha) || 0;
+      var lv = Math.trunc(level) || 1;
+      return c * (lv >= 50 ? 3 : 2);
+    }
+    function summonCountByCha(cha) {
+      var c = Math.trunc(cha) || 0;
+      if (c >= 36) return 7;
+      if (c >= 30) return 6;
+      if (c >= 24) return 5;
+      if (c >= 18) return 4;
+      if (c >= 12) return 3;
+      if (c >= 7) return 2;
+      return 1;
+    }
+    function combatCls() {
+      return selectedCls === '요정' ? '요정' : '기사';
+    }
+    function growthPair(table, cls, value) {
+      var row = table && table[String(Number(value))];
+      if (!row) return { dmg: 0, acc: 0 };
+      if (cls === '기사') return { dmg: Number(row.knightDmg) || 0, acc: Number(row.knightAcc) || 0 };
+      return { dmg: Number(row.elfDmg) || 0, acc: Number(row.elfAcc) || 0 };
+    }
+    function lookupWeaponCombat(name, enchant) {
+      var db = window.DBCOMBAT;
+      if (!db || !db.weapons || !name) return null;
+      var enc = Number(enchant) || 0;
+      var key = enc + ' ' + name;
+      var w = db.weapons[key];
+      if (w) return w;
+      w = db.weapons['0 ' + name];
+      if (w && w.ne) return w;
+      return null;
+    }
+    function buffCombatBonus() {
+      var on = ensureBuffs();
+      var list = buffsForClass(selectedCls);
+      var out = { dmg: 0, acc: 0, meleeDmg: 0, meleeAcc: 0, rangedDmg: 0, rangedAcc: 0, sp: 0, maxDice: false };
+      list.forEach(function (b) {
+        if (!on[b.id]) return;
+        if (b.maxDice) out.maxDice = true;
+        var dmg = Number(b.dmg) || 0;
+        var acc = Number(b.acc) || 0;
+        var sp = Number(b.sp) || 0;
+        if (b.melee) {
+          out.meleeDmg += dmg;
+          out.meleeAcc += acc;
+        } else {
+          out.dmg += dmg;
+          out.acc += acc;
+        }
+        out.sp += sp;
+      });
+      var doll = dollBonus();
+      out.dmg += doll.dmg + doll.rangedDmg;
+      out.acc += doll.acc + doll.rangedAcc;
+      out.meleeDmg += doll.meleeDmg;
+      out.meleeAcc += doll.meleeAcc;
+      out.rangedDmg += doll.rangedDmg;
+      out.rangedAcc += doll.rangedAcc;
+      out.sp += doll.sp;
+      return out;
+    }
+    function signed(n) {
+      var v = Number(n) || 0;
+      return (v > 0 ? '+' : '') + v;
+    }
+    function computeAttackBreakdown() {
+      var db = window.DBCOMBAT || { levels: {}, stats: {}, weapons: {} };
+      var cls = combatCls();
+      var level = num('level');
+      var str = num('str') + buffStatBonus('str');
+      var dex = num('dex') + buffStatBonus('dex');
+      var weaponRaw = sheet && sheet.gear && sheet.gear.weapon;
+      var weaponName = gearLabel(weaponRaw);
+      var enchant = slotEnchant('weapon', weaponRaw);
+      var w = lookupWeaponCombat(weaponName, enchant);
+      var isBow = !!(w && w.t === '활');
+      var meleeElf = cls === '요정' && !isBow;
+      var statCls = meleeElf ? '기사' : cls;
+      var statValue = cls === '기사' ? str : (isBow ? dex : str);
+      if (isBow && cls === '요정' && w) statValue += Number(w.dx) || 0;
+      var levelRow = growthPair(db.levels, cls, level);
+      var statRow = growthPair(db.stats, statCls, statValue);
+      var strRow = growthPair(db.stats, '기사', str);
+      var dexRow = growthPair(db.stats, '요정', dex);
+      var levelDmg = cls === '기사' ? (isBow ? 0 : levelRow.dmg) : (isBow ? levelRow.dmg : 0);
+      var buffs = buffCombatBonus();
+      var blocked = !!(w && w.ne);
+      var encStep = (!w || blocked) ? 0 : Math.max(0, enchant);
+      var encTier = (!w || blocked) ? 0 : (enchant >= 11 ? 5 : enchant >= 10 ? 2 : 0);
+      var flat = w ? (Number(w.f) || 0) : 0;
+      var weaponSpell = w ? (Number(w.spell) || 0) : 0;
+      var weaponSpStat = w ? (Number(w.sp) || 0) : 0;
+      var spDmg = 0;
+      if (weaponSpStat) {
+        var boosted = growthPair(db.stats, statCls, Number(statValue) + weaponSpStat);
+        spDmg = Math.max(0, (boosted.dmg || 0) - (statRow.dmg || 0));
+      }
+      var buffDmg = buffs.dmg - (isBow ? 0 : buffs.rangedDmg) + (isBow ? 0 : buffs.meleeDmg);
+      var buffAcc = buffs.acc - (isBow ? 0 : buffs.rangedAcc) + (isBow ? 0 : buffs.meleeAcc);
+      var totalExtra = flat + encStep + encTier + weaponSpell + spDmg + buffs.sp + buffDmg + levelDmg + (statRow.dmg || 0);
+      var weaponAcc = w ? (Number(w.a) || 0) : 0;
+      var totalAcc = weaponAcc + encStep + buffAcc + levelRow.acc + (statRow.acc || 0);
+      var small = w ? (Number(w.s) || 0) : 0;
+      var large = w ? (Number(w.l) || 0) : 0;
+      var undeadBase = 0;
+      if (w) {
+        var mat = w.m || '';
+        if (isBow) undeadBase = 0;
+        else if (mat === '은' || mat === '미스릴' || mat === '오리하루콘') undeadBase = (Number(w.u) || 0) > 0 ? Number(w.u) : 10;
+        else undeadBase = Number(w.u) || 0;
+      }
+      var undeadMax = undeadBase > 0 ? undeadBase + (blocked ? 0 : encStep) : 0;
+      var atkMin = w ? Math.max(0, 1 + totalExtra) : null;
+      var atkMax = w ? Math.max(0, small + totalExtra) : null;
+      var undMin = null;
+      var undMax = null;
+      if (w && undeadMax > 0) {
+        undMin = Math.max(0, 1 + totalExtra + 1);
+        undMax = Math.max(0, small + totalExtra + undeadMax);
+      }
+      return {
+        weaponName: weaponName,
+        enchant: enchant,
+        weapon: w,
+        isBow: isBow,
+        levelDmg: levelDmg,
+        levelAcc: levelRow.acc,
+        strDmg: strRow.dmg,
+        strAcc: strRow.acc,
+        dexDmg: dexRow.dmg,
+        dexAcc: dexRow.acc,
+        totalExtra: totalExtra,
+        totalAcc: totalAcc,
+        buffDmg: buffDmg,
+        small: small,
+        large: large,
+        weaponAcc: weaponAcc,
+        undeadBase: undeadBase,
+        undeadMax: undeadMax,
+        atkMin: atkMin,
+        atkMax: atkMax,
+        undMin: undMin,
+        undMax: undMax,
+        encStep: encStep
+      };
+    }
+    function paintStatsDetail() {
+      var el = document.getElementById('stats-detail');
+      if (!el) return;
+      syncDerivedStats();
+      var level = num('level');
+      var str = num('str') + buffStatBonus('str');
+      var dex = num('dex') + buffStatBonus('dex');
+      var con = num('con');
+      var intStat = num('int');
+      var wis = num('wis');
+      var cha = num('cha');
+      var er = num('er');
+      var atk = computeAttackBreakdown();
+      var hpAvg = sheet._hpAvg || 0;
+      var mpAvg = sheet._mpAvg || 0;
+      var observed = sheet.hpObserved;
+      var hpCmp = '';
+      if (observed != null && observed !== '' && Number.isFinite(Number(observed))) {
+        var diff = Number(observed) - hpAvg;
+        if (diff > 0) hpCmp = '<span class="tag-bless">축 +' + diff + '</span>';
+        else if (diff < 0) hpCmp = '<span class="tag-curse">저주 ' + diff + '</span>';
+        else hpCmp = '<span class="tag-ok">평균과 동일</span>';
+      } else {
+        hpCmp = '<span class="muted">실측 HP 입력</span>';
+      }
+      var hpTick = hpRegenByCon(con);
+      var mpTick = mpRegenByWis(wis);
+      var mr = mrByWis(wis);
+      var weight = num('weight');
+      var levelDmgLabel = (selectedCls === '요정') ? '레벨 원거리대미지' : '레벨 근거리대미지';
+      var weaponTitle = atk.weaponName
+        ? ((atk.enchant > 0 ? ('+' + atk.enchant + ' ') : '') + atk.weaponName + ' 무기 상세')
+        : '무기 상세';
+      var undeadLine = '—';
+      if (atk.weapon && atk.undeadBase > 0) {
+        undeadLine = '1~' + atk.undeadBase + (atk.encStep ? ('+' + atk.encStep) : '') +
+          ' (언댐 범위 1~' + atk.undeadMax + ')';
+      } else if (atk.weapon) {
+        undeadLine = '없음';
+      }
+      function block(title, lines) {
+        return '<section class="stats-block"><h3>' + escapeHtml(title) + '</h3>' + lines + '</section>';
+      }
+      function line(k, v) {
+        return '<div class="line"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
+      }
+      var html = '';
+      html += block('내 캐릭터 상세',
+        line('합계 추타', signed(atk.totalExtra)) +
+        line('합계 명중', signed(atk.totalAcc)) +
+        line('기본 공격 대미지 범위', atk.weapon ? (atk.atkMin + '~' + atk.atkMax) : '—') +
+        line('기본 공격 언데드 대미지 범위', (atk.weapon && atk.undeadMax > 0) ? (atk.undMin + '~' + atk.undMax) : '—') +
+        line('마법 공격 대미지 범위', '<span class="muted">준비중</span>')
+      );
+      html += block(level + '레벨 상세',
+        line(levelDmgLabel, signed(atk.levelDmg)) +
+        line('레벨 명중', signed(atk.levelAcc)) +
+        line('ER', String(Number.isFinite(er) ? er : 0))
+      );
+      html += block(weaponTitle,
+        atk.weapon
+          ? (
+            line('작몹 대미지', atk.small + ' <span class="muted">(대미지 범위 1~' + atk.small + ')</span>') +
+            line('큰몹 대미지', atk.large + ' <span class="muted">(대미지 범위 1~' + atk.large + ')</span>') +
+            line('옵션', atk.weaponAcc ? ('명중' + signed(atk.weaponAcc)) : '없음') +
+            line('언데드 대미지', undeadLine)
+          )
+          : '<div class="sub">무기 미장착</div>'
+      );
+      html += block('STR ' + str + ' 상세',
+        line('근거리 대미지', signed(atk.strDmg)) +
+        line('근거리 명중', signed(atk.strAcc)) +
+        line('무게', String(weight))
+      );
+      html += block('DEX ' + dex + ' 상세',
+        line('원거리 대미지', signed(atk.dexDmg)) +
+        line('원거리 명중', signed(atk.dexAcc)) +
+        line('방어력(AC)', signed(-dexAcBonus()))
+      );
+      html += block('INT ' + intStat + ' 상세',
+        line('마법 대미지', '<span class="muted">준비중</span>') +
+        line('마법 명중', '<span class="muted">준비중</span>') +
+        line('마법 보너스', '<span class="muted">준비중</span>') +
+        line('SP', '<span class="muted">준비중</span>')
+      );
+      html += block('CON ' + con + ' 상세',
+        '<div class="line"><span class="k">최대HP 합계(평균)</span><span class="v">' + hpAvg + '</span></div>' +
+        '<div class="hp-row"><label>실측 최대HP <input id="hp-observed" type="number" inputmode="numeric" value="' +
+          (observed != null && observed !== '' ? escapeHtml(String(observed)) : '') +
+          '"></label> ' + hpCmp + '</div>' +
+        line('HP 회복(틱)', hpTick.min + '~' + hpTick.max +
+          ' <span class="muted">(대기 3초 / 이동 6초 / 전투 12초)</span>') +
+        line('무게', String(weight))
+      );
+      html += block('WIS ' + wis + ' 상세',
+        line('최대MP', String(mpAvg)) +
+        line('MP 회복(틱)', String(mpTick)) +
+        line('마법 방어력(MR)', mr + '%')
+      );
+      html += block('CHA ' + cha + ' 상세',
+        line('보유 가능 혈맹원', clanMembersByCha(cha, level) + '명') +
+        line('소환 몬스터', summonCountByCha(cha) + '마리')
+      );
+      el.innerHTML = html;
+      var obs = document.getElementById('hp-observed');
+      if (obs) {
+        obs.addEventListener('change', function () {
+          sheet.hpObserved = obs.value === '' ? '' : Number(obs.value);
+          paintStatsDetail();
+        });
+        obs.addEventListener('keydown', function (e) { e.stopPropagation(); });
+      }
     }
     function adjustLevel(dir) {
       var cur = num('level');
@@ -1442,6 +1797,7 @@
       if (!statOverlayEl) return;
       syncDerivedStats();
       recomputeAc();
+      paintStatsDetail();
       statOverlayEl.innerHTML = '';
       var foodLeft = num('food');
       STAT_OVERLAYS.forEach(function (row) {
@@ -1534,6 +1890,7 @@
       );
       sheet.buffs = Object.assign({}, (data && data.buffs) || {});
       sheet.transform = (data && data.transform) || '';
+      sheet.hpObserved = (data && data.hpObserved != null) ? data.hpObserved : '';
       setClass(sheet.cls || '요정', false);
       pruneBuffsForClass();
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
@@ -1562,6 +1919,7 @@
       );
       next.buffs = Object.assign({}, (sheet && sheet.buffs) || {});
       next.transform = (sheet && sheet.transform) || '';
+      next.hpObserved = (sheet && sheet.hpObserved != null) ? sheet.hpObserved : '';
       sheet = next;
       return next;
     }
@@ -2383,6 +2741,7 @@
       sum += setAcBonus();
       sum += buffAcBonus();
       sum += dollAcBonus();
+      sum += dexAcBonus();
       setField('ac', 10 - sum - levelAcBonus());
     }
 
@@ -2447,6 +2806,13 @@
       el.readOnly = true;
       el.addEventListener('keydown', function (e) { e.preventDefault(); });
     });
+    var erInput = document.getElementById('er');
+    if (erInput) {
+      erInput.addEventListener('input', function () {
+        if (sheet) sheet.er = num('er');
+        paintStatsDetail();
+      });
+    }
 
     document.getElementById('modal-search').addEventListener('input', renderPickList);
     document.getElementById('modal-ok').addEventListener('click', function () {

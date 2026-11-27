@@ -160,6 +160,7 @@
       elixir: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
       buffs: {},
       transform: '',
+      hpObserved: '',
       gear: {
         helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
         ring1: '', gloves: '', belt: '', shield: '', weapon: '',

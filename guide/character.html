@@ -232,10 +232,91 @@
       padding: 10px 10px 12px;
       background: #0a0908;
     }
+    .paper-stage {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 8px;
+    }
+    .side-rail {
+      flex: 0 0 auto;
+      width: 168px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding-top: 8px;
+    }
+    .side-row {
+      display: grid;
+      grid-template-columns: 26px 18px minmax(0, 1fr) 18px;
+      align-items: center;
+      gap: 3px;
+      min-height: 28px;
+    }
+    .side-row.pick-row {
+      grid-template-columns: 26px minmax(0, 1fr);
+    }
+    .side-ico {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: #000;
+      border: 1px solid rgba(180, 180, 180, 0.35);
+    }
+    .side-step {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 1px solid rgba(160, 160, 160, 0.55);
+      border-radius: 2px;
+      background: linear-gradient(180deg, #3a3a3a, #1a1a1a);
+      color: #f0f0f0;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .side-step:hover { border-color: var(--gold); color: var(--gold); }
+    .side-label {
+      min-width: 0;
+      color: var(--ink);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .side-label.has { color: var(--gold); }
+    .side-pick {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      min-height: 26px;
+      padding: 2px 6px;
+      border: 1px solid rgba(160, 160, 160, 0.45);
+      border-radius: 3px;
+      background: linear-gradient(180deg, #2a2a2a, #121212);
+      color: var(--ink);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: left;
+    }
+    .side-pick:hover { border-color: var(--gold); color: var(--gold); }
+    .side-pick img.picked {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
     .doll-wrap {
       position: relative;
       width: min(100%, 520px);
-      margin: 0 auto;
+      margin: 0;
       container-type: inline-size;
     }
     .doll-bg {
@@ -388,7 +469,7 @@
       font: inherit;
       cursor: pointer;
       box-sizing: border-box;
-      overflow: hidden;
+      overflow: visible;
     }
     .slot:hover, .slot:focus-visible {
       border-color: transparent;
@@ -411,29 +492,7 @@
       pointer-events: none;
       filter: drop-shadow(0 1px 1px rgba(0,0,0,.75));
     }
-    .slot .v {
-      display: none;
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 6px);
-      transform: translateX(-50%);
-      z-index: 5;
-      width: max-content;
-      max-width: 160px;
-      padding: 5px 8px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(12, 10, 8, 0.94);
-      color: var(--gold);
-      font-size: 11px;
-      font-weight: 800;
-      line-height: 1.35;
-      white-space: normal;
-      word-break: keep-all;
-      pointer-events: none;
-    }
-    .slot:hover .v, .slot:focus-visible .v { display: block; }
-    .slot.empty { background: rgba(0, 0, 0, 0.18); }
+    .slot.empty { background: rgba(0, 0, 0, 0.18); overflow: hidden; }
     .slot .guide {
       display: none;
       flex-direction: column;
@@ -722,10 +781,80 @@
     .confirm-actions button.danger { color: #f0b4a0; }
     .confirm-actions button.danger:hover { border-color: #f0b4a0; color: #ffd2c4; }
     [hidden] { display: none !important; }
+    .icon-tip {
+      position: fixed;
+      z-index: 120;
+      display: none;
+      max-width: min(320px, calc(100vw - 24px));
+      padding: 6px 8px;
+      border: 1px solid #c8c8c8;
+      background: rgba(0, 0, 0, 0.94);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+      pointer-events: none;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+    .icon-tip.on { display: block; }
+    .icon-tip .tip-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .icon-tip img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      background: #000;
+      border: 1px solid #555;
+      flex: 0 0 auto;
+    }
+    .icon-tip .tip-body { min-width: 0; }
+    .icon-tip .tip-title { color: #fff; font-weight: 800; word-break: keep-all; }
+    .icon-tip .tip-sub { color: #cfcfcf; margin-top: 3px; font-size: 11px; white-space: pre-wrap; word-break: keep-all; }
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+      gap: 8px;
+      max-height: min(52vh, 480px);
+      overflow: auto;
+      padding: 4px 2px 8px;
+    }
+    .pick-icon {
+      width: 44px;
+      height: 44px;
+      padding: 3px;
+      border: 1px solid rgba(160, 160, 160, 0.45);
+      border-radius: 4px;
+      background: #0a0a0a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pick-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: grayscale(1) brightness(0.72);
+      transition: filter .12s;
+    }
+    .pick-icon.on {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(228, 195, 106, 0.35);
+    }
+    .pick-icon.on img { filter: none; }
+    .pick-icon:hover { border-color: rgba(228, 195, 106, 0.8); }
     @media (max-width: 820px) {
       .sheet-body { grid-template-columns: 1fr; }
       .stats { border-left: 0; border-top: 1px solid var(--line); }
-      .doll-wrap { width: min(100%, 480px); }
+      .paper-stage { flex-wrap: wrap; }
+      .side-rail { width: 100%; flex-direction: row; flex-wrap: wrap; }
+      .side-row { width: calc(50% - 4px); }
+      .doll-wrap { width: min(100%, 480px); margin: 0 auto; }
     }
   </style>
 </head>
@@ -774,10 +903,13 @@
         </div>
         <div class="sheet-body">
           <div class="paper">
-            <div class="doll-wrap">
-              <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
-              <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
-              <div class="gear" id="gear" aria-label="장비 슬롯"></div>
+            <div class="paper-stage">
+              <aside class="side-rail" id="side-rail" aria-label="엘릭서·버프·인형"></aside>
+              <div class="doll-wrap">
+                <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
+                <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
+                <div class="gear" id="gear" aria-label="장비 슬롯"></div>
+              </div>
             </div>
             <div id="gear-extra"></div>
             <div class="paper-foot">
@@ -842,11 +974,24 @@
       <div class="confirm-actions" id="confirm-actions"></div>
     </div>
   </div>
+  <div class="modal-bg" id="icon-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2 id="icon-modal-title">선택</h2>
+      <div class="pick-grid" id="icon-pick-list"></div>
+      <div class="row-actions">
+        <button type="button" id="icon-modal-clear">선택해제</button>
+        <button type="button" id="icon-modal-close">닫기</button>
+      </div>
+    </div>
+  </div>
+  <div class="icon-tip" id="icon-tip" aria-hidden="true"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="member-config.js"></script>
   <script src="member.js"></script>
   <script src="db-stack.js"></script>
   <script src="db-gear.js"></script>
+  <script src="db-buffs.js"></script>
+  <script src="db-dolls.js"></script>
   <script>
     var SLOT_CATS = {
       helmet: ['투구'],
@@ -883,6 +1028,16 @@
     var EXTRA_SLOTS = [
       { key: 'doll', label: '마법인형' }
     ];
+    var ELIXIR_ROWS = [
+      { id: 'str', label: 'STR엘릭서', icon: 'ui/elixir/elixir-str.png' },
+      { id: 'dex', label: 'DEX엘릭서', icon: 'ui/elixir/elixir-dex.png' },
+      { id: 'int', label: 'INT엘릭서', icon: 'ui/elixir/elixir-int.png' },
+      { id: 'con', label: 'CON엘릭서', icon: 'ui/elixir/elixir-con.png' },
+      { id: 'wis', label: 'WIS엘릭서', icon: 'ui/elixir/elixir-wis.png' },
+      { id: 'cha', label: 'CHA엘릭서', icon: 'ui/elixir/elixir-cha.png' }
+    ];
+    var ELIXIR_MIN_LEVEL = 50;
+    var ELIXIR_MAX = 25;
     /* character-status.png — 분배스탯 + Str~Cha(하락/수치/상승) + HP/MP */
     var STAT_OVERLAYS = [
       { id: 'level', l: 31.55, t: 5.46, w: 14.14, h: 3.66, ctrl: true, level: true },
@@ -922,9 +1077,15 @@
     var gearEl = document.getElementById('gear');
     var gearExtraEl = document.getElementById('gear-extra');
     var statOverlayEl = document.getElementById('stat-overlay');
+    var sideRailEl = document.getElementById('side-rail');
     var modal = document.getElementById('modal');
     var pickList = document.getElementById('pick-list');
     var weaponCatsEl = document.getElementById('weapon-cats');
+    var iconModal = document.getElementById('icon-modal');
+    var iconPickList = document.getElementById('icon-pick-list');
+    var iconModalTitle = document.getElementById('icon-modal-title');
+    var iconTip = document.getElementById('icon-tip');
+    var iconModalMode = '';
 
     function say(text) { status.textContent = text || ''; }
     var confirmBg = document.getElementById('confirm-bg');
@@ -1151,6 +1312,26 @@
         setField('level', cur - 1);
       }
       paintStatOverlays();
+      paintSideRail();
+    }
+    function ensureElixir() {
+      if (!sheet) return { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+      if (!sheet.elixir || typeof sheet.elixir !== 'object') {
+        sheet.elixir = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+      }
+      STAT_IDS.forEach(function (id) {
+        var n = Number(sheet.elixir[id]);
+        sheet.elixir[id] = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+      });
+      return sheet.elixir;
+    }
+    function elixirOf(id) {
+      return Number(ensureElixir()[id]) || 0;
+    }
+    function ensureBuffs() {
+      if (!sheet) return {};
+      if (!sheet.buffs || typeof sheet.buffs !== 'object') sheet.buffs = {};
+      return sheet.buffs;
     }
     function adjustStat(id, dir) {
       if (id === 'level') {
@@ -1160,8 +1341,8 @@
       if (STAT_IDS.indexOf(id) === -1) return;
       var cur = num(id);
       var food = num('food');
-      var floor = statFloor(id);
-      var cap = statCap(id);
+      var floor = statFloor(id) + elixirOf(id);
+      var cap = statCap(id) + elixirOf(id);
       if (dir > 0) {
         if (food <= 0 || cur >= cap) return;
         setField(id, cur + 1);
@@ -1172,6 +1353,29 @@
         setField('food', food + 1);
       }
       paintStatOverlays();
+      paintSideRail();
+    }
+    function adjustElixir(id, dir) {
+      if (STAT_IDS.indexOf(id) === -1) return;
+      if (num('level') < ELIXIR_MIN_LEVEL) {
+        alertPopup('50래벨이상만 사용할 수 있습니다');
+        return;
+      }
+      var e = ensureElixir();
+      var curE = Number(e[id]) || 0;
+      var cur = num(id);
+      if (dir > 0) {
+        if (curE >= ELIXIR_MAX) return;
+        e[id] = curE + 1;
+        setField(id, cur + 1);
+      } else if (dir < 0) {
+        if (curE <= 0) return;
+        e[id] = curE - 1;
+        setField(id, Math.max(statFloor(id), cur - 1));
+      }
+      sheet.elixir = e;
+      paintStatOverlays();
+      paintSideRail();
     }
 
     function setClass(cls, applyStats) {
@@ -1184,8 +1388,12 @@
       ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
         setField(id, base[id]);
       });
-      if (sheet) sheet.cls = selectedCls;
+      if (sheet) {
+        sheet.cls = selectedCls;
+        sheet.elixir = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+      }
       paintStatOverlays();
+      paintSideRail();
     }
 
     function paintStatOverlays() {
@@ -1203,8 +1411,8 @@
           wrap.style.width = row.w + '%';
           wrap.style.height = row.h + '%';
           var cur = num(row.id);
-          var floor = row.level ? LEVEL_MIN : statFloor(row.id);
-          var cap = row.level ? LEVEL_MAX : statCap(row.id);
+          var floor = row.level ? LEVEL_MIN : (statFloor(row.id) + elixirOf(row.id));
+          var cap = row.level ? LEVEL_MAX : (statCap(row.id) + elixirOf(row.id));
           var canDown = cur > floor;
           var canUp = row.level ? (cur < cap) : (foodLeft > 0 && cur < cap);
 
@@ -1274,6 +1482,11 @@
     function fillForm(data) {
       sheet = Object.assign(DgMember.defaultSheet(), data || {});
       sheet.gear = Object.assign(DgMember.defaultSheet().gear, (data && data.gear) || {});
+      sheet.elixir = Object.assign(
+        { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        (data && data.elixir) || {}
+      );
+      sheet.buffs = Object.assign({}, (data && data.buffs) || {});
       setClass(sheet.cls || '요정', false);
       document.getElementById('alignment').value = sheet.alignment || '뉴트럴';
       FIELDS.forEach(function (id) {
@@ -1284,6 +1497,7 @@
       paintGear();
       recomputeAc();
       paintStatOverlays();
+      paintSideRail();
     }
 
     function readForm() {
@@ -1294,18 +1508,256 @@
       FIELDS.forEach(function (id) { next[id] = num(id); });
       next.weaponEnchant = Number(sheet && sheet.weaponEnchant) || 0;
       next.gear = Object.assign({}, (sheet && sheet.gear) || DgMember.defaultSheet().gear);
+      next.elixir = Object.assign(
+        { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+        (sheet && sheet.elixir) || {}
+      );
+      next.buffs = Object.assign({}, (sheet && sheet.buffs) || {});
       sheet = next;
       return next;
     }
 
-    function slotCaption(slot, label) {
-      if (!label) return slot.label;
-      var value = sheet.gear && sheet.gear[slot.key];
+    function slotEnchant(slot, value) {
       var enc = 0;
       if (value && typeof value === 'object') enc = Number(value.enchant) || 0;
       if (slot.key === 'weapon' && !enc) enc = Number(sheet.weaponEnchant) || 0;
-      if (enc > 0) return label + ' +' + enc;
+      return enc;
+    }
+    function slotOptText(value) {
+      if (!value || typeof value !== 'object') return '';
+      var opt = value.opt || value.o || '';
+      if (Array.isArray(opt)) return opt.filter(Boolean).join(', ');
+      return String(opt || '');
+    }
+    function slotCaption(slot, label) {
+      if (!label) return slot.label;
+      var value = sheet.gear && sheet.gear[slot.key];
+      var enc = slotEnchant(slot, value);
+      if (enc > 0) return '+' + enc + ' ' + label;
       return label;
+    }
+    function hideIconTip() {
+      if (!iconTip) return;
+      iconTip.classList.remove('on');
+      iconTip.innerHTML = '';
+      iconTip.setAttribute('aria-hidden', 'true');
+    }
+    function showIconTip(anchor, html) {
+      if (!iconTip || !anchor || !html) return;
+      iconTip.innerHTML = html;
+      iconTip.classList.add('on');
+      iconTip.setAttribute('aria-hidden', 'false');
+      var r = anchor.getBoundingClientRect();
+      var tipW = iconTip.offsetWidth || 200;
+      var tipH = iconTip.offsetHeight || 40;
+      var left = r.left;
+      var top = r.bottom + 6;
+      if (left + tipW > window.innerWidth - 8) left = Math.max(8, window.innerWidth - tipW - 8);
+      if (top + tipH > window.innerHeight - 8) top = Math.max(8, r.top - tipH - 6);
+      iconTip.style.left = Math.round(left) + 'px';
+      iconTip.style.top = Math.round(top) + 'px';
+    }
+    function buffDetailHtml(b) {
+      if (!b) return '';
+      var lines = [];
+      if (b.note) lines.push(b.note);
+      if (b.dmg) lines.push('추타 +' + b.dmg);
+      if (b.acc) lines.push('명중 +' + b.acc);
+      if (b.dr) lines.push('리덕 +' + b.dr);
+      if (b.er) lines.push('ER +' + b.er);
+      if (b.sp) lines.push('SP +' + b.sp);
+      return '<div class="tip-row">' +
+        (b.i ? '<img src="buff-icons/' + b.i + '" alt="">' : '') +
+        '<div class="tip-body"><div class="tip-title">' + escapeHtml(b.n || b.id) + '</div>' +
+        (lines.length ? '<div class="tip-sub">' + escapeHtml(lines.join('\n')) + '</div>' : '') +
+        '</div></div>';
+    }
+    function dollDetailHtml(d) {
+      if (!d) return '';
+      return '<div class="tip-row">' +
+        (d.i ? '<img src="dolls/' + d.i + '" alt="">' : '') +
+        '<div class="tip-body"><div class="tip-title">' + escapeHtml(d.n) +
+        (d.stage ? ' (' + d.stage + '단계)' : '') + '</div>' +
+        (d.fx ? '<div class="tip-sub">' + escapeHtml(d.fx) + '</div>' : '') +
+        '</div></div>';
+    }
+    function gearTipHtml(slot, value, label) {
+      if (!label) return '';
+      var enc = slotEnchant(slot, value);
+      var title = (enc > 0 ? ('+' + enc + ' ') : '') + label + ' [착용]';
+      var opt = slotOptText(value);
+      var icon = gearIcon(value);
+      var src = '';
+      if (icon) {
+        if (slot.key === 'doll') src = String(icon).indexOf('/') >= 0 ? icon : ('dolls/' + icon);
+        else src = 'item-icons/' + icon;
+      }
+      return '<div class="tip-row">' +
+        (src ? '<img src="' + src + '" alt="">' : '') +
+        '<div class="tip-body"><div class="tip-title">' + escapeHtml(title) + '</div>' +
+        (opt ? '<div class="tip-sub">' + escapeHtml(opt) + '</div>' : '') +
+        '</div></div>';
+    }
+    function escapeHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    function findBuff(id) {
+      var list = window.DBBUFFS || [];
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return null;
+    }
+    function findDoll(id) {
+      var list = window.DBDOLLS || [];
+      for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return null;
+    }
+    function selectedDoll() {
+      var raw = sheet && sheet.gear && sheet.gear.doll;
+      if (!raw) return null;
+      if (typeof raw === 'string') return findDoll(raw) || { id: raw, n: raw, i: '' };
+      if (raw.id) return findDoll(raw.id) || { id: raw.id, n: raw.name || raw.n || raw.id, i: raw.icon || raw.i || '', fx: raw.opt || raw.fx || '' };
+      return null;
+    }
+    function paintSideRail() {
+      if (!sideRailEl) return;
+      ensureElixir();
+      ensureBuffs();
+      sideRailEl.innerHTML = '';
+      ELIXIR_ROWS.forEach(function (row) {
+        var e = elixirOf(row.id);
+        var wrap = document.createElement('div');
+        wrap.className = 'side-row';
+        var ico = document.createElement('img');
+        ico.className = 'side-ico';
+        ico.src = row.icon;
+        ico.alt = '';
+        var down = document.createElement('button');
+        down.type = 'button';
+        down.className = 'side-step';
+        down.setAttribute('aria-label', row.label + ' 하락');
+        down.textContent = '−';
+        down.addEventListener('click', function () { adjustElixir(row.id, -1); });
+        var lab = document.createElement('span');
+        lab.className = 'side-label' + (e > 0 ? ' has' : '');
+        lab.textContent = e > 0 ? (row.label + ' +' + e) : row.label;
+        var up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'side-step';
+        up.setAttribute('aria-label', row.label + ' 상승');
+        up.textContent = '+';
+        up.addEventListener('click', function () { adjustElixir(row.id, 1); });
+        wrap.appendChild(ico);
+        wrap.appendChild(down);
+        wrap.appendChild(lab);
+        wrap.appendChild(up);
+        sideRailEl.appendChild(wrap);
+      });
+
+      var buffRow = document.createElement('div');
+      buffRow.className = 'side-row pick-row';
+      var buffIco = document.createElement('img');
+      buffIco.className = 'side-ico';
+      buffIco.src = 'ui/elixir/btn-buff.png';
+      buffIco.alt = '';
+      var buffBtn = document.createElement('button');
+      buffBtn.type = 'button';
+      buffBtn.className = 'side-pick';
+      buffBtn.textContent = '버프선택';
+      buffBtn.addEventListener('click', function () { openIconModal('buff'); });
+      buffRow.appendChild(buffIco);
+      buffRow.appendChild(buffBtn);
+      sideRailEl.appendChild(buffRow);
+
+      var doll = selectedDoll();
+      var dollRow = document.createElement('div');
+      dollRow.className = 'side-row pick-row';
+      var dollIco = document.createElement('img');
+      dollIco.className = 'side-ico';
+      dollIco.src = 'ui/elixir/btn-doll-pick.png';
+      dollIco.alt = '';
+      var dollBtn = document.createElement('button');
+      dollBtn.type = 'button';
+      dollBtn.className = 'side-pick';
+      if (doll && doll.i) {
+        var p = document.createElement('img');
+        p.className = 'picked';
+        p.src = 'dolls/' + doll.i;
+        p.alt = '';
+        dollBtn.appendChild(p);
+        dollBtn.appendChild(document.createTextNode(doll.n || '인형 선택'));
+      } else {
+        dollBtn.textContent = '인형 선택';
+      }
+      dollBtn.addEventListener('click', function () { openIconModal('doll'); });
+      dollRow.appendChild(dollIco);
+      dollRow.appendChild(dollBtn);
+      sideRailEl.appendChild(dollRow);
+    }
+    function closeIconModal() {
+      if (!iconModal) return;
+      iconModal.hidden = true;
+      iconModalMode = '';
+      hideIconTip();
+    }
+    function openIconModal(mode) {
+      if (!iconModal || !iconPickList) return;
+      iconModalMode = mode;
+      iconModalTitle.textContent = mode === 'buff' ? '버프 선택' : '인형 선택';
+      renderIconPickList();
+      iconModal.hidden = false;
+    }
+    function renderIconPickList() {
+      if (!iconPickList) return;
+      iconPickList.innerHTML = '';
+      hideIconTip();
+      if (iconModalMode === 'buff') {
+        var onMap = ensureBuffs();
+        (window.DBBUFFS || []).forEach(function (b) {
+          if (!b.i) return;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pick-icon' + (onMap[b.id] ? ' on' : '');
+          btn.setAttribute('aria-label', b.n || b.id);
+          var img = document.createElement('img');
+          img.src = 'buff-icons/' + b.i;
+          img.alt = '';
+          btn.appendChild(img);
+          btn.addEventListener('click', function () {
+            onMap[b.id] = !onMap[b.id];
+            sheet.buffs = onMap;
+            renderIconPickList();
+          });
+          btn.addEventListener('mouseenter', function () { showIconTip(btn, buffDetailHtml(b)); });
+          btn.addEventListener('mouseleave', hideIconTip);
+          iconPickList.appendChild(btn);
+        });
+        return;
+      }
+      var cur = selectedDoll();
+      (window.DBDOLLS || []).forEach(function (d) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pick-icon' + (cur && cur.id === d.id ? ' on' : '');
+        btn.setAttribute('aria-label', d.n);
+        var img = document.createElement('img');
+        img.src = 'dolls/' + d.i;
+        img.alt = '';
+        btn.appendChild(img);
+        btn.addEventListener('click', function () {
+          sheet = readForm();
+          sheet.gear.doll = { id: d.id, name: d.n, icon: d.i, opt: d.fx || '' };
+          paintGear();
+          paintSideRail();
+          renderIconPickList();
+        });
+        btn.addEventListener('mouseenter', function () { showIconTip(btn, dollDetailHtml(d)); });
+        btn.addEventListener('mouseleave', hideIconTip);
+        iconPickList.appendChild(btn);
+      });
     }
     var pickEnchant = 0;
     function canWearItem(it) {
@@ -1388,7 +1840,6 @@
       btn.type = 'button';
       btn.className = 'slot' + (extra ? ' extra' : '') + (label ? '' : ' empty');
       btn.dataset.key = slot.key;
-      btn.title = label ? caption : (slot.label + ' 선택');
       btn.setAttribute('aria-label', slot.label + (label ? ': ' + caption : ' 선택'));
       if (!extra) {
         btn.style.left = slot.l + '%';
@@ -1396,12 +1847,7 @@
         btn.style.width = slot.w + '%';
         btn.style.height = slot.h + '%';
       }
-      if (label) {
-        var tip = document.createElement('span');
-        tip.className = 'v';
-        tip.textContent = caption;
-        btn.appendChild(tip);
-      } else {
+      if (!label) {
         var guide = document.createElement('span');
         guide.className = 'guide';
         if (extra) {
@@ -1415,11 +1861,24 @@
       }
       if (icon) {
         var img = document.createElement('img');
-        img.src = 'item-icons/' + icon;
+        if (slot.key === 'doll') img.src = (String(icon).indexOf('/') >= 0 ? icon : ('dolls/' + icon));
+        else img.src = 'item-icons/' + icon;
         img.alt = '';
         btn.appendChild(img);
       }
-      btn.addEventListener('click', function () { openSlot(slot.key, slot.label); });
+      if (label) {
+        btn.addEventListener('mouseenter', function () {
+          showIconTip(btn, gearTipHtml(slot, value, label));
+        });
+        btn.addEventListener('mouseleave', hideIconTip);
+      }
+      btn.addEventListener('click', function () {
+        if (slot.key === 'doll') {
+          openIconModal('doll');
+          return;
+        }
+        openSlot(slot.key, slot.label);
+      });
       host.appendChild(btn);
     }
 
@@ -1715,6 +2174,32 @@
       closeModal();
     });
     modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    if (iconModal) {
+      iconModal.addEventListener('click', function (e) {
+        if (e.target === iconModal) closeIconModal();
+      });
+    }
+    var iconModalClose = document.getElementById('icon-modal-close');
+    if (iconModalClose) iconModalClose.addEventListener('click', closeIconModal);
+    var iconModalClear = document.getElementById('icon-modal-clear');
+    if (iconModalClear) {
+      iconModalClear.addEventListener('click', function () {
+        if (iconModalMode === 'buff') {
+          sheet.buffs = {};
+          renderIconPickList();
+          return;
+        }
+        if (iconModalMode === 'doll') {
+          sheet = readForm();
+          sheet.gear.doll = '';
+          paintGear();
+          paintSideRail();
+          renderIconPickList();
+        }
+      });
+    }
+    window.addEventListener('scroll', hideIconTip, true);
+    window.addEventListener('resize', hideIconTip);
 
     function saveLocal(payload) {
       var session = DgMember.getSession() || {};

@@ -157,6 +157,8 @@
       ac: 10, weight: 4, food: 7, str: 11, dex: 12, con: 12, int: 12, wis: 12, cha: 9,
       magicLevel: 0, magicBonus: 0, resistEarth: 0, resistWater: 0, resistFire: 0, resistWind: 0,
       alignment: '뉴트럴', er: 0, weaponEnchant: 0,
+      elixir: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      buffs: {},
       gear: {
         helmet: '', necklace: '', shirt: '', armor: '', cloak: '',
         ring1: '', gloves: '', belt: '', shield: '', weapon: '',
@@ -189,6 +191,11 @@
     out.knightStat = out.str;
     out.stat = cls === '기사' ? out.str : out.dex;
     out.elfStatMode = 'dex';
+    if (s.buffs && typeof s.buffs === 'object') {
+      out.buffs = Object.assign({}, s.buffs);
+      if (cls === '기사') out.buffsKnight = Object.assign({}, s.buffs);
+      else out.buffsElf = Object.assign({}, s.buffs);
+    }
     if (weaponName) {
       var rows = Array.isArray(out.rows) ? out.rows.slice() : [];
       var found = rows.find(function (row) { return row && row.name === weaponName; });

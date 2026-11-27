@@ -1028,16 +1028,6 @@
               </div>
             </div>
             <div class="paper-foot">
-              <div class="paper-foot-top">
-                <label class="align">성향
-                  <select id="alignment">
-                    <option value="뉴트럴">뉴트럴</option>
-                    <option value="라우풀">라우풀</option>
-                    <option value="카오틱">카오틱</option>
-                  </select>
-                </label>
-                <label class="er-box">ER <input id="er" type="number"></label>
-              </div>
               <div class="obs-box">
                 <p class="obs-tip">축저부 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>
                 <div class="obs-row">
@@ -1054,6 +1044,12 @@
           <div class="stats" aria-label="캐릭터 상세 스탯">
             <div class="stats-detail" id="stats-detail"></div>
             <div class="hidden-fields" aria-hidden="true">
+              <select id="alignment">
+                <option value="뉴트럴">뉴트럴</option>
+                <option value="라우풀">라우풀</option>
+                <option value="카오틱">카오틱</option>
+              </select>
+              <input id="er" type="number">
               <input id="exp" type="number">
               <input id="hp" type="number">
               <input id="hpMax" type="number">

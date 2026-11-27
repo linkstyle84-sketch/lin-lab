@@ -116,12 +116,51 @@
     }
     .sheet-top {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      padding: 12px 14px;
+      gap: 10px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--line);
       font-weight: 900;
+      flex-wrap: wrap;
+    }
+    .bless-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 10px;
+      flex: 1 1 auto;
+      min-width: 0;
+      color: #d7c7a8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .bless-title {
+      color: var(--gold);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .bless-bar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .bless-bar input {
+      width: 58px;
+      border: 1px solid rgba(228,195,106,.3);
+      border-radius: 5px;
+      padding: 3px 5px;
+      background: #0c0a08;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .sheet-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+      margin-left: auto;
     }
     .sheet-top .top-btn {
       border: 1px solid var(--line);
@@ -573,78 +612,7 @@
       user-select: none;
     }
     .slot.empty .guide { display: flex; }
-    .paper-foot {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      margin-top: 10px;
-      position: relative;
-      z-index: 4;
-    }
-    .paper-foot-top {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: end;
-      gap: 12px;
-    }
-    .align {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 6px 10px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-      background: rgba(0,0,0,.25);
-    }
-    .er-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-weight: 900;
-    }
-    .er-box input { width: 64px; }
-    .obs-box {
-      border: 1px solid rgba(228,195,106,.22);
-      border-radius: 10px;
-      padding: 8px 10px 9px;
-      background: rgba(0,0,0,.28);
-    }
-    .obs-tip {
-      margin: 0 0 7px;
-      color: #d7c7a8;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1.4;
-    }
-    .obs-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 5px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #cfc4b2;
-    }
-    .obs-row:last-child { margin-bottom: 0; }
-    .obs-row label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .obs-row input {
-      width: 78px;
-      border: 1px solid rgba(228,195,106,.3);
-      border-radius: 5px;
-      padding: 3px 6px;
-      background: #0c0a08;
-      color: var(--ink);
-      font-weight: 800;
-    }
-    .obs-tag { font-weight: 900; min-width: 4.5em; }
+    .obs-tag { font-weight: 900; min-width: 3.8em; }
     .obs-tag.bless { color: #7ec8ff; }
     .obs-tag.curse { color: #ff9b8a; }
     .obs-tag.same { color: #9fdfb0; }
@@ -1019,9 +987,17 @@
       </div>
       <section class="sheet" aria-label="캐릭터 정보">
         <div class="sheet-top">
+          <div class="bless-bar" id="bless-bar">
+            <span class="bless-title">축저주 판별기</span>
+            <label>레벨 <input id="level-top" type="number" min="1" max="99" step="1" inputmode="numeric"></label>
+            <label>HP <input id="hp-observed" type="number" inputmode="numeric"><span class="obs-tag" id="hp-obs-tag"></span></label>
+            <label>MP <input id="mp-observed" type="number" inputmode="numeric"><span class="obs-tag" id="mp-obs-tag"></span></label>
+          </div>
           <input id="level" type="number" min="1" max="99" step="1" aria-hidden="true" tabindex="-1">
-          <button type="button" class="top-btn" id="btn-save">저장</button>
-          <button type="button" class="top-btn danger" id="btn-clear">삭제</button>
+          <div class="sheet-top-actions">
+            <button type="button" class="top-btn" id="btn-save">저장</button>
+            <button type="button" class="top-btn danger" id="btn-clear">삭제</button>
+          </div>
         </div>
         <div class="sheet-body">
           <div class="paper">
@@ -1032,19 +1008,6 @@
                   <img class="doll-bg" src="ui/character-status.png" alt="캐릭터 장비창" width="658" height="868" decoding="async">
                   <div class="stat-overlay" id="stat-overlay" aria-hidden="true"></div>
                   <div class="gear" id="gear" aria-label="장비 슬롯"></div>
-                </div>
-                <div class="paper-foot">
-                  <div class="obs-box">
-                    <p class="obs-tip">축저주 판별을 위해 실제 캐릭터의 HP와 MP를 입력해주세요</p>
-                    <div class="obs-row">
-                      <label>실제 HP <input id="hp-observed" type="number" inputmode="numeric"></label>
-                      <span class="obs-tag" id="hp-obs-tag"></span>
-                    </div>
-                    <div class="obs-row">
-                      <label>실제 MP <input id="mp-observed" type="number" inputmode="numeric"></label>
-                      <span class="obs-tag" id="mp-obs-tag"></span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1787,16 +1750,21 @@
     function blessCurseText(observed, avg) {
       if (!hasObserved(observed)) return { text: '', cls: '' };
       var diff = Number(observed) - avg;
-      if (diff > 0) return { text: '축+' + diff, cls: 'bless' };
-      if (diff < 0) return { text: '저주+' + Math.abs(diff), cls: 'curse' };
-      return { text: '평균과 동일', cls: 'same' };
+      if (diff > 0) return { text: '(축+' + diff + ')', cls: 'bless' };
+      if (diff < 0) return { text: '(저주+' + Math.abs(diff) + ')', cls: 'curse' };
+      return { text: '(평균)', cls: 'same' };
     }
     function syncObservedFoot() {
+      var lvIn = document.getElementById('level-top');
       var hpIn = document.getElementById('hp-observed');
       var mpIn = document.getElementById('mp-observed');
       var hpTag = document.getElementById('hp-obs-tag');
       var mpTag = document.getElementById('mp-obs-tag');
       if (!sheet) return;
+      var lv = num('level');
+      if (lvIn && document.activeElement !== lvIn) {
+        lvIn.value = Number.isFinite(lv) && lv > 0 ? String(lv) : '';
+      }
       if (hpIn && document.activeElement !== hpIn) {
         hpIn.value = hasObserved(sheet.hpObserved) ? String(sheet.hpObserved) : '';
       }
@@ -1831,6 +1799,29 @@
       }
       wire('hp-observed', 'hpObserved');
       wire('mp-observed', 'mpObserved');
+      var lvTop = document.getElementById('level-top');
+      if (lvTop && lvTop.dataset.bound !== '1') {
+        lvTop.dataset.bound = '1';
+        lvTop.addEventListener('input', function () {
+          var v = Number(lvTop.value);
+          if (!Number.isFinite(v)) return;
+          v = Math.max(LEVEL_MIN, Math.min(LEVEL_MAX, Math.trunc(v)));
+          setField('level', v);
+          paintStatOverlays();
+          paintSideRail();
+        });
+        lvTop.addEventListener('change', function () {
+          var v = Number(lvTop.value);
+          if (!Number.isFinite(v) || v < LEVEL_MIN) v = LEVEL_MIN;
+          if (v > LEVEL_MAX) v = LEVEL_MAX;
+          v = Math.trunc(v);
+          setField('level', v);
+          lvTop.value = String(v);
+          paintStatOverlays();
+          paintSideRail();
+        });
+        lvTop.addEventListener('keydown', function (e) { e.stopPropagation(); });
+      }
     }
     function adjustLevel(dir) {
       var cur = num('level');

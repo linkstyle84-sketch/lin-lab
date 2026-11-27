@@ -1675,14 +1675,16 @@
           )
           : '<div class="sub">무기 미장착</div>'
       );
+      var meleeWeapon = !!(atk.weapon && !atk.isBow);
+      var rangedWeapon = !!(atk.weapon && atk.isBow);
       html += block('STR ' + str + ' 상세',
-        line('근거리 대미지', signed(atk.strDmg)) +
-        line('근거리 명중', signed(atk.strAcc)) +
+        line('근거리 대미지', rangedWeapon ? '—' : signed(atk.strDmg)) +
+        line('근거리 명중', rangedWeapon ? '—' : signed(atk.strAcc)) +
         line('무게', String(weight))
       );
       html += block('DEX ' + dex + ' 상세',
-        line('원거리 대미지', signed(atk.dexDmg)) +
-        line('원거리 명중', signed(atk.dexAcc)) +
+        line('원거리 대미지', meleeWeapon ? '—' : signed(atk.dexDmg)) +
+        line('원거리 명중', meleeWeapon ? '—' : signed(atk.dexAcc)) +
         line('방어력(AC)', signed(-dexAcBonus()))
       );
       html += block('INT ' + intStat + ' 상세',

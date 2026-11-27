@@ -1521,7 +1521,11 @@
       var statRow = growthPair(db.stats, statCls, statValue);
       var strRow = growthPair(db.stats, '기사', str);
       var dexRow = growthPair(db.stats, '요정', dex);
-      var levelDmg = cls === '기사' ? (isBow ? 0 : levelRow.dmg) : (isBow ? levelRow.dmg : 0);
+      /* 군주는 레벨 추타 없음. 기사는 근거리만, 요정은 원거리(활)만 */
+      var levelDmg = 0;
+      if (selectedCls !== '군주') {
+        levelDmg = cls === '기사' ? (isBow ? 0 : levelRow.dmg) : (isBow ? levelRow.dmg : 0);
+      }
       var buffs = buffCombatBonus();
       var blocked = !!(w && w.ne);
       var encStep = (!w || blocked) ? 0 : Math.max(0, enchant);

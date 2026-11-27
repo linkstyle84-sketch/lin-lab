@@ -1403,6 +1403,81 @@
         rangedDmg: n('rangedDmg'), rangedAcc: n('rangedAcc')
       };
     }
+    /* 옵션 문구에서 최대 HP/MP만 합산 (HP회복·MP회복 제외) */
+    function parseMaxHpMp(text) {
+      var hp = 0;
+      var mp = 0;
+      var s = String(text || '');
+      var m;
+      var reMaxHp = /최대\s*HP\s*\+?\s*(\d+)/gi;
+      while ((m = reMaxHp.exec(s))) hp += Number(m[1]) || 0;
+      var reMaxMp = /최대\s*MP\s*\+?\s*(\d+)/gi;
+      while ((m = reMaxMp.exec(s))) mp += Number(m[1]) || 0;
+      var cleaned = s
+        .replace(/HP\s*회복\s*\+?\s*\d+/gi, '')
+        .replace(/MP\s*회복\s*\+?\s*\d+/gi, '')
+        .replace(/최대\s*HP\s*\+?\s*\d+/gi, '')
+        .replace(/최대\s*MP\s*\+?\s*\d+/gi, '');
+      var reHp = /HP\s*\+\s*(\d+)/gi;
+      while ((m = reHp.exec(cleaned))) hp += Number(m[1]) || 0;
+      var reMp = /MP\s*\+\s*(\d+)/gi;
+      while ((m = reMp.exec(cleaned))) mp += Number(m[1]) || 0;
+      return { hp: hp, mp: mp };
+    }
+    function lookupGearOptByName(name) {
+      if (!name) return '';
+      var src = window.DBGEAR || {};
+      var ids = Object.keys(src);
+      for (var i = 0; i < ids.length; i++) {
+        var it = src[ids[i]];
+        if (it && it.n === name) return String(it.o || '');
+      }
+      return '';
+    }
+    function gearHpMpBonus() {
+      var gear = (sheet && sheet.gear) || {};
+      var hp = 0;
+      var mp = 0;
+      Object.keys(gear).forEach(function (key) {
+        if (key === 'doll') return;
+        var g = gear[key];
+        if (!g) return;
+        var opt = '';
+        var name = '';
+        if (typeof g === 'string') {
+          name = g;
+          opt = lookupGearOptByName(g);
+        } else {
+          name = g.name || g.n || '';
+          opt = g.opt || g.o || '';
+          if (!opt) opt = lookupGearOptByName(name);
+        }
+        var p = parseMaxHpMp(opt);
+        hp += p.hp;
+        mp += p.mp;
+      });
+      return { hp: hp, mp: mp };
+    }
+    function buffHpMpBonus() {
+      var on = ensureBuffs();
+      var hp = 0;
+      var mp = 0;
+      buffsForClass(selectedCls).forEach(function (b) {
+        if (!on[b.id]) return;
+        var addHp = Number(b.hp);
+        var addMp = Number(b.mp);
+        if (Number.isFinite(addHp) && addHp > 0) hp += addHp;
+        if (Number.isFinite(addMp) && addMp > 0) mp += addMp;
+        var note = String(b.note || '');
+        if (!isBuffMetaNote(note)) {
+          var p = parseMaxHpMp(note);
+          /* structured 필드가 없을 때만 note 파싱 합산 (중복 방지) */
+          if (!(Number.isFinite(addHp) && addHp > 0)) hp += p.hp;
+          if (!(Number.isFinite(addMp) && addMp > 0)) mp += p.mp;
+        }
+      });
+      return { hp: hp, mp: mp };
+    }
     function syncDerivedStats() {
       var level = num('level');
       var con = num('con');
@@ -1417,8 +1492,12 @@
       var hp = calcHpRange(level, con);
       var mp = calcMpRange(level, wis);
       var doll = dollBonus();
-      var avgHp = hp.avg + doll.hp;
-      var avgMp = mp.avg + doll.mp;
+      var gearBonus = gearHpMpBonus();
+      var buffBonus = buffHpMpBonus();
+      var extraHp = doll.hp + gearBonus.hp + buffBonus.hp;
+      var extraMp = doll.mp + gearBonus.mp + buffBonus.mp;
+      var avgHp = hp.avg + extraHp;
+      var avgMp = mp.avg + extraMp;
       setField('hp', avgHp);
       setField('hpMax', avgHp);
       setField('mp', avgMp);
@@ -1430,8 +1509,10 @@
       setField('er', levelErBonus() + buffErBonus());
       sheet._hpAvg = avgHp;
       sheet._mpAvg = avgMp;
-      sheet._hpRange = { min: hp.min + doll.hp, max: hp.max + doll.hp, avg: avgHp };
-      sheet._mpRange = { min: mp.min + doll.mp, max: mp.max + doll.mp, avg: avgMp };
+      sheet._hpExtra = extraHp;
+      sheet._mpExtra = extraMp;
+      sheet._hpRange = { min: hp.min + extraHp, max: hp.max + extraHp, avg: avgHp };
+      sheet._mpRange = { min: mp.min + extraMp, max: mp.max + extraMp, avg: avgMp };
     }
     /* lcinfo: 군주 9 / 기사 5 / 요정 6 / 마법사 12 레벨당 +1 */
     function levelErBonus() {

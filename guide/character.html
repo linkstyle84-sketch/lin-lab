@@ -1398,10 +1398,29 @@
       setField('magicBonus', calcMagicBonus(intStat));
       setField('magicLevel', calcMagicLevel(level));
       setField('weight', calcMaxWeight(str, con) + doll.weight);
+      if (selectedCls === '군주') {
+        setField('er', levelErBonus() + buffErBonus());
+      }
       sheet._hpAvg = avgHp;
       sheet._mpAvg = avgMp;
       sheet._hpRange = { min: hp.min + doll.hp, max: hp.max + doll.hp, avg: avgHp };
       sheet._mpRange = { min: mp.min + doll.mp, max: mp.max + doll.mp, avg: avgMp };
+    }
+    /* 군주 ER: 10렙당 +1 */
+    function levelErBonus() {
+      if (selectedCls !== '군주') return 0;
+      var level = Math.max(0, Math.trunc(num('level')) || 0);
+      return Math.trunc(level / 10);
+    }
+    function buffErBonus() {
+      var on = ensureBuffs();
+      var sum = 0;
+      buffsForClass(selectedCls).forEach(function (b) {
+        if (!on[b.id]) return;
+        var v = Number(b.er);
+        if (Number.isFinite(v) && v > 0) sum += v;
+      });
+      return sum;
     }
     function calcMaxWeight(str, con) {
       /* 가이드 예시(STR11·CON18=2250)에 맞춘 식: STR×100 + CON×50 + 250 */
@@ -1782,6 +1801,7 @@
       document.querySelectorAll('#class-picker .class-btn').forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.dataset.cls === selectedCls ? 'true' : 'false');
       });
+      syncErInputMode();
       if (!applyStats) return;
       var base = classBase();
       ['str', 'dex', 'con', 'wis', 'cha', 'int', 'food'].forEach(function (id) {
@@ -1801,6 +1821,7 @@
       if (!statOverlayEl) return;
       syncDerivedStats();
       recomputeAc();
+      syncErInputMode();
       paintStatsDetail();
       statOverlayEl.innerHTML = '';
       var foodLeft = num('food');
@@ -2813,9 +2834,16 @@
     var erInput = document.getElementById('er');
     if (erInput) {
       erInput.addEventListener('input', function () {
+        if (selectedCls === '군주') return;
         if (sheet) sheet.er = num('er');
         paintStatsDetail();
       });
+    }
+    function syncErInputMode() {
+      if (!erInput) return;
+      var auto = selectedCls === '군주';
+      erInput.readOnly = auto;
+      erInput.title = auto ? '군주 ER: 10레벨당 +1 (자동)' : '';
     }
 
     document.getElementById('modal-search').addEventListener('input', renderPickList);

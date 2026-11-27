@@ -233,23 +233,28 @@
       user-select: none;
     }
     .stat-val.lbl {
-      justify-content: flex-start;
-      padding: 0 1px;
-      font-size: clamp(10px, 1.7cqw, 12px);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      background: #555;
-      color: #f8f8f8;
-      -webkit-text-stroke: 0;
+      justify-content: center;
+      padding: 0;
+      font-size: clamp(12px, 2.15cqw, 16px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: transparent;
+      color: #fff;
+      -webkit-text-stroke: 0.3px #fff;
       text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000;
+        -2px -2px 0 #000,
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+        -1px 0 0 #000,
+         1px 0 0 #000,
+         0 -1px 0 #000,
+         0 2px 0 #000;
     }
     .stat-val.cover {
-      background: #2f2f2f;
+      background: transparent;
       box-shadow: none;
+      font-size: clamp(15px, 2.7cqw, 20px);
       -webkit-text-stroke: 0.35px #fff;
     }
     .stat-ctrl {
@@ -690,14 +695,14 @@
     ];
     /* character-status.png — 분배스탯 + Str~Cha(하락/수치/상승) */
     var STAT_OVERLAYS = [
-      { id: 'foodLbl', text: '분배스탯', l: 4.9, t: 32.55, w: 12.2, h: 2.0, lbl: true },
-      { id: 'food', l: 25.6, t: 32.55, w: 7.6, h: 2.0, cover: true },
-      { id: 'str', l: 17.2, t: 37.5, w: 13.6, h: 3.4, ctrl: true },
-      { id: 'dex', l: 17.2, t: 41.8, w: 13.6, h: 3.4, ctrl: true },
-      { id: 'con', l: 17.2, t: 46.2, w: 13.6, h: 3.4, ctrl: true },
-      { id: 'int', l: 17.2, t: 50.5, w: 13.6, h: 3.4, ctrl: true },
-      { id: 'wis', l: 17.2, t: 54.9, w: 13.6, h: 3.4, ctrl: true },
-      { id: 'cha', l: 17.2, t: 59.2, w: 13.6, h: 3.4, ctrl: true }
+      { id: 'foodLbl', text: '분배스탯', l: 4.2, t: 31.9, w: 11.2, h: 2.8, lbl: true },
+      { id: 'food', l: 24.8, t: 31.9, w: 9.4, h: 2.8, cover: true },
+      { id: 'str', l: 15.5, t: 37.5, w: 14.5, h: 3.4, ctrl: true },
+      { id: 'dex', l: 15.5, t: 41.8, w: 14.5, h: 3.4, ctrl: true },
+      { id: 'con', l: 15.5, t: 46.2, w: 14.5, h: 3.4, ctrl: true },
+      { id: 'int', l: 15.5, t: 50.5, w: 14.5, h: 3.4, ctrl: true },
+      { id: 'wis', l: 15.5, t: 54.9, w: 14.5, h: 3.4, ctrl: true },
+      { id: 'cha', l: 15.5, t: 59.2, w: 14.5, h: 3.4, ctrl: true }
     ];
     var STAT_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     var STR_CAP_CLASSES = { '군주': 1, '기사': 1, '도적': 1 };
